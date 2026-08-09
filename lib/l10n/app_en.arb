@@ -1,0 +1,297 @@
+{
+  "@@locale": "en",
+  "appName": "EnCaisse",
+  "tagline": "EnCaisse, ensemble.",
+  "getStarted": "Get started",
+  "alreadyHaveAccount": "I already have an account",
+  "skip": "Skip",
+  "next": "Next",
+  "createAccount": "Create account",
+  "signIn": "Sign in",
+  "signOut": "Sign out",
+  "welcomeBack": "Welcome back",
+  "signInSubtitle": "Sign in to your EnCaisse account.",
+  "joinEncaisse": "Join EnCaisse",
+  "signUpSubtitle": "Track shared cash with full transparency.",
+  "email": "Email",
+  "password": "Password",
+  "displayName": "Display name",
+  "or": "or",
+  "continueWithGoogle": "Continue with Google",
+  "needAccount": "Need an account? Sign up",
+  "haveAccount": "Already have an account? Sign in",
+  "enterEmail": "Enter your email",
+  "validEmail": "Enter a valid email",
+  "passwordMin": "Password must be at least 6 characters",
+  "enterName": "Enter your name",
+  "hello": "Hello",
+  "helloName": "Hello, {name}",
+  "@helloName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "noGroupsYet": "No groups yet",
+  "noGroupsSubtitle": "Create a caisse or join one with an invite code.",
+  "createAGroup": "Create a group",
+  "joinWithCode": "Join with invite code",
+  "joinWithInviteCode": "Join with invite code",
+  "settings": "Settings",
+  "appearance": "Appearance",
+  "language": "Language",
+  "themeMode": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "languageEnglish": "English",
+  "languageFrench": "French",
+  "languageArabic": "Arabic",
+  "languageSpanish": "Spanish",
+  "languagePortuguese": "Portuguese",
+  "languageChinese": "Chinese",
+  "languageHindi": "Hindi",
+  "languageRussian": "Russian",
+  "languageJapanese": "Japanese",
+  "nameYourCaisse": "Name your caisse",
+  "inviteCodeHint": "You will get a 6-character invite code to share.",
+  "groupName": "Group name",
+  "groupNameHint": "Weekend trip, Flatmates…",
+  "enterGroupName": "Enter a group name",
+  "currency": "Currency",
+  "startingAmountOptional": "Starting amount (optional)",
+  "startingAmountHelper": "Only you (the creator) can edit this amount later.",
+  "createGroup": "Create group",
+  "enterInviteCode": "Enter invite code",
+  "askForCode": "Ask a member for the {length}-character code.",
+  "@askForCode": {
+    "placeholders": {
+      "length": { "type": "int" }
+    }
+  },
+  "inviteCode": "Invite code",
+  "joinGroup": "Join group",
+  "enterCodeLength": "Enter a {length}-character code",
+  "@enterCodeLength": {
+    "placeholders": {
+      "length": { "type": "int" }
+    }
+  },
+  "noGroupForCode": "No group found for this invite code.",
+  "balance": "Balance",
+  "inLabel": "In",
+  "outLabel": "Out",
+  "members": "Members",
+  "byCategory": "By category",
+  "filterAll": "All",
+  "filterUser": "User",
+  "filterDate": "Date",
+  "clearFilters": "Clear filters",
+  "noMatchingMovements": "No movements match these filters.",
+  "inviteFriends": "Invite friends",
+  "shareCodeSoFriends": "Share this code so friends can join.",
+  "shareThisCode": "Share this code so others can join.",
+  "copyCode": "Copy code",
+  "share": "Share",
+  "inviteCodeCopied": "Invite code {code} copied",
+  "@inviteCodeCopied": {
+    "placeholders": {
+      "code": { "type": "String" }
+    }
+  },
+  "shareInviteText": "Join my EnCaisse group \"{name}\" with code {code}. EnCaisse, ensemble.",
+  "@shareInviteText": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "code": { "type": "String" }
+    }
+  },
+  "joinOnEncaisse": "Join {name} on EnCaisse",
+  "@joinOnEncaisse": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "notificationsMuted": "Notifications muted for this group",
+  "notificationsEnabled": "Notifications enabled for this group",
+  "unmuteNotifications": "Unmute notifications",
+  "muteNotifications": "Mute notifications",
+  "noMovementsYet": "No movements yet",
+  "noMovementsSubtitle": "Add the first deposit or expense for this caisse.",
+  "addMovement": "Add movement",
+  "editMovement": "Edit movement",
+  "movement": "Movement",
+  "startingBalance": "Starting balance",
+  "editStartingBalance": "Edit starting balance",
+  "type": "Type",
+  "deposit": "Deposit",
+  "expense": "Expense",
+  "amount": "Amount",
+  "startingAmount": "Starting amount",
+  "title": "Title",
+  "titleHint": "Groceries, rent share…",
+  "category": "Category",
+  "addReceipt": "Add receipt photo (optional)",
+  "receiptSelected": "Receipt selected",
+  "saveChanges": "Save changes",
+  "enterValidAmount": "Enter a valid amount",
+  "enterTitle": "Enter a title",
+  "onlyCreatorEditStarting": "Only you (the creator) can change this amount.",
+  "onlyCreatorCanEditStarting": "Only the person who created this caisse can edit the starting balance.",
+  "onlyYouEditStarting": "Only you can edit this starting amount.",
+  "onlyCreatorEditAmount": "Only the caisse creator can edit this amount.",
+  "createdBy": "Created by",
+  "created": "Created",
+  "receipt": "Receipt",
+  "attached": "Attached",
+  "auditTrail": "Audit trail",
+  "auditTrailSubtitle": "Append-only history. Nobody can edit or delete these entries.",
+  "noAuditYet": "No audit entries yet.",
+  "deleteMovement": "Delete movement?",
+  "deleteStartingBalance": "Delete starting balance?",
+  "softDeleteHint": "This soft-deletes the movement for 24 hours. You can undo from the snackbar or this screen.",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "movementDeletedUndo": "Movement deleted — Undo",
+  "undo": "Undo",
+  "movementRestored": "Movement restored",
+  "softDeletedCanUndo": "Soft-deleted — you can still undo within 24 hours.",
+  "softDeletedExpired": "Soft-deleted — undo window expired.",
+  "undoDelete": "Undo delete",
+  "actionCreate": "Create",
+  "actionUpdate": "Update",
+  "actionDelete": "Delete",
+  "groupNotFound": "Group not found",
+  "movementNotFound": "Movement not found",
+  "couldNotLoadGroups": "Could not load groups. Check Firebase setup.",
+  "onboardingTitle1": "One shared caisse",
+  "onboardingBody1": "Everyone in the group can add deposits and expenses. No admin hierarchy.",
+  "onboardingTitle2": "Full audit trail",
+  "onboardingBody2": "Every change is logged. Trust comes from transparency, not permissions.",
+  "onboardingTitle3": "Invite with a code",
+  "onboardingBody3": "Create a group or join with a 6-character invite code.",
+  "welcomeSubtitle": "Shared group cash, transparent for everyone.",
+  "validStartingAmount": "Enter a valid starting amount (or leave empty).",
+  "manageGroup": "Manage group",
+  "renameGroup": "Rename group",
+  "renameGroupHint": "Enter a new name for this caisse.",
+  "save": "Save",
+  "manageMembers": "Manage members",
+  "removeMember": "Remove",
+  "removeMemberConfirm": "Remove {name} from this group?",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "memberRemoved": "Member removed",
+  "cannotRemoveCreator": "You cannot remove the group creator.",
+  "deleteGroup": "Delete group",
+  "deleteGroupConfirm": "Delete this group?",
+  "deleteGroupHint": "This permanently deletes the group, members, and all movements. This cannot be undone.",
+  "groupDeleted": "Group deleted",
+  "groupRenamed": "Group renamed",
+  "creator": "Creator",
+  "changeGroupPhoto": "Change group photo",
+  "groupPhotoUpdated": "Group photo updated",
+  "leaveGroup": "Leave group",
+  "leaveGroupHint": "You will leave this group, but your movements stay in the history.",
+  "leftGroup": "You left the group",
+  "profile": "Profile",
+  "editProfile": "Edit profile",
+  "changePhoto": "Change photo",
+  "profileUpdated": "Profile updated",
+  "incorrectCredentials": "Email or password is incorrect.",
+  "firebaseNotConfigured": "Firebase is not configured yet. Add your google-services.json.",
+  "signInFailed": "Sign-in failed. Please try again.",
+  "signUpFailed": "Sign-up failed. Please try again.",
+  "googleSignInCanceled": "Google sign-in was canceled.",
+  "googleSignInConfigError": "Google sign-in is not configured. Add this app's SHA-1 in Firebase Console (Project settings → Your apps), enable Google sign-in, then download a new google-services.json.",
+  "googleSignInFailed": "Google sign-in failed. Please try again.",
+  "emailAlreadyInUse": "An account already exists for this email.",
+  "weakPassword": "Choose a stronger password.",
+  "member": "Member",
+  "aMember": "A member",
+  "someoneJoined": "Someone joined",
+  "memberJoinedBody": "{name} joined {group}",
+  "@memberJoinedBody": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "group": { "type": "String" }
+    }
+  },
+  "joinAGroup": "Join a group",
+  "errorWithDetails": "Error: {error}",
+  "@errorWithDetails": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "enterValidAmountGtZero": "Enter a valid amount greater than zero.",
+  "couldNotLoadAudit": "Could not load audit: {error}",
+  "@couldNotLoadAudit": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "newMovementNotify": "New movement",
+  "depositNotifyTitle": "New deposit",
+  "expenseNotifyTitle": "New expense",
+  "movementUpdatedNotify": "Movement updated",
+  "movementDeletedNotify": "Movement deleted",
+  "movementRestoredNotify": "Movement restored",
+  "addedDeposit": "{name} added a deposit: {title}",
+  "@addedDeposit": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "addedExpense": "{name} added an expense: {title}",
+  "@addedExpense": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "addedDepositAmount": "{name} added a deposit of {amount}: {title}",
+  "@addedDepositAmount": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "addedExpenseAmount": "{name} added an expense of {amount}: {title}",
+  "@addedExpenseAmount": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "amount": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "updatedMovementBy": "{name} updated: {title}",
+  "@updatedMovementBy": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "deletedMovementBy": "{name} deleted: {title}",
+  "@deletedMovementBy": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "restoredMovementBy": "{name} restored: {title}",
+  "@restoredMovementBy": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "deletedMarker": "deleted",
+  "insufficientBalance": "Not enough balance. This would make the caisse negative.",
+  "dateLabel": "Date",
+  "timeLabel": "Time"
+}

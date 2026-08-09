@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "559211214178",
+    "project_id": "encaisse-3c7fb",
+    "storage_bucket": "encaisse-3c7fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559211214178:android:78c914cdbf1a1b763f283b",
+        "android_client_info": {
+          "package_name": "com.encaisse.encaisse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "559211214178-rjmgid992j5spfott9qklaitoanot21d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.encaisse.encaisse",
+            "certificate_hash": "23eaa2c78193221e2c94f755e16ad454e4d5735a"
+          }
+        },
+        {
+          "client_id": "559211214178-b4qj066trj4ide94s31j014l680ad6im.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDc3DcjdOEjSNiKp9w5oEJJzQVtxMql88o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "559211214178-b4qj066trj4ide94s31j014l680ad6im.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "559211214178-09l4spju2rcvns8762du5cua352fc1b2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.encaisse.encaisse"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

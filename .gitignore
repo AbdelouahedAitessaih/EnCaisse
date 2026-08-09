@@ -1,0 +1,80 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code (keep shared launch configs optional)
+.vscode/*
+
+# Flutter / Dart
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+.packages
+
+# Symbolication / obfuscation
+app.*.symbols
+app.*.map.json
+
+# Android build outputs
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle/
+/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# Android signing secrets (never commit)
+**/android/key.properties
+**/*.jks
+**/*.keystore
+!**/debug.keystore
+
+# iOS / macOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Env / local secrets
+.env
+.env.*
+!.env.example
+
+# Generated / local tooling
+*.freezed.dart
+*.g.dart
+# Keep if you commit generated l10n (Flutter gen-l10n often is committed)
+# lib/l10n/app_localizations*.dart
+
+# FVM
+.fvm/flutter_sdk
+
+# Misc OS
+Thumbs.db
+desktop.ini
