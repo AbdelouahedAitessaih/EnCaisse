@@ -130,7 +130,9 @@ class MovementDetailScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.accentLight,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.accent.withValues(alpha: 0.18)
+                    : AppColors.accentLight,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -413,10 +415,13 @@ class _ActionBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final (label, bg, fg) = switch (action) {
       AuditAction.create => (
           l10n.actionCreate,
-          AppColors.primaryLight,
+          isDark
+              ? AppColors.deposit.withValues(alpha: 0.18)
+              : AppColors.primaryLight,
           AppColors.primary
         ),
       AuditAction.update => (
@@ -426,7 +431,9 @@ class _ActionBadge extends StatelessWidget {
         ),
       AuditAction.delete => (
           l10n.actionDelete,
-          AppColors.accentLight,
+          isDark
+              ? AppColors.accent.withValues(alpha: 0.18)
+              : AppColors.accentLight,
           AppColors.accent
         ),
     };

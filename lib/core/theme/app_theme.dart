@@ -75,9 +75,11 @@ abstract final class AppTheme {
         onSecondary: Colors.white,
         surface: surface,
         onSurface: onSurface,
+        onSurfaceVariant: secondaryText,
         error: AppColors.error,
         onError: Colors.white,
         outline: border,
+        surfaceContainerHighest: surface,
       ),
       appBarTheme: AppBarTheme(
         elevation: 0,

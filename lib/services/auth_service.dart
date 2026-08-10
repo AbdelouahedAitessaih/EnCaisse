@@ -66,15 +66,23 @@ class AuthService {
 
   Future<UserProfile> signInWithGoogle() async {
     await _ensureGoogleInitialized();
+    // Clear any stale Credential Manager session so we only show the
+    // account picker once (retrying authenticate() after [16] doubles the UI).
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {}
     try {
       return await _completeGoogleSignIn();
     } on GoogleSignInException catch (e) {
-      // Credential Manager can stick on a broken reauth session ([16]).
       final detail = '${e.code} ${e.description ?? ''}';
       debugPrint('GoogleSignInException: $detail');
+      // Credential Manager maps many OAuth/SHA misconfigs to "canceled" + [16].
       if (detail.contains('reauth') || detail.contains('[16]')) {
-        await _googleSignIn.signOut();
-        return await _completeGoogleSignIn();
+        throw FirebaseAuthException(
+          code: 'google-sign-in-config',
+          message:
+              'Google Sign-In failed ([16] Account reauth failed). Add this machine\'s debug SHA-1 in Firebase Console (Project settings → Your Android app), then download a fresh google-services.json. Current google-services.json SHA does not match this build.',
+        );
       }
       rethrow;
     }

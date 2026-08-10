@@ -20,20 +20,29 @@ class MovementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDeposit = movement.type == MovementType.deposit;
     final color = isDeposit ? AppColors.deposit : AppColors.expense;
+    final iconBg = isDeposit
+        ? (isDark
+            ? AppColors.deposit.withValues(alpha: 0.18)
+            : AppColors.primaryLight)
+        : (isDark
+            ? AppColors.expense.withValues(alpha: 0.18)
+            : AppColors.accentLight);
     final locale = Localizations.localeOf(context).toString();
     final date = formatMovementDate(movement.createdAt, locale: locale);
     final time = formatMovementTime(movement.createdAt, locale: locale);
 
     final child = Material(
-      color: AppColors.surface,
+      color: scheme.surface,
       child: InkWell(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: AppColors.border)),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: scheme.outline)),
           ),
           child: Row(
             children: [
@@ -42,9 +51,7 @@ class MovementTile extends StatelessWidget {
                 height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isDeposit
-                      ? AppColors.primaryLight
-                      : AppColors.accentLight,
+                  color: iconBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(

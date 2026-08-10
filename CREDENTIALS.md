@@ -104,5 +104,10 @@ When you have the 6 IDs ready, paste them here in chat and they can be filled in
 
 ## Google Sign-In
 
-- Android: SHA-1 of your debug/release keystore must be added in Firebase Console → Project settings → Your apps.
+- Android: SHA-1 (and SHA-256) of each debug/release keystore must be added in Firebase Console → Project settings → Your Android app, then download a fresh `google-services.json` into the repo once.
+- Registered debug fingerprints (add any new PC’s SHA the same way; no need for a separate json per machine):
+  - SHA-1: `A7:EA:41:4E:DD:68:E0:97:1F:FB:FF:38:AF:B5:D6:6B:2F:81:CA:8A`
+  - SHA-256: `6F:8B:04:8B:95:71:A6:46:3E:E0:53:AD:91:12:39:28:C6:E3:55:3A:A6:D9:F5:56:5F:C2:C2:A7:1F:5D:31:AF`
+  - Other PC SHA-1: `23:EA:A2:C7:81:93:22:1E:2C:94:F7:55:E1:6A:D4:54:E4:D5:73:5A`
+- Missing or mismatched SHA usually surfaces as `[16] Account reauth failed` / fake “canceled” from Credential Manager.
 - iOS: URL scheme from `REVERSED_CLIENT_ID` in GoogleService-Info.plist must be in Xcode.

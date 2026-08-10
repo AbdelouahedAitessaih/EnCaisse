@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-import '../core/theme/app_colors.dart';
 import 'zellige_pattern.dart';
 
 /// Branded Lottie with CustomPainter fallback if asset fails.
@@ -100,7 +99,7 @@ class SuccessOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.background.withValues(alpha: 0.92),
+      color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.92),
       child: const Center(
         child: BrandedLottie(
           asset: 'assets/lottie/success.json',

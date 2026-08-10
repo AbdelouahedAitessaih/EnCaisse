@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "559211214178-tdq8e8h6m6nheuj2l47hnfrjaqvbrirk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.encaisse.encaisse",
+            "certificate_hash": "a7ea414edd68e0971ffbff38afb5d66b2f81ca8a"
+          }
+        },
+        {
           "client_id": "559211214178-b4qj066trj4ide94s31j014l680ad6im.apps.googleusercontent.com",
           "client_type": 3
         }

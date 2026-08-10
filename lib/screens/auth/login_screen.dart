@@ -73,17 +73,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (s.contains('REPLACE_WITH') || s.contains('placeholder')) {
       return l10n.firebaseNotConfigured;
     }
-    if (s.contains('GoogleSignInExceptionCode.canceled') ||
-        s.contains('sign_in_canceled')) {
-      return l10n.googleSignInCanceled;
-    }
     if (s.contains('missing-id-token') ||
         s.contains('clientConfigurationError') ||
+        s.contains('google-sign-in-config') ||
         s.contains('serverClientId') ||
         s.contains('SHA-1') ||
+        s.contains('Account reauth failed') ||
+        s.contains('[16]') ||
         s.contains('10:') ||
         s.contains('ApiException: 10')) {
       return l10n.googleSignInConfigError;
+    }
+    if (s.contains('GoogleSignInExceptionCode.canceled') ||
+        s.contains('sign_in_canceled')) {
+      return l10n.googleSignInCanceled;
     }
     if (s.contains('GoogleSignIn') || s.contains('google')) {
       return l10n.googleSignInFailed;

@@ -14,9 +14,10 @@ class EncaisseRefreshIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return RefreshIndicator(
       color: AppColors.primary,
-      backgroundColor: AppColors.surface,
+      backgroundColor: scheme.surface,
       displacement: 48,
       onRefresh: onRefresh,
       child: child,
