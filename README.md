@@ -107,6 +107,12 @@ Output:
 
 After Play App Signing is enabled, add the **Play App signing** SHA-1 in Firebase so Google Sign-In works for store installs.
 
+### Store listing & Console checklist
+
+Everything to finish Play Console setup (graphics, listing copy, privacy policy, Data safety answers, closed testing requirements) lives in:
+
+[`docs/play-store/CONSOLE_CHECKLIST.md`](docs/play-store/CONSOLE_CHECKLIST.md)
+
 ## Project layout
 
 ```
