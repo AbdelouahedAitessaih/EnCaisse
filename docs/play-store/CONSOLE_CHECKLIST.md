@@ -6,7 +6,26 @@ Work top → bottom.
 
 ---
 
-## A. Privacy policy URL (required)
+### Data safety — account creation / deletion
+
+**How users create accounts — check both:**
+- Username and password  
+- OAuth (Google Sign-In)
+
+Do **not** use only “Username and other authentication”.
+
+**Delete account URL** (paste exactly):
+
+```text
+https://encaisse-3c7fb.web.app/delete-account.html
+```
+
+Privacy policy URL:
+
+```text
+https://encaisse-3c7fb.web.app/privacy.html
+```
+
 
 Contact email: `aitsaihabdelouahed@gmail.com`
 

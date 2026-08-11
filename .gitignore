@@ -78,3 +78,7 @@ app.*.map.json
 # Misc OS
 Thumbs.db
 desktop.ini
+
+# Firebase local cache
+.firebase/
+
