@@ -8,15 +8,28 @@ Work top → bottom.
 
 ## A. Privacy policy URL (required)
 
-Public URL (after GitHub Pages is enabled on `/docs`):
+Contact email: `aitsaihabdelouahed@gmail.com`
 
-```text
-https://abdelouahedaitessaih.github.io/EnCaisse/play-store/privacy.html
+Your GitHub repo is **private**, so GitHub Pages is not publicly reachable unless you make the repo public (or use GitHub Pro). Prefer **Firebase Hosting** (same project as the app):
+
+```bash
+firebase login
+cd EnCaisse
+firebase deploy --only hosting --project encaisse-3c7fb
 ```
 
-Contact email in the policy: `aitsaihabdelouahed@gmail.com`
+Then use:
 
-Paste that URL in Play Console → **App content** → **Privacy policy**.
+```text
+https://encaisse-3c7fb.web.app/privacy.html
+```
+
+(or `https://encaisse-3c7fb.firebaseapp.com/privacy.html`)
+
+**Alternative — GitHub Pages:** make the repo **Public** temporarily → Settings → Pages → Branch `main` / folder `/docs` → URL  
+`https://abdelouahedaitessaih.github.io/EnCaisse/play-store/privacy.html`
+
+Paste the live URL in Play Console → **App content** → **Privacy policy**.
 
 ---
 

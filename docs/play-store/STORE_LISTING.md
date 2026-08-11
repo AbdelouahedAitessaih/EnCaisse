@@ -73,4 +73,4 @@ EnCaisse — la caisse partagée, simplement.
 - **App category:** Finance (or Tools if Finance is unavailable)
 - **Tags:** budget, expenses, shared money, groups
 - **Email:** aitsaihabdelouahed@gmail.com
-- **Privacy policy URL:** https://abdelouahedaitessaih.github.io/EnCaisse/play-store/privacy.html
+- **Privacy policy URL:** `https://encaisse-3c7fb.web.app/privacy.html` (after `firebase deploy --only hosting`)

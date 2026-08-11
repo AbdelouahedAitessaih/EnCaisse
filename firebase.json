@@ -6,6 +6,22 @@
   "storage": {
     "rules": "firebase/storage.rules"
   },
+  "hosting": {
+    "public": "docs/play-store",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/*.md",
+      "**/*.png"
+    ],
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/privacy.html"
+      }
+    ]
+  },
   "flutter": {
     "platforms": {
       "android": {
