@@ -45,12 +45,6 @@ app.*.map.json
 /android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 
-# Android signing secrets (never commit)
-**/android/key.properties
-**/*.jks
-**/*.keystore
-!**/debug.keystore
-
 # iOS / macOS
 **/ios/Pods/
 **/ios/.symlinks/
