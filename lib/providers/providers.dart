@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../services/ad_service.dart';
+import '../services/app_update_service.dart';
 import '../services/auth_service.dart';
 import '../services/group_service.dart';
 import '../services/movement_service.dart';
@@ -13,6 +14,9 @@ import '../services/review_service.dart';
 import '../services/storage_service.dart';
 
 final firebaseReadyProvider = Provider<bool>((ref) => false);
+
+final appUpdateServiceProvider =
+    Provider<AppUpdateService>((ref) => AppUpdateService());
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 

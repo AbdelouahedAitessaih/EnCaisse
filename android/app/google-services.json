@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "559211214178-4qibj9akcjln8kjpmpjspib8ukjoph4d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.encaisse.encaisse",
+            "certificate_hash": "81d87acb2bbf360e654d96b1a14fd84dd0eb19b6"
+          }
+        },
+        {
           "client_id": "559211214178-rjmgid992j5spfott9qklaitoanot21d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

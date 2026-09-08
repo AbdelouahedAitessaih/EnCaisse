@@ -1,3 +1,5 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,19 +15,22 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 class AppSettings {
   const AppSettings({
     required this.themeMode,
-    required this.locale,
+    this.locale,
   });
 
   final ThemeMode themeMode;
-  final Locale locale;
+
+  /// `null` = follow the phone language (not forced to English).
+  final Locale? locale;
 
   AppSettings copyWith({
     ThemeMode? themeMode,
     Locale? locale,
+    bool clearLocale = false,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
-      locale: locale ?? this.locale,
+      locale: clearLocale ? null : (locale ?? this.locale),
     );
   }
 }
@@ -52,6 +57,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
     state = state.copyWith(locale: locale);
   }
 
+  Future<void> setFollowSystemLocale() async {
+    await _prefs.remove(_kLocale);
+    state = state.copyWith(clearLocale: true);
+  }
+
   static ThemeMode _themeFromStorage(String? raw) {
     switch (raw) {
       case 'light':
@@ -63,8 +73,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
     }
   }
 
-  static Locale _localeFromStorage(String? raw) {
+  /// Only returns a locale when the user explicitly chose one.
+  static Locale? _localeFromStorage(String? raw) {
     switch (raw) {
+      case 'en':
+        return const Locale('en');
       case 'fr':
         return const Locale('fr');
       case 'ar':
@@ -82,7 +95,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       case 'ja':
         return const Locale('ja');
       default:
-        return const Locale('en');
+        return null;
     }
   }
 }
@@ -101,3 +114,17 @@ const supportedLocales = <Locale>[
   Locale('ru'),
   Locale('ja'),
 ];
+
+/// Resolves the phone language to the closest supported app locale.
+Locale resolveDeviceLocale([List<Locale>? deviceLocales]) {
+  final locales =
+      deviceLocales ?? PlatformDispatcher.instance.locales;
+  for (final device in locales) {
+    for (final supported in supportedLocales) {
+      if (supported.languageCode == device.languageCode) {
+        return supported;
+      }
+    }
+  }
+  return const Locale('en');
+}

@@ -78,6 +78,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get passwordMin => 'पासवर्ड कम से कम 6 अक्षर का होना चाहिए';
 
   @override
+  String get rememberMe => 'मुझे याद रखें';
+
+  @override
+  String get showPassword => 'पासवर्ड दिखाएं';
+
+  @override
+  String get hidePassword => 'पासवर्ड छिपाएं';
+
+  @override
   String get enterName => 'अपना नाम दर्ज करें';
 
   @override
@@ -111,6 +120,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get language => 'भाषा';
+
+  @override
+  String get languageSystem => 'फ़ोन की भाषा';
 
   @override
   String get themeMode => 'थीम';
@@ -169,6 +181,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get currency => 'मुद्रा';
+
+  @override
+  String get selectCurrency => 'मुद्रा चुनें';
 
   @override
   String get startingAmountOptional => 'प्रारंभिक राशि (वैकल्पिक)';
@@ -552,6 +567,26 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get googleSignInFailed => 'Google साइन-इन विफल। कृपया फिर कोशिश करें।';
+
+  @override
+  String get forceUpdateTitle => 'अपडेट आवश्यक';
+
+  @override
+  String get forceUpdateBody =>
+      'जारी रखने के लिए EnCaisse का नया संस्करण आवश्यक है। Google Play से अपडेट करें।';
+
+  @override
+  String get updateAvailableTitle => 'अपडेट उपलब्ध';
+
+  @override
+  String get updateAvailableBody =>
+      'EnCaisse का नया संस्करण उपलब्ध है जिसमें महत्वपूर्ण सुधार हैं।';
+
+  @override
+  String get updateNow => 'अभी अपडेट करें';
+
+  @override
+  String get updateLater => 'बाद में';
 
   @override
   String get emailAlreadyInUse => 'इस ईमेल के लिए खाता पहले से मौजूद है।';

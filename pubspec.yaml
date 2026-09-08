@@ -1,7 +1,7 @@
 name: encaisse
 description: "Encaisse — shared group cash management. Encaisse, ensemble."
 publish_to: 'none'
-version: 1.0.5+6
+version: 1.0.10+11
 
 environment:
   sdk: ^3.10.0
@@ -19,6 +19,8 @@ dependencies:
   go_router: ^17.4.0
   intl: 0.20.2
   image_picker: ^1.2.3
+  image_picker_android: ^0.8.13+17
+  image_picker_platform_interface: ^2.11.0
   google_mobile_ads: ^9.0.0
   lottie: ^3.3.3
   google_sign_in: ^7.2.0
@@ -29,6 +31,9 @@ dependencies:
   shared_preferences: ^2.5.3
   timezone: ^0.10.1
   firebase_storage: ^13.4.6
+  package_info_plus: ^10.2.1
+  in_app_update: ^4.2.5
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

@@ -187,6 +187,9 @@ class Movement {
   /// Starting caisse balance — only the group creator may edit or delete.
   final bool isStartingBalance;
 
+  bool get hasReceipt =>
+      receiptUrl != null && receiptUrl!.trim().isNotEmpty;
+
   double get signedAmount =>
       type == MovementType.expense ? -amount.abs() : amount.abs();
 
@@ -208,7 +211,7 @@ class Movement {
       createdAt: _toDate(data['createdAt']) ?? DateTime.now(),
       updatedAt: _toDate(data['updatedAt']) ?? DateTime.now(),
       updatedBy: data['updatedBy'] as String? ?? '',
-      receiptUrl: data['receiptUrl'] as String?,
+      receiptUrl: _nonEmpty(data['receiptUrl'] as String?),
       deleted: data['deleted'] as bool? ?? false,
       deletedAt: _toDate(data['deletedAt']),
       isStartingBalance: data['isStartingBalance'] as bool? ?? false,
@@ -352,4 +355,10 @@ DateTime? _toDate(dynamic value) {
   if (value is Timestamp) return value.toDate();
   if (value is DateTime) return value;
   return null;
+}
+
+String? _nonEmpty(String? value) {
+  final trimmed = value?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return trimmed;
 }

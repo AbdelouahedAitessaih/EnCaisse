@@ -54,6 +54,12 @@ service cloud.firestore {
       }
     }
 
+    // Public app update policy (min/force version). Clients read only.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /groups/{groupId} {
       allow get: if signedIn();
       allow list: if signedIn();

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/image_picker_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -345,8 +345,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     Group group,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+    final file = await pickGalleryImage(
       imageQuality: 80,
       maxWidth: 1280,
     );
@@ -1065,6 +1064,8 @@ class _MovementFilters extends StatelessWidget {
             children: [
               PopupMenuButton<String>(
                 // PopupMenuItem value:null never fires onSelected — use sentinel.
+                constraints: const BoxConstraints(maxHeight: 280),
+                position: PopupMenuPosition.under,
                 onSelected: (value) =>
                     onCategory(value == _filterAll ? null : value),
                 itemBuilder: (context) => [
@@ -1084,6 +1085,8 @@ class _MovementFilters extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               PopupMenuButton<String>(
+                constraints: const BoxConstraints(maxHeight: 280),
+                position: PopupMenuPosition.under,
                 onSelected: (value) =>
                     onUser(value == _filterAll ? null : value),
                 itemBuilder: (context) => [

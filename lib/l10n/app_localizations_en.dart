@@ -78,6 +78,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordMin => 'Password must be at least 6 characters';
 
   @override
+  String get rememberMe => 'Remember me';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
   String get enterName => 'Enter your name';
 
   @override
@@ -112,6 +121,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get language => 'Language';
+
+  @override
+  String get languageSystem => 'Phone language';
 
   @override
   String get themeMode => 'Theme';
@@ -170,6 +182,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currency => 'Currency';
+
+  @override
+  String get selectCurrency => 'Select a currency';
 
   @override
   String get startingAmountOptional => 'Starting amount (optional)';
@@ -549,10 +564,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleSignInConfigError =>
-      'Google sign-in is not configured. Add this app\'s SHA-1 in Firebase Console (Project settings → Your apps), enable Google sign-in, then download a new google-services.json.';
+      'Google sign-in is temporarily unavailable. Please create an account with email, or try Google again later.';
 
   @override
   String get googleSignInFailed => 'Google sign-in failed. Please try again.';
+
+  @override
+  String get forceUpdateTitle => 'Update required';
+
+  @override
+  String get forceUpdateBody =>
+      'A new version of EnCaisse is required to continue. Please update from Google Play.';
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String get updateAvailableBody =>
+      'A newer version of EnCaisse is available with important improvements.';
+
+  @override
+  String get updateNow => 'Update now';
+
+  @override
+  String get updateLater => 'Later';
 
   @override
   String get emailAlreadyInUse => 'An account already exists for this email.';

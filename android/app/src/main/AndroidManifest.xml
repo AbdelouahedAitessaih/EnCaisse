@@ -4,10 +4,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
-    <!-- Google Play: use system photo picker only (no broad gallery access). -->
+    <!-- Google Play: system photo picker only — no broad gallery access. -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" tools:node="remove" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.CAMERA" tools:node="remove" />
 
     <application
         android:label="EnCaisse"
@@ -38,11 +41,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!--
-          ⚠️ AdMob APP ID — currently Google SAMPLE / TEST ID.
-          Replace with your real AdMob app ID before release:
-          https://admob.google.com → Apps → App settings
-        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="encaisse_events" />
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-7691333173853968~2642191347"/>

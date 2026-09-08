@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../providers/settings_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +21,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   bool _loading = false;
   bool _obscure = true;
+  bool _rememberMe = true;
   String? _error;
+
+  static const _rememberMeKey = 'auth_remember_me';
+  static const _rememberedEmailKey = 'auth_remembered_email';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRemembered());
+  }
+
+  void _loadRemembered() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final remember = prefs.getBool(_rememberMeKey) ?? true;
+    final email = prefs.getString(_rememberedEmailKey) ?? '';
+    setState(() {
+      _rememberMe = remember;
+      if (remember && email.isNotEmpty) {
+        _email.text = email;
+      }
+    });
+  }
+
+  Future<void> _persistRemembered(String email) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(_rememberMeKey, _rememberMe);
+    if (_rememberMe) {
+      await prefs.setString(_rememberedEmailKey, email.trim());
+    } else {
+      await prefs.remove(_rememberedEmailKey);
+    }
+  }
 
   @override
   void dispose() {
@@ -39,6 +73,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _email.text,
             password: _password.text,
           );
+      await _persistRemembered(_email.text);
+      TextInput.finishAutofillContext(shouldSave: true);
       if (mounted) context.go('/home');
     } catch (e) {
       setState(() => _error = _friendlyError(e));
@@ -103,99 +139,114 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.welcomeBack,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.signInSubtitle,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  decoration: InputDecoration(labelText: l10n.email),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.enterEmail;
-                    if (!v.contains('@')) return l10n.validEmail;
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _password,
-                  obscureText: _obscure,
-                  autofillHints: const [AutofillHints.password],
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscure
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.length < 6) {
-                      return l10n.passwordMin;
-                    }
-                    return null;
-                  },
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 16),
+          child: AutofillGroup(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   Text(
-                    _error!,
-                    style: const TextStyle(color: AppColors.error),
+                    l10n.welcomeBack,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.signInSubtitle,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username, AutofillHints.email],
+                    decoration: InputDecoration(labelText: l10n.email),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return l10n.enterEmail;
+                      if (!v.contains('@')) return l10n.validEmail;
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _password,
+                    obscureText: _obscure,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _loading ? null : _submit(),
+                    autofillHints: const [AutofillHints.password],
+                    decoration: InputDecoration(
+                      labelText: l10n.password,
+                      suffixIcon: IconButton(
+                        tooltip: _obscure ? l10n.showPassword : l10n.hidePassword,
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.length < 6) {
+                        return l10n.passwordMin;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    value: _rememberMe,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(l10n.rememberMe),
+                    onChanged: (v) => setState(() => _rememberMe = v ?? true),
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loading ? null : _submit,
+                    child: _loading
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(l10n.signIn),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(l10n.or),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _loading ? null : _google,
+                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    label: Text(l10n.continueWithGoogle),
+                  ),
+                  const SizedBox(height: 24),
+                  TextButton(
+                    onPressed: () => context.push('/signup'),
+                    child: Text(l10n.needAccount),
                   ),
                 ],
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(l10n.signIn),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(l10n.or),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _loading ? null : _google,
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: Text(l10n.continueWithGoogle),
-                ),
-                const SizedBox(height: 24),
-                TextButton(
-                  onPressed: () => context.push('/signup'),
-                  child: Text(l10n.needAccount),
-                ),
-              ],
+              ),
             ),
           ),
         ),

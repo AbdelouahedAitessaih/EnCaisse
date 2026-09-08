@@ -8,12 +8,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-/// FCM + local notifications for movement alerts, joins, and weekly digest.
+/// Push + local notifications for movement alerts, joins, and weekly digest.
 ///
-/// Real-time delivery without Cloud Functions:
-/// 1. Writers create docs under `users/{uid}/notifications`.
-/// 2. Each device listens to that collection and shows a local notification.
-/// Live caisse balances/lists still come from Firestore `.snapshots()`.
+/// Delivery path:
+/// 1. Writers create docs under `users/{uid}/notifications` (inbox + audit).
+/// 2. Cloud Function `sendPushOnNotificationCreated` sends FCM to the user's
+///    token(s) so alerts appear even when the app is killed / backgrounded.
+/// 3. Foreground: [FirebaseMessaging.onMessage] shows a local notification.
 class NotificationService {
   NotificationService({
     FirebaseMessaging? messaging,
@@ -27,27 +28,29 @@ class NotificationService {
   final FirebaseFirestore _db;
   final FlutterLocalNotificationsPlugin _local;
 
+  static const eventChannelId = 'encaisse_events';
   static const _weeklyChannelId = 'encaisse_weekly';
-  static const _eventChannelId = 'encaisse_events';
 
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _inboxSub;
-  DateTime? _listenStartedAt;
-  final Set<String> _seenNotifIds = {};
+  bool _initialized = false;
+  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _foregroundSub;
 
   Future<void> initialize({required String? uid}) async {
     tz.initializeTimeZones();
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-    await _local.initialize(
-      const InitializationSettings(android: androidInit, iOS: iosInit),
-    );
-
-    await _createChannels();
+    if (!_initialized) {
+      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosInit = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+      await _local.initialize(
+        const InitializationSettings(android: androidInit, iOS: iosInit),
+      );
+      await _createChannels();
+      _initialized = true;
+    }
 
     final settings = await _messaging.requestPermission(
       alert: true,
@@ -59,61 +62,36 @@ class NotificationService {
       return;
     }
 
-    if (uid != null) {
-      await _saveToken(uid);
-      _messaging.onTokenRefresh.listen((token) => _persistToken(uid, token));
-      await listenForUserNotifications(uid);
+    // Android 13+: also request via local notifications plugin.
+    if (!kIsWeb && Platform.isAndroid) {
+      await _local
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
     }
 
-    FirebaseMessaging.onMessage.listen(_showForegroundMessage);
+    await _foregroundSub?.cancel();
+    _foregroundSub =
+        FirebaseMessaging.onMessage.listen(_showForegroundMessage);
+
+    if (uid != null) {
+      await _saveToken(uid);
+      await _tokenRefreshSub?.cancel();
+      _tokenRefreshSub =
+          _messaging.onTokenRefresh.listen((token) => _persistToken(uid, token));
+    }
+
     await scheduleWeeklyDigest();
   }
 
-  /// Start (or restart) the real-time inbox listener for [uid].
+  /// Kept for API compatibility — inbox delivery is via FCM (Cloud Function).
   Future<void> listenForUserNotifications(String uid) async {
-    await _inboxSub?.cancel();
-    _seenNotifIds.clear();
-    _listenStartedAt = DateTime.now().toUtc();
-
-    _inboxSub = _db
-        .collection('users')
-        .doc(uid)
-        .collection('notifications')
-        .orderBy('createdAt', descending: true)
-        .limit(25)
-        .snapshots()
-        .listen((snap) async {
-      for (final change in snap.docChanges) {
-        if (change.type != DocumentChangeType.added) continue;
-        final doc = change.doc;
-        if (_seenNotifIds.contains(doc.id)) continue;
-
-        final data = doc.data();
-        if (data == null) continue;
-
-        final createdAt = (data['createdAt'] as Timestamp?)?.toDate().toUtc();
-        // Skip backlog from before this session (first snapshot).
-        if (createdAt == null ||
-            _listenStartedAt == null ||
-            createdAt.isBefore(
-              _listenStartedAt!.subtract(const Duration(seconds: 2)),
-            )) {
-          _seenNotifIds.add(doc.id);
-          continue;
-        }
-
-        _seenNotifIds.add(doc.id);
-        final title = data['title'] as String? ?? 'EnCaisse';
-        final body = data['body'] as String? ?? '';
-        await _showLocalEvent(title: title, body: body, id: doc.id.hashCode);
-      }
-    });
+    await _saveToken(uid);
   }
 
   Future<void> stopListening() async {
-    await _inboxSub?.cancel();
-    _inboxSub = null;
-    _seenNotifIds.clear();
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
   }
 
   Future<void> _createChannels() async {
@@ -122,7 +100,7 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>();
     await android?.createNotificationChannel(
       const AndroidNotificationChannel(
-        _eventChannelId,
+        eventChannelId,
         'Caisse activity',
         description: 'New movements and member joins',
         importance: Importance.high,
@@ -148,19 +126,28 @@ class NotificationService {
   Future<void> _persistToken(String uid, String token) async {
     final ref = _db.collection('users').doc(uid);
     final snap = await ref.get();
-    // Do not create a stub user doc — that races profile creation and
-    // leaves displayName/email empty.
+    // Do not create a stub user doc — that races profile creation.
     if (!snap.exists) return;
-    await ref.set({'fcmToken': token}, SetOptions(merge: true));
+    await ref.set({
+      'fcmToken': token,
+      'fcmTokens': FieldValue.arrayUnion([token]),
+      'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> _showForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
-    if (notification == null) return;
+    final title = notification?.title ??
+        message.data['title'] as String? ??
+        'EnCaisse';
+    final body =
+        notification?.body ?? message.data['body'] as String? ?? '';
+    if (body.isEmpty && notification == null) return;
     await _showLocalEvent(
-      title: notification.title ?? 'EnCaisse',
-      body: notification.body ?? '',
-      id: notification.hashCode,
+      title: title,
+      body: body,
+      id: message.messageId?.hashCode ??
+          Object.hash(title, body, DateTime.now().millisecondsSinceEpoch),
     );
   }
 
@@ -175,8 +162,9 @@ class NotificationService {
       body,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          _eventChannelId,
+          eventChannelId,
           'Caisse activity',
+          channelDescription: 'New movements and member joins',
           importance: Importance.high,
           priority: Priority.high,
         ),
@@ -212,7 +200,7 @@ class NotificationService {
   }
 
   /// Fan-out to every non-muted member except [actorUid].
-  /// Recipients get a real-time local notification via [listenForUserNotifications].
+  /// Docs in `users/{uid}/notifications` trigger Cloud Function → FCM push.
   Future<void> notifyGroupEvent({
     required String groupId,
     required String title,
@@ -264,5 +252,6 @@ class NotificationService {
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // System tray handles display when a remote FCM message arrives.
+  // Notification payloads are shown by the OS when the app is backgrounded
+  // or killed. Data-only messages can be handled here if needed later.
 }

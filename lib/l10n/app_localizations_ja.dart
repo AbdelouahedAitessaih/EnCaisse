@@ -78,6 +78,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get passwordMin => 'パスワードは6文字以上にしてください';
 
   @override
+  String get rememberMe => 'ログイン情報を記憶';
+
+  @override
+  String get showPassword => 'パスワードを表示';
+
+  @override
+  String get hidePassword => 'パスワードを隠す';
+
+  @override
   String get enterName => '名前を入力';
 
   @override
@@ -111,6 +120,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get language => '言語';
+
+  @override
+  String get languageSystem => '端末の言語';
 
   @override
   String get themeMode => 'テーマ';
@@ -168,6 +180,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get currency => '通貨';
+
+  @override
+  String get selectCurrency => '通貨を選択';
 
   @override
   String get startingAmountOptional => '開始金額（任意）';
@@ -536,6 +551,25 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get googleSignInFailed => 'Googleログインに失敗しました。もう一度お試しください。';
+
+  @override
+  String get forceUpdateTitle => 'アップデートが必要です';
+
+  @override
+  String get forceUpdateBody =>
+      '続行するには新しいバージョンの EnCaisse が必要です。Google Play から更新してください。';
+
+  @override
+  String get updateAvailableTitle => 'アップデートがあります';
+
+  @override
+  String get updateAvailableBody => '重要な改善を含む新しいバージョンの EnCaisse があります。';
+
+  @override
+  String get updateNow => '今すぐ更新';
+
+  @override
+  String get updateLater => '後で';
 
   @override
   String get emailAlreadyInUse => 'このメールのアカウントは既に存在します。';

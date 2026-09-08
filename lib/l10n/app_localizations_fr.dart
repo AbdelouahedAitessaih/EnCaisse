@@ -80,6 +80,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le mot de passe doit contenir au moins 6 caractères';
 
   @override
+  String get rememberMe => 'Se souvenir de moi';
+
+  @override
+  String get showPassword => 'Afficher le mot de passe';
+
+  @override
+  String get hidePassword => 'Masquer le mot de passe';
+
+  @override
   String get enterName => 'Entrez votre nom';
 
   @override
@@ -114,6 +123,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get language => 'Langue';
+
+  @override
+  String get languageSystem => 'Langue du téléphone';
 
   @override
   String get themeMode => 'Thème';
@@ -172,6 +184,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get currency => 'Devise';
+
+  @override
+  String get selectCurrency => 'Choisissez une devise';
 
   @override
   String get startingAmountOptional => 'Montant de départ (optionnel)';
@@ -557,10 +572,30 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get googleSignInConfigError =>
-      'Google Sign-In n\'est pas configuré. Ajoutez le SHA-1 de l\'app dans Firebase (Paramètres du projet → Vos apps), activez Google, puis téléchargez un nouveau google-services.json.';
+      'La connexion Google est temporairement indisponible. Créez un compte avec e-mail, ou réessayez Google plus tard.';
 
   @override
   String get googleSignInFailed => 'Échec de la connexion Google. Réessayez.';
+
+  @override
+  String get forceUpdateTitle => 'Mise à jour obligatoire';
+
+  @override
+  String get forceUpdateBody =>
+      'Une nouvelle version d’EnCaisse est requise pour continuer. Merci de mettre à jour depuis Google Play.';
+
+  @override
+  String get updateAvailableTitle => 'Mise à jour disponible';
+
+  @override
+  String get updateAvailableBody =>
+      'Une nouvelle version d’EnCaisse est disponible avec des améliorations importantes.';
+
+  @override
+  String get updateNow => 'Mettre à jour';
+
+  @override
+  String get updateLater => 'Plus tard';
 
   @override
   String get emailAlreadyInUse => 'Un compte existe déjà pour cet e-mail.';

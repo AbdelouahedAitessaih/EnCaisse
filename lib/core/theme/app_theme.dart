@@ -224,6 +224,25 @@ abstract final class AppTheme {
         iconColor: onSurface,
         textColor: onSurface,
       ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(surface),
+          maximumSize: const WidgetStatePropertyAll(Size(double.infinity, 280)),
+          visualDensity: VisualDensity.compact,
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+          ),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: surface,
+        position: PopupMenuPosition.under,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
+      ),
       textTheme: TextTheme(
         displayLarge: TextStyle(
           fontSize: 40,

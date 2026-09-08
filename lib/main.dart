@@ -6,6 +6,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
+
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
@@ -13,10 +16,20 @@ import 'l10n/app_localizations.dart';
 import 'providers/providers.dart';
 import 'providers/settings_provider.dart';
 import 'router/app_router.dart';
+import 'services/device_region.dart';
 import 'services/notification_service.dart';
+import 'widgets/force_update_gate.dart';
+
+void _enableAndroidPhotoPicker() {
+  final impl = ImagePickerPlatform.instance;
+  if (impl is ImagePickerAndroid) {
+    impl.useAndroidPhotoPicker = true;
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _enableAndroidPhotoPicker();
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -58,6 +71,7 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await DeviceRegion.preload();
       if (!ref.read(firebaseReadyProvider)) return;
       if (!kIsWeb) {
         await ref.read(adServiceProvider).initialize();
@@ -96,6 +110,12 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp> {
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
       locale: settings.locale,
+      localeListResolutionCallback: (deviceLocales, supported) {
+        if (settings.locale != null) {
+          return settings.locale;
+        }
+        return resolveDeviceLocale(deviceLocales);
+      },
       supportedLocales: supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -104,6 +124,11 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
+      builder: (context, child) {
+        return ForceUpdateGate(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

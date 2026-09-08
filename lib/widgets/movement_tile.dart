@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/utils/formatters.dart';
+import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 
 class MovementTile extends StatelessWidget {
@@ -88,6 +89,29 @@ class MovementTile extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                     ),
+                    if (movement.hasReceipt) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.attach_file,
+                            size: 14,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            AppLocalizations.of(context).receipt,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -80,8 +80,7 @@ class AuthService {
       if (detail.contains('reauth') || detail.contains('[16]')) {
         throw FirebaseAuthException(
           code: 'google-sign-in-config',
-          message:
-              'Google Sign-In failed ([16] Account reauth failed). Add this machine\'s debug SHA-1 in Firebase Console (Project settings → Your Android app), then download a fresh google-services.json. Current google-services.json SHA does not match this build.',
+          message: 'Google Sign-In configuration error ([16]).',
         );
       }
       rethrow;
@@ -96,8 +95,7 @@ class AuthService {
     if (idToken == null) {
       throw FirebaseAuthException(
         code: 'missing-id-token',
-        message:
-            'Google Sign-In did not return an ID token. Add the app SHA-1 in Firebase and download a fresh google-services.json.',
+        message: 'Google Sign-In missing ID token.',
       );
     }
     final credential = GoogleAuthProvider.credential(idToken: idToken);

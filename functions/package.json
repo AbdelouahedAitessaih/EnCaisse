@@ -1,0 +1,13 @@
+{
+  "name": "encaisse-functions",
+  "description": "EnCaisse Cloud Functions — push FCM when inbox notifications are created",
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.3.0"
+  },
+  "private": true
+}

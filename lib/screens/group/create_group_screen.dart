@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/currencies.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../services/device_region.dart';
+import '../../widgets/app_select_field.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
   const CreateGroupScreen({super.key});
@@ -19,9 +22,23 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _startingAmount = TextEditingController();
-  String _currency = 'MAD';
+  String? _currency;
   bool _loading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveCurrencyFromCountry();
+  }
+
+  Future<void> _resolveCurrencyFromCountry() async {
+    final country = await DeviceRegion.countryCode();
+    if (!mounted) return;
+    setState(() {
+      _currency = AppCurrencies.codeForCountry(country);
+    });
+  }
 
   @override
   void dispose() {
@@ -32,6 +49,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 
   Future<void> _create() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_currency == null) return;
     final user = ref.read(authStateProvider).value;
     final profile = ref.read(currentUserProfileProvider).value;
     if (user == null) return;
@@ -58,7 +76,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                 user.displayName ??
                 AppLocalizations.of(context).member,
             photoUrl: profile?.photoUrl ?? user.photoURL,
-            currency: _currency,
+            currency: _currency!,
             startingAmount: startingAmount,
           );
 
@@ -87,6 +105,10 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final localeTag = locale.toLanguageTag();
+    final currencyCodes = AppCurrencies.codesPreferredFirst(_currency);
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.createAGroup)),
       body: SafeArea(
@@ -122,17 +144,22 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _currency,
-                  decoration: InputDecoration(labelText: l10n.currency),
-                  items: const [
-                    DropdownMenuItem(value: 'MAD', child: Text('MAD')),
-                    DropdownMenuItem(value: 'EUR', child: Text('EUR')),
-                    DropdownMenuItem(value: 'USD', child: Text('USD')),
-                    DropdownMenuItem(value: 'GBP', child: Text('GBP')),
+                AppSelectField<String>(
+                  key: ValueKey(_currency),
+                  label: l10n.currency,
+                  hint: l10n.selectCurrency,
+                  value: _currency,
+                  options: [
+                    for (final code in currencyCodes)
+                      AppSelectOption(
+                        value: code,
+                        label: AppCurrencies.label(code, localeTag),
+                      ),
                   ],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _currency = v);
+                  onChanged: (v) => setState(() => _currency = v),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return l10n.selectCurrency;
+                    return null;
                   },
                 ),
                 const SizedBox(height: 16),

@@ -10,6 +10,7 @@ import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/movement_service.dart';
 import '../../widgets/compact_dialog.dart';
+import '../../widgets/receipt_image.dart';
 
 class MovementDetailScreen extends ConsumerWidget {
   const MovementDetailScreen({
@@ -123,8 +124,12 @@ class MovementDetailScreen extends ConsumerWidget {
               locale: Localizations.localeOf(context).toString(),
             ),
           ),
-          if (movement.receiptUrl != null)
-            _InfoRow(label: l10n.receipt, value: l10n.attached),
+          if (movement.hasReceipt) ...[
+            const SizedBox(height: 20),
+            Text(l10n.receipt, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            ReceiptImage(url: movement.receiptUrl!),
+          ],
           if (movement.deleted) ...[
             const SizedBox(height: 12),
             Container(

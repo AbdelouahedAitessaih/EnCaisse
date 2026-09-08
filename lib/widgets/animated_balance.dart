@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../core/theme/app_colors.dart';
+import '../core/utils/formatters.dart';
 
 /// Animated count-up / count-down for balance changes.
 class AnimatedBalance extends StatelessWidget {
@@ -20,10 +20,7 @@ class AnimatedBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(
-      symbol: '',
-      decimalDigits: 2,
-    );
+    final locale = Localizations.localeOf(context).toLanguageTag();
     final baseStyle = style ??
         Theme.of(context).textTheme.displayLarge?.copyWith(
               color: value >= 0 ? AppColors.primary : AppColors.accent,
@@ -34,9 +31,8 @@ class AnimatedBalance extends StatelessWidget {
       duration: duration,
       curve: Curves.easeOutCubic,
       builder: (context, animated, _) {
-        final prefix = animated >= 0 ? '' : '-';
         return Text(
-          '$prefix${formatter.format(animated.abs())} $currency',
+          formatMoney(animated, currency: currency, locale: locale),
           style: baseStyle,
         );
       },

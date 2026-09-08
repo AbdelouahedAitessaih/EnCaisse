@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/image_picker_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/movement_service.dart';
+import '../../widgets/app_select_field.dart';
 import '../../widgets/branded_lottie.dart';
+import '../../widgets/receipt_image.dart';
 
 class MovementFormScreen extends ConsumerStatefulWidget {
   const MovementFormScreen({
@@ -61,9 +63,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   }
 
   Future<void> _pickReceipt() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: ImageSource.gallery,
+    final file = await pickGalleryImage(
       imageQuality: 75,
       maxWidth: 1600,
     );
@@ -317,28 +317,28 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue:
-                            AppConstants.categories.contains(_category)
-                                ? _category
-                                : AppConstants.categories.last,
-                        decoration: InputDecoration(labelText: l10n.category),
-                        items: AppConstants.categories
-                            .map(
-                              (c) =>
-                                  DropdownMenuItem(value: c, child: Text(c)),
-                            )
-                            .toList(),
-                        onChanged: (v) {
-                          if (v != null) setState(() => _category = v);
-                        },
+                      AppSelectField<String>(
+                        label: l10n.category,
+                        value: AppConstants.categories.contains(_category)
+                            ? _category
+                            : AppConstants.categories.last,
+                        options: [
+                          for (final c in AppConstants.categories)
+                            AppSelectOption(value: c, label: c),
+                        ],
+                        onChanged: (v) => setState(() => _category = v),
                       ),
                       const SizedBox(height: 16),
+                      if (_receiptPath != null &&
+                          _receiptPath!.trim().isNotEmpty) ...[
+                        ReceiptImage(url: _receiptPath!, height: 160),
+                        const SizedBox(height: 12),
+                      ],
                       OutlinedButton.icon(
                         onPressed: _pickReceipt,
                         icon: const Icon(Icons.photo_outlined),
                         label: Text(
-                          _receiptPath == null
+                          _receiptPath == null || _receiptPath!.trim().isEmpty
                               ? l10n.addReceipt
                               : l10n.receiptSelected,
                         ),

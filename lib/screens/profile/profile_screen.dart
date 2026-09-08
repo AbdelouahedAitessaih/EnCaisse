@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/image_picker_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 
@@ -46,8 +46,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+    final file = await pickGalleryImage(
       imageQuality: 80,
       maxWidth: 1024,
     );

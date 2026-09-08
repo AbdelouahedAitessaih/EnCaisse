@@ -78,6 +78,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get passwordMin => '密码至少需要 6 个字符';
 
   @override
+  String get rememberMe => '记住我';
+
+  @override
+  String get showPassword => '显示密码';
+
+  @override
+  String get hidePassword => '隐藏密码';
+
+  @override
   String get enterName => '请输入您的姓名';
 
   @override
@@ -111,6 +120,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get language => '语言';
+
+  @override
+  String get languageSystem => '手机语言';
 
   @override
   String get themeMode => '主题';
@@ -168,6 +180,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get currency => '货币';
+
+  @override
+  String get selectCurrency => '请选择货币';
 
   @override
   String get startingAmountOptional => '起始金额（可选）';
@@ -535,6 +550,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get googleSignInFailed => 'Google 登录失败，请重试。';
+
+  @override
+  String get forceUpdateTitle => '必须更新';
+
+  @override
+  String get forceUpdateBody => '需要更新到新版本才能继续使用 EnCaisse。请从 Google Play 更新。';
+
+  @override
+  String get updateAvailableTitle => '有可用更新';
+
+  @override
+  String get updateAvailableBody => 'EnCaisse 有新版本，包含重要改进。';
+
+  @override
+  String get updateNow => '立即更新';
+
+  @override
+  String get updateLater => '稍后';
 
   @override
   String get emailAlreadyInUse => '该电子邮箱已有账户。';

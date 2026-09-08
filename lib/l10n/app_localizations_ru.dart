@@ -79,6 +79,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get passwordMin => 'Пароль должен содержать не менее 6 символов';
 
   @override
+  String get rememberMe => 'Запомнить меня';
+
+  @override
+  String get showPassword => 'Показать пароль';
+
+  @override
+  String get hidePassword => 'Скрыть пароль';
+
+  @override
   String get enterName => 'Введите ваше имя';
 
   @override
@@ -113,6 +122,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get language => 'Язык';
+
+  @override
+  String get languageSystem => 'Язык телефона';
 
   @override
   String get themeMode => 'Тема';
@@ -171,6 +183,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get currency => 'Валюта';
+
+  @override
+  String get selectCurrency => 'Выберите валюту';
 
   @override
   String get startingAmountOptional => 'Начальная сумма (необязательно)';
@@ -560,6 +575,26 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get googleSignInFailed =>
       'Не удалось войти через Google. Попробуйте снова.';
+
+  @override
+  String get forceUpdateTitle => 'Требуется обновление';
+
+  @override
+  String get forceUpdateBody =>
+      'Для продолжения нужна новая версия EnCaisse. Обновите приложение в Google Play.';
+
+  @override
+  String get updateAvailableTitle => 'Доступно обновление';
+
+  @override
+  String get updateAvailableBody =>
+      'Доступна новая версия EnCaisse с важными улучшениями.';
+
+  @override
+  String get updateNow => 'Обновить';
+
+  @override
+  String get updateLater => 'Позже';
 
   @override
   String get emailAlreadyInUse => 'Аккаунт с этой эл. почтой уже существует.';

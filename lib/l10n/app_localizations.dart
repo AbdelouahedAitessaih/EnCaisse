@@ -250,6 +250,24 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get passwordMin;
 
+  /// No description provided for @rememberMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember me'**
+  String get rememberMe;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
   /// No description provided for @enterName.
   ///
   /// In en, this message translates to:
@@ -315,6 +333,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
+
+  /// No description provided for @languageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone language'**
+  String get languageSystem;
 
   /// No description provided for @themeMode.
   ///
@@ -429,6 +453,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Currency'**
   String get currency;
+
+  /// No description provided for @selectCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a currency'**
+  String get selectCurrency;
 
   /// No description provided for @startingAmountOptional.
   ///
@@ -1129,7 +1159,7 @@ abstract class AppLocalizations {
   /// No description provided for @googleSignInConfigError.
   ///
   /// In en, this message translates to:
-  /// **'Google sign-in is not configured. Add this app\'s SHA-1 in Firebase Console (Project settings → Your apps), enable Google sign-in, then download a new google-services.json.'**
+  /// **'Google sign-in is temporarily unavailable. Please create an account with email, or try Google again later.'**
   String get googleSignInConfigError;
 
   /// No description provided for @googleSignInFailed.
@@ -1137,6 +1167,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google sign-in failed. Please try again.'**
   String get googleSignInFailed;
+
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of EnCaisse is required to continue. Please update from Google Play.'**
+  String get forceUpdateBody;
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailableTitle;
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A newer version of EnCaisse is available with important improvements.'**
+  String get updateAvailableBody;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get updateNow;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
 
   /// No description provided for @emailAlreadyInUse.
   ///

@@ -25,7 +25,8 @@ class SettingsScreen extends ConsumerWidget {
         ? profile!.email
         : (user?.email ?? '');
     final photoUrl = profile?.photoUrl ?? user?.photoURL;
-    final languages = <(Locale, String)>[
+    final languages = <(Locale?, String)>[
+      (null, l10n.languageSystem),
       (const Locale('en'), l10n.languageEnglish),
       (const Locale('fr'), l10n.languageFrench),
       (const Locale('ar'), l10n.languageArabic),
@@ -97,9 +98,16 @@ class SettingsScreen extends ConsumerWidget {
           ...languages.map(
             (entry) => _LanguageTile(
               title: entry.$2,
-              selected: settings.locale.languageCode == entry.$1.languageCode,
-              onTap: () =>
-                  ref.read(settingsProvider.notifier).setLocale(entry.$1),
+              selected: entry.$1 == null
+                  ? settings.locale == null
+                  : settings.locale?.languageCode == entry.$1!.languageCode,
+              onTap: () {
+                if (entry.$1 == null) {
+                  ref.read(settingsProvider.notifier).setFollowSystemLocale();
+                } else {
+                  ref.read(settingsProvider.notifier).setLocale(entry.$1!);
+                }
+              },
             ),
           ),
         ],

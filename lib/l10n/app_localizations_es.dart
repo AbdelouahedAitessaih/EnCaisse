@@ -79,6 +79,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get passwordMin => 'La contraseña debe tener al menos 6 caracteres';
 
   @override
+  String get rememberMe => 'Recuérdame';
+
+  @override
+  String get showPassword => 'Mostrar contraseña';
+
+  @override
+  String get hidePassword => 'Ocultar contraseña';
+
+  @override
   String get enterName => 'Introduce tu nombre';
 
   @override
@@ -113,6 +122,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get language => 'Idioma';
+
+  @override
+  String get languageSystem => 'Idioma del teléfono';
 
   @override
   String get themeMode => 'Tema';
@@ -171,6 +183,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get currency => 'Moneda';
+
+  @override
+  String get selectCurrency => 'Elige una moneda';
 
   @override
   String get startingAmountOptional => 'Cantidad inicial (opcional)';
@@ -561,6 +576,26 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get googleSignInFailed =>
       'Error al iniciar sesión con Google. Inténtalo de nuevo.';
+
+  @override
+  String get forceUpdateTitle => 'Actualización obligatoria';
+
+  @override
+  String get forceUpdateBody =>
+      'Se requiere una nueva versión de EnCaisse para continuar. Actualiza desde Google Play.';
+
+  @override
+  String get updateAvailableTitle => 'Actualización disponible';
+
+  @override
+  String get updateAvailableBody =>
+      'Hay una nueva versión de EnCaisse con mejoras importantes.';
+
+  @override
+  String get updateNow => 'Actualizar ahora';
+
+  @override
+  String get updateLater => 'Más tarde';
 
   @override
   String get emailAlreadyInUse => 'Ya existe una cuenta con este correo.';
