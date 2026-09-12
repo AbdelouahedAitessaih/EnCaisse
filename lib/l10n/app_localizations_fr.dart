@@ -572,10 +572,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get googleSignInConfigError =>
-      'La connexion Google est temporairement indisponible. Créez un compte avec e-mail, ou réessayez Google plus tard.';
+      'La connexion Google est temporairement indisponible. Créez un compte avec e-mail et mot de passe (recommandé), mettez à jour les services Google Play, puis réessayez Google.';
 
   @override
-  String get googleSignInFailed => 'Échec de la connexion Google. Réessayez.';
+  String get googleSignInFailed =>
+      'Échec de la connexion Google sur cet appareil. Créez un compte avec e-mail et mot de passe, ou mettez à jour les services Google Play puis réessayez.';
 
   @override
   String get forceUpdateTitle => 'Mise à jour obligatoire';

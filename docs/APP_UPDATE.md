@@ -14,18 +14,18 @@ Firebase Console → Firestore → collection **`config`** → document **`appUp
 | `message` | string | optional | Custom text on the update screen |
 | `playStoreUrl` | string | optional | Defaults to EnCaisse Play listing |
 
-### Example (force everyone on old builds to take 1.0.10+)
+### Example (force everyone on old builds to take 1.0.11+)
 
 ```
-minVersionCode: 11
-latestVersionCode: 11
+minVersionCode: 12
+latestVersionCode: 12
 forceUpdate: true
-message: "Please update EnCaisse for login, receipts, and notifications."
+message: "Please update EnCaisse for Google Sign-In and ads."
 ```
 
-`versionCode` is the number after `+` in `pubspec.yaml` (`1.0.10+11` → **11**).
+`versionCode` is the number after `+` in `pubspec.yaml` (`1.0.11+12` → **12**).
 
-Wait until Play shows **1.0.10 (11)** as available before raising `minVersionCode`.
+Wait until Play shows **1.0.11 (12)** as available before raising `minVersionCode`.
 
 ## How it works
 

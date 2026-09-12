@@ -1,7 +1,7 @@
 name: encaisse
 description: "Encaisse — shared group cash management. Encaisse, ensemble."
 publish_to: 'none'
-version: 1.0.10+11
+version: 1.0.11+12
 
 environment:
   sdk: ^3.10.0

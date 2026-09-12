@@ -1159,13 +1159,13 @@ abstract class AppLocalizations {
   /// No description provided for @googleSignInConfigError.
   ///
   /// In en, this message translates to:
-  /// **'Google sign-in is temporarily unavailable. Please create an account with email, or try Google again later.'**
+  /// **'Google sign-in is temporarily unavailable. Please create an account with email and password (recommended), update Google Play services, then try Google again.'**
   String get googleSignInConfigError;
 
   /// No description provided for @googleSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Google sign-in failed. Please try again.'**
+  /// **'Google sign-in failed on this device. Create an account with email and password, or update Google Play services and try again.'**
   String get googleSignInFailed;
 
   /// No description provided for @forceUpdateTitle.

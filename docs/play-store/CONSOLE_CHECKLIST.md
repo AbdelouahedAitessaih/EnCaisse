@@ -158,7 +158,7 @@ Internal testing (up to 100) is fine for early checks, but **does not** replace 
 - [ ] Fresh `google-services.json` after SHA update
 - [ ] `android/key.properties` + `upload-keystore.jks` backed up
 - [ ] Privacy policy URL live and matching Data safety answers
-- [ ] Version code increased in `pubspec.yaml` (this release: `1.0.10+11`)
+- [ ] Version code increased in `pubspec.yaml` (this release: `1.0.11+12`)
 
 ---
 

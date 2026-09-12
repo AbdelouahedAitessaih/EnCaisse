@@ -564,10 +564,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleSignInConfigError =>
-      'Google sign-in is temporarily unavailable. Please create an account with email, or try Google again later.';
+      'Google sign-in is temporarily unavailable. Please create an account with email and password (recommended), update Google Play services, then try Google again.';
 
   @override
-  String get googleSignInFailed => 'Google sign-in failed. Please try again.';
+  String get googleSignInFailed =>
+      'Google sign-in failed on this device. Create an account with email and password, or update Google Play services and try again.';
 
   @override
   String get forceUpdateTitle => 'Update required';

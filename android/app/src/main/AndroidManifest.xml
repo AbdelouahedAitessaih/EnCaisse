@@ -59,5 +59,16 @@
             <action android:name="android.intent.action.SEND"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Needed for Firebase Google browser OAuth fallback (Custom Tabs). -->
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="https"/>
+        </intent>
+        <package android:name="com.google.android.gms"/>
+        <package android:name="com.android.vending"/>
     </queries>
 </manifest>

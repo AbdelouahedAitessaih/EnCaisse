@@ -5,7 +5,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../core/constants/app_constants.dart';
 
-/// AdMob with TEST unit IDs. Swap [AdMobConfig] before release.
+/// AdMob banners + interstitials (production unit IDs in [AdMobConfig]).
 class AdService {
   BannerAd? _bannerAd;
   InterstitialAd? _interstitialAd;

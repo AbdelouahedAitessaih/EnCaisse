@@ -1,4 +1,4 @@
-/// App-wide constants. Credentials and ad IDs are placeholders — swap before release.
+/// App-wide constants.
 library;
 
 abstract final class AppConstants {
@@ -24,29 +24,26 @@ abstract final class AppConstants {
   ];
 }
 
-/// ⚠️ REPLACE BEFORE RELEASE — AdMob test IDs only.
-/// Get real IDs from https://admob.google.com
+/// Production AdMob IDs (Android app Ready in AdMob).
+/// Banner: Home. Interstitial: after creating the 3rd group.
 abstract final class AdMobConfig {
   /// Android app ID — also set in AndroidManifest.xml
   static const String androidAppId =
       'ca-app-pub-7691333173853968~2642191347';
 
-  /// iOS app ID — also set in Info.plist
-  /// TODO: create an iOS app in AdMob and replace if different from Android.
+  /// iOS app ID — same until a dedicated iOS AdMob app exists.
   static const String iosAppId =
       'ca-app-pub-7691333173853968~2642191347';
 
   /// Banner on Home screen only
   static const String bannerAdUnitIdAndroid =
       'ca-app-pub-7691333173853968/9244806876';
-  /// Same unit until a dedicated iOS Banner is created in AdMob.
   static const String bannerAdUnitIdIos =
       'ca-app-pub-7691333173853968/9244806876';
 
   /// Interstitial after creating 3rd group
   static const String interstitialAdUnitIdAndroid =
       'ca-app-pub-7691333173853968/2450619655';
-  /// Same unit until a dedicated iOS Interstitial is created in AdMob.
   static const String interstitialAdUnitIdIos =
       'ca-app-pub-7691333173853968/2450619655';
 }

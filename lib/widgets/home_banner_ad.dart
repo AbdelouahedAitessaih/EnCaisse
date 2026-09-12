@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../core/constants/app_constants.dart';
-import '../core/theme/app_colors.dart';
 import '../providers/providers.dart';
 
-/// Banner ad for Home only. Uses TEST ad unit IDs from [AdMobConfig].
+/// Banner ad on Home. Uses production AdMob unit IDs from [AdMobConfig].
 class HomeBannerAd extends ConsumerStatefulWidget {
   const HomeBannerAd({super.key});
 
@@ -37,7 +35,10 @@ class _HomeBannerAdState extends ConsumerState<HomeBannerAd> {
       },
       onFailed: (_) {
         if (!mounted) return;
-        setState(() => _loaded = false);
+        setState(() {
+          _ad = null;
+          _loaded = false;
+        });
       },
     );
   }
@@ -51,35 +52,25 @@ class _HomeBannerAdState extends ConsumerState<HomeBannerAd> {
   @override
   Widget build(BuildContext context) {
     if (!_loaded || _ad == null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        color: AppColors.primaryLight,
-        child: const Text(
-          // ⚠️ TEST AD PLACEHOLDER — swap AdMobConfig before release
-          'Ad space (test IDs) — replace AdMobConfig before release',
-          style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 4),
-          child: Text(
-            '⚠️ Using AdMob TEST IDs — swap before release',
-            style: TextStyle(fontSize: 10, color: AppColors.accent),
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: _ad!.size.height.toDouble(),
+          child: Center(
+            child: SizedBox(
+              width: _ad!.size.width.toDouble(),
+              height: _ad!.size.height.toDouble(),
+              child: AdWidget(ad: _ad!),
+            ),
           ),
         ),
-        SizedBox(
-          width: _ad!.size.width.toDouble(),
-          height: _ad!.size.height.toDouble(),
-          child: AdWidget(ad: _ad!),
-        ),
-      ],
+      ),
     );
   }
 }

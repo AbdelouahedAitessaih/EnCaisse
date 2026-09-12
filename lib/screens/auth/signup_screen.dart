@@ -98,7 +98,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       return l10n.googleSignInConfigError;
     }
     if (s.contains('GoogleSignInExceptionCode.canceled') ||
-        s.contains('sign_in_canceled')) {
+        s.contains('sign_in_canceled') ||
+        s.contains('web-context-canceled') ||
+        s.contains('ERROR_WEB_CONTEXT_CANCELED') ||
+        s.contains('user-cancelled') ||
+        s.contains('canceled by the user')) {
       return l10n.googleSignInCanceled;
     }
     if (s.contains('GoogleSignIn') || s.contains('google')) {

@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -65,14 +67,48 @@ class AuthService {
   }
 
   Future<UserProfile> signInWithGoogle() async {
+    // Prefer native Google Sign-In; on Android Credential Manager failures
+    // (common on some Huawei / older Play Services builds), fall back to
+    // Firebase's browser OAuth flow — same path many apps use successfully.
+    try {
+      return await _signInWithGoogleNative();
+    } catch (e, st) {
+      debugPrint('Native Google Sign-In failed: $e\n$st');
+      if (!_shouldFallbackToBrowserOAuth(e)) rethrow;
+      if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) rethrow;
+      debugPrint('Falling back to Firebase signInWithProvider (browser OAuth)');
+      return _signInWithGoogleBrowser();
+    }
+  }
+
+  bool _shouldFallbackToBrowserOAuth(Object e) {
+    final s = e.toString();
+    if (s.contains('GoogleSignInExceptionCode.canceled') &&
+        !s.contains('[16]') &&
+        !s.contains('reauth') &&
+        !s.contains('10:')) {
+      // Genuine user cancel — do not open a second browser prompt.
+      return false;
+    }
+    return s.contains('[16]') ||
+        s.contains('reauth') ||
+        s.contains('google-sign-in-config') ||
+        s.contains('missing-id-token') ||
+        s.contains('clientConfigurationError') ||
+        s.contains('ApiException: 10') ||
+        s.contains('10:') ||
+        s.contains('GoogleSignInExceptionCode.providerConfigurationError') ||
+        s.contains('GoogleSignInExceptionCode.interrupted') ||
+        s.contains('GoogleSignInExceptionCode.unknownError') ||
+        s.contains('CredentialManager') ||
+        s.contains('network_error') ||
+        s.contains('NETWORK_ERROR');
+  }
+
+  Future<UserProfile> _signInWithGoogleNative() async {
     await _ensureGoogleInitialized();
-    // Clear any stale Credential Manager session so we only show the
-    // account picker once (retrying authenticate() after [16] doubles the UI).
     try {
-      await _googleSignIn.signOut();
-    } catch (_) {}
-    try {
-      return await _completeGoogleSignIn();
+      return await _completeGoogleSignInNative();
     } on GoogleSignInException catch (e) {
       final detail = '${e.code} ${e.description ?? ''}';
       debugPrint('GoogleSignInException: $detail');
@@ -87,7 +123,7 @@ class AuthService {
     }
   }
 
-  Future<UserProfile> _completeGoogleSignIn() async {
+  Future<UserProfile> _completeGoogleSignInNative() async {
     final account = await _googleSignIn.authenticate(
       scopeHint: const ['email', 'profile'],
     );
@@ -98,8 +134,37 @@ class AuthService {
         message: 'Google Sign-In missing ID token.',
       );
     }
-    final credential = GoogleAuthProvider.credential(idToken: idToken);
+
+    String? accessToken;
+    try {
+      final authz = await account.authorizationClient.authorizationForScopes(
+        const ['email', 'profile'],
+      );
+      accessToken = authz?.accessToken;
+      if (accessToken == null) {
+        final granted = await account.authorizationClient.authorizeScopes(
+          const ['email', 'profile'],
+        );
+        accessToken = granted.accessToken;
+      }
+    } catch (e) {
+      debugPrint('Google accessToken optional step failed: $e');
+    }
+
+    final credential = GoogleAuthProvider.credential(
+      idToken: idToken,
+      accessToken: accessToken,
+    );
     final cred = await _auth.signInWithCredential(credential);
+    return _ensureUserProfile(cred.user!);
+  }
+
+  Future<UserProfile> _signInWithGoogleBrowser() async {
+    final provider = GoogleAuthProvider()
+      ..addScope('email')
+      ..addScope('profile')
+      ..setCustomParameters({'prompt': 'select_account'});
+    final cred = await _auth.signInWithProvider(provider);
     return _ensureUserProfile(cred.user!);
   }
 
