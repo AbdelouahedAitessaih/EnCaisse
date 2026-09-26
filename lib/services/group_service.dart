@@ -72,6 +72,7 @@ class GroupService {
     String? photoUrl,
     String currency = 'MAD',
     double startingAmount = 0,
+    bool isPersonal = false,
   }) async {
     final ref = _groups.doc();
     final now = DateTime.now();
@@ -98,6 +99,7 @@ class GroupService {
       createdAt: now,
       inviteCode: inviteCode,
       currency: currency,
+      isPersonal: isPersonal,
     );
 
     final batch = _db.batch();
@@ -118,6 +120,7 @@ class GroupService {
         'groupId': ref.id,
         'joinedAt': Timestamp.fromDate(now),
         'name': group.name,
+        'isPersonal': isPersonal,
       },
     );
     await batch.commit();
@@ -158,6 +161,38 @@ class GroupService {
     }
 
     return group;
+  }
+
+  /// Opens or creates the user's solo personal caisse.
+  Future<Group> ensurePersonalGroup({
+    required String uid,
+    required String displayName,
+    required String personalName,
+    String? photoUrl,
+    String currency = 'MAD',
+  }) async {
+    final memberships = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('memberships')
+        .get();
+    for (final doc in memberships.docs) {
+      final groupId = doc.id;
+      final groupSnap = await _groups.doc(groupId).get();
+      if (!groupSnap.exists) continue;
+      final group = Group.fromDoc(groupSnap);
+      if (group.isPersonal && group.createdBy == uid) {
+        return group;
+      }
+    }
+    return createGroup(
+      name: personalName,
+      createdBy: uid,
+      displayName: displayName,
+      photoUrl: photoUrl,
+      currency: currency,
+      isPersonal: true,
+    );
   }
 
   Future<Group> joinGroup({

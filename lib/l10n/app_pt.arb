@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "pt",
   "appName": "EnCaisse",
   "tagline": "EnCaisse, ensemble.",
@@ -30,7 +30,7 @@
   "hello": "Olá",
   "helloName": "Olá, {name}",
   "noGroupsYet": "Ainda sem grupos",
-  "noGroupsSubtitle": "Crie uma caixa ou entre com um código de convite.",
+  "noGroupsSubtitle": "Comece sozinho com uma caixa pessoal, crie um grupo ou entre com um código.",
   "createAGroup": "Criar um grupo",
   "joinWithCode": "Entrar com código",
   "joinWithInviteCode": "Entrar com código de convite",
@@ -138,7 +138,7 @@
   "movementNotFound": "Movimento não encontrado",
   "couldNotLoadGroups": "Não foi possível carregar os grupos. Verifique a configuração do Firebase.",
   "onboardingTitle1": "Uma caixa partilhada",
-  "onboardingBody1": "Todos no grupo podem adicionar depósitos e despesas. Sem hierarquia de administradores.",
+  "onboardingBody1": "Controlo sozinho ou com amigos. Num grupo partilhado todos podem adicionar depósitos e despesas — sem hierarquia de admins.",
   "onboardingTitle2": "Histórico completo",
   "onboardingBody2": "Cada alteração é registada. A confiança vem da transparência, não das permissões.",
   "onboardingTitle3": "Convidar com um código",
@@ -175,10 +175,10 @@
   "signUpFailed": "Falha no registo. Tente novamente.",
   "googleSignInCanceled": "Início de sessão com Google cancelado.",
   "googleSignInConfigError": "O Google Sign-In não está configurado. Adicione o SHA-1 no Firebase e descarregue um novo google-services.json.",
-    "updateAvailableTitle": "Atualização disponível",
+  "updateAvailableTitle": "Atualização disponível",
   "updateNow": "Atualizar agora",
   "updateAvailableBody": "Há uma nova versão do EnCaisse com melhorias importantes.",
-  "forceUpdateBody": "É necessária uma nova versão do EnCaisse para continuar. Atualize na Google Play.",
+  "forceUpdateBody": "É necessária uma nova versão do EnCaisse. Atualize na loja.",
   "forceUpdateTitle": "Atualização obrigatória",
   "updateLater": "Mais tarde",
   "googleSignInFailed": "Falha no início de sessão com Google. Tente novamente.",
@@ -208,5 +208,75 @@
   "deletedMarker": "eliminado",
   "insufficientBalance": "Saldo insuficiente. Isto deixaria a caixa negativa.",
   "dateLabel": "Data",
-  "timeLabel": "Hora"
+  "timeLabel": "Hora",
+  "verifyEmailTitle": "Verifique o seu e-mail",
+  "verifyEmailBody": "Enviámos um link para {email}. Abra-o e depois toque em Continuar.",
+  "resendVerification": "Reenviar e-mail",
+  "verificationEmailSent": "E-mail de verificação enviado",
+  "emailVerifiedContinue": "Continuar",
+  "emailNotVerifiedYet": "E-mail ainda não verificado. Verifique a caixa de entrada.",
+  "checkVerification": "Já verifiquei",
+  "settleTitle": "Quem deve a quem",
+  "settleSubtitle": "Divisão igual da caixa com base em depósitos e despesas.",
+  "settleSettled": "Todos estão equilibrados",
+  "settleOwes": "{from} deve a {to}",
+  "memberNet": "Líquido",
+  "chartsTitle": "Gráficos",
+  "categoryBreakdown": "Por categoria",
+  "exportCsv": "Exportar CSV",
+  "exportPdf": "Exportar PDF",
+  "exportShared": "Exportação pronta para partilhar",
+  "exportFailed": "Não foi possível exportar",
+  "notifications": "Notificações",
+  "noNotifications": "Ainda sem notificações",
+  "noNotificationsSubtitle": "A atividade dos seus grupos aparecerá aqui.",
+  "markAllRead": "Marcar tudo como lido",
+  "offlineBanner": "Sem rede. A mostrar dados em cache quando disponíveis.",
+  "offlineRetry": "Tentar novamente",
+  "forceUpdateBodyIos": "É necessária uma nova versão do EnCaisse. Atualize na App Store.",
+  "openStore": "Abrir loja",
+  "insightsTitle": "Análises",
+  "insightsOpen": "Acerto e gráficos",
+  "personalCaisse": "Caixa pessoal",
+  "personalCaisseSubtitle": "Acompanhe o seu dinheiro sozinho — sem grupo.",
+  "personalCaisseName": "A minha caixa",
+  "personalBadge": "Pessoal",
+  "howToUse": "Como usar o EnCaisse",
+  "tourNext": "Seguinte",
+  "tourBack": "Voltar",
+  "tourSkip": "Saltar",
+  "tourDone": "Percebi",
+  "tourHome1Title": "O seu início",
+  "tourHome1Body": "Esta lista mostra todas as suas caixas. Toque numa para ver depósitos, despesas e o saldo em direto.",
+  "tourHome2Title": "Seguir sozinho",
+  "tourHome2Body": "Precisa de um bloco privado? Toque em + e escolha Caixa pessoal. Sem código, só você.",
+  "tourHome3Title": "Partilhar com outros",
+  "tourHome3Body": "Crie um grupo ou entre com um código de 6 caracteres. Todos veem o mesmo histórico transparente.",
+  "tourGroup1Title": "Saldo em direto",
+  "tourGroup1Body": "O cartão verde é sempre calculado a partir dos movimentos — depósitos menos despesas. Nunca é um total guardado que se possa manipular.",
+  "tourGroup2Title": "Adicionar um movimento",
+  "tourGroup2Body": "Toque em + para um depósito ou despesa. Pode anexar um recibo; cada alteração fica no histórico de auditoria.",
+  "tourGroup3Title": "Convite e análises",
+  "tourGroup3Body": "Partilhe o código para os amigos entrarem. Abra Acerto e gráficos para ver quem deve a quem e o gasto por categoria.",
+  "tourGroup3BodyPersonal": "Abra Acerto e gráficos para as categorias. Esta caixa é só sua — o convite está oculto.",
+  "tapPhotoToChange": "Toque na foto para alterar",
+  "tapPhotoToView": "Toque para ver",
+  "creatingPersonal": "A abrir a sua caixa pessoal…",
+  "@verifyEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@settleOwes": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  }
 }

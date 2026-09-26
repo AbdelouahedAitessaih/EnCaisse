@@ -28,6 +28,9 @@ class AuthService {
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  /// Includes profile/`reload()` updates (unlike [authStateChanges]).
+  Stream<User?> get userChanges => _auth.userChanges();
+
   User? get currentUser => _auth.currentUser;
 
   Future<void> _ensureGoogleInitialized() async {
@@ -49,10 +52,44 @@ class AuthService {
       password: password,
     );
     await cred.user!.updateDisplayName(displayName.trim());
+    try {
+      await cred.user!.sendEmailVerification();
+    } catch (e) {
+      debugPrint('sendEmailVerification failed: $e');
+    }
     return _ensureUserProfile(
       cred.user!,
       displayNameOverride: displayName.trim(),
     );
+  }
+
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user == null || user.emailVerified) return;
+    await user.sendEmailVerification();
+  }
+
+  Future<bool> reloadAndCheckEmailVerified() async {
+    var user = _auth.currentUser;
+    if (user == null) return false;
+    await user.reload();
+    user = _auth.currentUser;
+    if (user == null) return false;
+    // Force token refresh so claims / emailVerified are current.
+    await user.getIdToken(true);
+    user = _auth.currentUser;
+    return user?.emailVerified ?? false;
+  }
+
+  /// Email/password users must verify; Google (and other) providers are exempt.
+  bool needsEmailVerification(User? user) {
+    // Prefer live Firebase user — stream can lag behind [User.reload].
+    final live = _auth.currentUser ?? user;
+    if (live == null) return false;
+    if (live.emailVerified) return false;
+    final providers = live.providerData.map((p) => p.providerId).toSet();
+    if (providers.contains('google.com')) return false;
+    return providers.contains('password');
   }
 
   Future<UserProfile> signInWithEmail({
@@ -67,42 +104,55 @@ class AuthService {
   }
 
   Future<UserProfile> signInWithGoogle() async {
-    // Prefer native Google Sign-In; on Android Credential Manager failures
-    // (common on some Huawei / older Play Services builds), fall back to
-    // Firebase's browser OAuth flow — same path many apps use successfully.
+    // Debug (`flutter run`) is signed with the debug keystore → native works.
+    // Play Store builds are re-signed by Play App Signing; Credential Manager
+    // often fails there (especially Huawei) with a fake "canceled" and never
+    // reaches our browser fallback. Use Firebase browser OAuth first on
+    // Android release — same path many working apps use.
+    final androidRelease =
+        !kIsWeb && Platform.isAndroid && kReleaseMode;
+    if (androidRelease) {
+      try {
+        return await _signInWithGoogleBrowser();
+      } catch (e, st) {
+        debugPrint('Browser Google Sign-In failed: $e\n$st');
+        if (_isGenuineUserCancel(e)) rethrow;
+        debugPrint('Falling back to native Google Sign-In');
+        return _signInWithGoogleNative();
+      }
+    }
+
     try {
       return await _signInWithGoogleNative();
     } catch (e, st) {
       debugPrint('Native Google Sign-In failed: $e\n$st');
-      if (!_shouldFallbackToBrowserOAuth(e)) rethrow;
+      if (_isGenuineUserCancel(e)) rethrow;
       if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) rethrow;
       debugPrint('Falling back to Firebase signInWithProvider (browser OAuth)');
       return _signInWithGoogleBrowser();
     }
   }
 
-  bool _shouldFallbackToBrowserOAuth(Object e) {
+  /// True only when the user clearly dismissed the picker (not a SHA/[16] fake cancel).
+  bool _isGenuineUserCancel(Object e) {
     final s = e.toString();
-    if (s.contains('GoogleSignInExceptionCode.canceled') &&
-        !s.contains('[16]') &&
-        !s.contains('reauth') &&
-        !s.contains('10:')) {
-      // Genuine user cancel — do not open a second browser prompt.
+    final looksCanceled = s.contains('GoogleSignInExceptionCode.canceled') ||
+        s.contains('sign_in_canceled') ||
+        s.contains('web-context-canceled') ||
+        s.contains('ERROR_WEB_CONTEXT_CANCELED') ||
+        s.contains('user-cancelled') ||
+        s.contains('canceled by the user');
+    if (!looksCanceled) return false;
+    // Config failures are often reported as "canceled" + [16] / ApiException 10.
+    if (s.contains('[16]') ||
+        s.contains('reauth') ||
+        s.contains('10:') ||
+        s.contains('ApiException: 10') ||
+        s.contains('google-sign-in-config') ||
+        s.contains('clientConfigurationError')) {
       return false;
     }
-    return s.contains('[16]') ||
-        s.contains('reauth') ||
-        s.contains('google-sign-in-config') ||
-        s.contains('missing-id-token') ||
-        s.contains('clientConfigurationError') ||
-        s.contains('ApiException: 10') ||
-        s.contains('10:') ||
-        s.contains('GoogleSignInExceptionCode.providerConfigurationError') ||
-        s.contains('GoogleSignInExceptionCode.interrupted') ||
-        s.contains('GoogleSignInExceptionCode.unknownError') ||
-        s.contains('CredentialManager') ||
-        s.contains('network_error') ||
-        s.contains('NETWORK_ERROR');
+    return true;
   }
 
   Future<UserProfile> _signInWithGoogleNative() async {

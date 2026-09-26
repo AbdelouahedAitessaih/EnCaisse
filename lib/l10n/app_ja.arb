@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ja",
   "appName": "EnCaisse",
   "tagline": "EnCaisse, ensemble.",
@@ -30,7 +30,7 @@
   "hello": "こんにちは",
   "helloName": "こんにちは、{name}",
   "noGroupsYet": "まだグループがありません",
-  "noGroupsSubtitle": "カイスを作成するか、招待コードで参加してください。",
+  "noGroupsSubtitle": "個人の金庫から始めるか、グループを作成、またはコードで参加。",
   "createAGroup": "グループを作成",
   "joinWithCode": "コードで参加",
   "joinWithInviteCode": "招待コードで参加",
@@ -138,7 +138,7 @@
   "movementNotFound": "取引が見つかりません",
   "couldNotLoadGroups": "グループを読み込めませんでした。Firebaseの設定を確認してください。",
   "onboardingTitle1": "ひとつの共有カイス",
-  "onboardingBody1": "グループの誰でも入金と支出を追加できます。管理者の階層はありません。",
+  "onboardingBody1": "一人でも友人とでも記録できます。共有グループでは全員が入金・支出を追加でき、管理者の階層はありません。",
   "onboardingTitle2": "完全な監査ログ",
   "onboardingBody2": "すべての変更が記録されます。信頼は権限ではなく透明性から生まれます。",
   "onboardingTitle3": "コードで招待",
@@ -175,10 +175,10 @@
   "signUpFailed": "登録に失敗しました。もう一度お試しください。",
   "googleSignInCanceled": "Googleログインがキャンセルされました。",
   "googleSignInConfigError": "Googleログインが未設定です。FirebaseにSHA-1を追加し、新しいgoogle-services.jsonをダウンロードしてください。",
-    "updateAvailableTitle": "アップデートがあります",
+  "updateAvailableTitle": "アップデートがあります",
   "updateNow": "今すぐ更新",
   "updateAvailableBody": "重要な改善を含む新しいバージョンの EnCaisse があります。",
-  "forceUpdateBody": "続行するには新しいバージョンの EnCaisse が必要です。Google Play から更新してください。",
+  "forceUpdateBody": "続行するには新しいバージョンの EnCaisse が必要です。ストアから更新してください。",
   "forceUpdateTitle": "アップデートが必要です",
   "updateLater": "後で",
   "googleSignInFailed": "Googleログインに失敗しました。もう一度お試しください。",
@@ -208,5 +208,75 @@
   "deletedMarker": "削除済み",
   "insufficientBalance": "残高不足です。これでは金庫がマイナスになります。",
   "dateLabel": "日付",
-  "timeLabel": "時刻"
+  "timeLabel": "時刻",
+  "verifyEmailTitle": "メールを確認してください",
+  "verifyEmailBody": "{email} に確認リンクを送りました。開いてから続行をタップしてください。",
+  "resendVerification": "メールを再送",
+  "verificationEmailSent": "確認メールを送信しました",
+  "emailVerifiedContinue": "続行",
+  "emailNotVerifiedYet": "メールはまだ確認されていません。受信箱を確認してください。",
+  "checkVerification": "確認しました",
+  "settleTitle": "誰が誰に払うか",
+  "settleSubtitle": "入金と支出に基づく均等な分け方です。",
+  "settleSettled": "全員清算済み",
+  "settleOwes": "{from} は {to} に支払う",
+  "memberNet": "純額",
+  "chartsTitle": "グラフ",
+  "categoryBreakdown": "カテゴリ別",
+  "exportCsv": "CSVを書き出す",
+  "exportPdf": "PDFを書き出す",
+  "exportShared": "共有の準備ができました",
+  "exportFailed": "書き出せませんでした",
+  "notifications": "通知",
+  "noNotifications": "通知はまだありません",
+  "noNotificationsSubtitle": "グループの活動がここに表示されます。",
+  "markAllRead": "すべて既読にする",
+  "offlineBanner": "オフラインです。キャッシュがあれば表示します。",
+  "offlineRetry": "再試行",
+  "forceUpdateBodyIos": "新しいバージョンの EnCaisse が必要です。App Store から更新してください。",
+  "openStore": "ストアを開く",
+  "insightsTitle": "分析",
+  "insightsOpen": "精算とグラフ",
+  "personalCaisse": "個人の金庫",
+  "personalCaisseSubtitle": "グループなしで自分のお金を記録。",
+  "personalCaisseName": "自分の金庫",
+  "personalBadge": "個人",
+  "howToUse": "EnCaisse の使い方",
+  "tourNext": "次へ",
+  "tourBack": "戻る",
+  "tourSkip": "スキップ",
+  "tourDone": "了解",
+  "tourHome1Title": "ホーム",
+  "tourHome1Body": "参加中の金庫が一覧表示されます。タップして入金・支出・残高を確認できます。",
+  "tourHome2Title": "一人で記録",
+  "tourHome2Body": "個人用ノートが必要なら + から個人の金庫を選びます。招待コードは不要です。",
+  "tourHome3Title": "みんなと共有",
+  "tourHome3Body": "グループを作るか、6文字のコードで参加。全員が同じ透明な履歴を見ます。",
+  "tourGroup1Title": "ライブ残高",
+  "tourGroup1Body": "緑のカードは常に取引から計算されます（入金−支出）。改ざんできる保存残高ではありません。",
+  "tourGroup2Title": "取引を追加",
+  "tourGroup2Body": "+ で入金または支出を追加。領収書も添付でき、変更は監査ログに残ります。",
+  "tourGroup3Title": "招待と分析",
+  "tourGroup3Body": "招待コードを共有。精算とグラフで誰が誰に払うか、カテゴリ別支出を確認できます。",
+  "tourGroup3BodyPersonal": "カテゴリ分析は精算とグラフから。この金庫はあなた専用で、招待は非表示です。",
+  "tapPhotoToChange": "タップして写真を変更",
+  "tapPhotoToView": "タップして表示",
+  "creatingPersonal": "個人の金庫を開いています…",
+  "@verifyEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@settleOwes": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  }
 }

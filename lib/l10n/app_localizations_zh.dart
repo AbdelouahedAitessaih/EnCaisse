@@ -101,7 +101,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noGroupsYet => '暂无群组';
 
   @override
-  String get noGroupsSubtitle => '创建一个资金池，或使用邀请码加入。';
+  String get noGroupsSubtitle => '可先建个人账本，或创建群组，或用邀请码加入。';
 
   @override
   String get createAGroup => '创建群组';
@@ -435,7 +435,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingTitle1 => '一个共享资金池';
 
   @override
-  String get onboardingBody1 => '群组中每个人都可以添加存入和支出。没有管理员层级。';
+  String get onboardingBody1 => '可独自或与朋友记账。共享群组中所有人都能添加存入与支出 — 无管理员层级。';
 
   @override
   String get onboardingTitle2 => '完整审计记录';
@@ -555,7 +555,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forceUpdateTitle => '必须更新';
 
   @override
-  String get forceUpdateBody => '需要更新到新版本才能继续使用 EnCaisse。请从 Google Play 更新。';
+  String get forceUpdateBody => '需要更新 EnCaisse 才能继续。请从商店更新。';
 
   @override
   String get updateAvailableTitle => '有可用更新';
@@ -669,4 +669,167 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get timeLabel => '时间';
+
+  @override
+  String get verifyEmailTitle => '验证您的邮箱';
+
+  @override
+  String verifyEmailBody(String email) {
+    return '我们已向 $email 发送验证链接。打开后点击继续。';
+  }
+
+  @override
+  String get resendVerification => '重新发送邮件';
+
+  @override
+  String get verificationEmailSent => '验证邮件已发送';
+
+  @override
+  String get emailVerifiedContinue => '继续';
+
+  @override
+  String get emailNotVerifiedYet => '邮箱尚未验证。请检查收件箱。';
+
+  @override
+  String get checkVerification => '我已验证';
+
+  @override
+  String get settleTitle => '谁欠谁';
+
+  @override
+  String get settleSubtitle => '根据存入与支出平均分摊。';
+
+  @override
+  String get settleSettled => '大家已结清';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from 欠 $to';
+  }
+
+  @override
+  String get memberNet => '净值';
+
+  @override
+  String get chartsTitle => '图表';
+
+  @override
+  String get categoryBreakdown => '按类别';
+
+  @override
+  String get exportCsv => '导出 CSV';
+
+  @override
+  String get exportPdf => '导出 PDF';
+
+  @override
+  String get exportShared => '导出已准备好分享';
+
+  @override
+  String get exportFailed => '无法导出';
+
+  @override
+  String get notifications => '通知';
+
+  @override
+  String get noNotifications => '暂无通知';
+
+  @override
+  String get noNotificationsSubtitle => '群组动态将显示在这里。';
+
+  @override
+  String get markAllRead => '全部标为已读';
+
+  @override
+  String get offlineBanner => '您处于离线状态。有缓存时将显示缓存数据。';
+
+  @override
+  String get offlineRetry => '重试';
+
+  @override
+  String get forceUpdateBodyIos => '需要更新 EnCaisse。请从 App Store 更新。';
+
+  @override
+  String get openStore => '打开商店';
+
+  @override
+  String get insightsTitle => '分析';
+
+  @override
+  String get insightsOpen => '结算与图表';
+
+  @override
+  String get personalCaisse => '个人账本';
+
+  @override
+  String get personalCaisseSubtitle => '独自记账 — 无需群组。';
+
+  @override
+  String get personalCaisseName => '我的账本';
+
+  @override
+  String get personalBadge => '个人';
+
+  @override
+  String get howToUse => '如何使用 EnCaisse';
+
+  @override
+  String get tourNext => '下一步';
+
+  @override
+  String get tourBack => '返回';
+
+  @override
+  String get tourSkip => '跳过';
+
+  @override
+  String get tourDone => '知道了';
+
+  @override
+  String get tourHome1Title => '首页';
+
+  @override
+  String get tourHome1Body => '此列表显示您的所有账本。点开即可查看存入、支出和实时余额。';
+
+  @override
+  String get tourHome2Title => '独自记账';
+
+  @override
+  String get tourHome2Body => '需要私人账本？点 + 选择个人账本。无需邀请码，只有您自己。';
+
+  @override
+  String get tourHome3Title => '与他人共享';
+
+  @override
+  String get tourHome3Body => '创建群组或用 6 位邀请码加入。所有人看到同一透明记录。';
+
+  @override
+  String get tourGroup1Title => '实时余额';
+
+  @override
+  String get tourGroup1Body => '绿色卡片始终由流水计算：存入减支出。不是可被篡改的存档总额。';
+
+  @override
+  String get tourGroup2Title => '添加流水';
+
+  @override
+  String get tourGroup2Body => '点 + 添加存入或支出。可附收据；每次更改都会保留在审计记录中。';
+
+  @override
+  String get tourGroup3Title => '邀请与分析';
+
+  @override
+  String get tourGroup3Body => '分享邀请码。打开结算与图表查看谁欠谁以及分类支出。';
+
+  @override
+  String get tourGroup3BodyPersonal => '打开结算与图表查看分类。此账本仅属于您 — 邀请已隐藏。';
+
+  @override
+  String get tapPhotoToChange => '点按照片以更换';
+
+  @override
+  String get tapPhotoToView => '点按查看';
+
+  @override
+  String get creatingPersonal => '正在打开您的个人账本…';
 }

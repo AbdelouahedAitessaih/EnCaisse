@@ -76,6 +76,7 @@ class Group {
     required this.inviteCode,
     required this.currency,
     this.photoUrl,
+    this.isPersonal = false,
   });
 
   final String id;
@@ -85,6 +86,8 @@ class Group {
   final String inviteCode;
   final String currency;
   final String? photoUrl;
+  /// Solo caisse for personal tracking (no invite / shared settle needed).
+  final bool isPersonal;
 
   factory Group.fromDoc(DocumentSnapshot doc) {
     final data = (doc.data() as Map<String, dynamic>?) ?? {};
@@ -96,6 +99,7 @@ class Group {
       inviteCode: data['inviteCode'] as String? ?? '',
       currency: data['currency'] as String? ?? 'MAD',
       photoUrl: data['photoUrl'] as String?,
+      isPersonal: data['isPersonal'] as bool? ?? false,
     );
   }
 
@@ -105,6 +109,7 @@ class Group {
         'createdAt': Timestamp.fromDate(createdAt),
         'inviteCode': inviteCode,
         'currency': currency,
+        'isPersonal': isPersonal,
         if (photoUrl != null) 'photoUrl': photoUrl,
       };
 }
@@ -346,6 +351,47 @@ class BalanceSummary {
       deposits: deposits,
       expenses: expenses,
       byCategory: byCategory,
+    );
+  }
+}
+
+class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.groupId,
+    required this.title,
+    required this.body,
+    required this.type,
+    required this.actorUid,
+    required this.createdAt,
+    required this.read,
+    this.actorName,
+  });
+
+  final String id;
+  final String groupId;
+  final String title;
+  final String body;
+  final String type;
+  final String actorUid;
+  final String? actorName;
+  final DateTime createdAt;
+  final bool read;
+
+  factory AppNotification.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data() ?? {};
+    return AppNotification(
+      id: doc.id,
+      groupId: data['groupId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      body: data['body'] as String? ?? '',
+      type: data['type'] as String? ?? '',
+      actorUid: data['actorUid'] as String? ?? '',
+      actorName: data['actorName'] as String?,
+      createdAt: _toDate(data['createdAt']) ?? DateTime.now(),
+      read: data['read'] as bool? ?? false,
     );
   }
 }

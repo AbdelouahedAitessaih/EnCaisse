@@ -8,6 +8,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../models/models.dart';
+
 /// Push + local notifications for movement alerts, joins, and weekly digest.
 ///
 /// Delivery path:
@@ -82,6 +84,30 @@ class NotificationService {
     }
 
     await scheduleWeeklyDigest();
+
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpen);
+    final initial = await _messaging.getInitialMessage();
+    if (initial != null) {
+      _pendingGroupId = initial.data['groupId'] as String?;
+    }
+  }
+
+  String? _pendingGroupId;
+  void Function(String groupId)? onOpenGroup;
+
+  /// Consumed once by the app shell to deep-link into a group.
+  String? takePendingGroupId() {
+    final id = _pendingGroupId;
+    _pendingGroupId = null;
+    return id;
+  }
+
+  void _handleMessageOpen(RemoteMessage message) {
+    final groupId = message.data['groupId'] as String?;
+    if (groupId != null && groupId.isNotEmpty) {
+      _pendingGroupId = groupId;
+      onOpenGroup?.call(groupId);
+    }
   }
 
   /// Kept for API compatibility — inbox delivery is via FCM (Cloud Function).
@@ -246,6 +272,75 @@ class NotificationService {
     }
     if (ops > 0) {
       await batch.commit();
+    }
+  }
+
+  Stream<List<AppNotification>> watchInbox(String uid) {
+    return _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(100)
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map((d) => AppNotification.fromDoc(d))
+              .toList(growable: false),
+        );
+  }
+
+  Future<void> markRead({
+    required String uid,
+    required String notificationId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notificationId)
+        .set({'read': true}, SetOptions(merge: true));
+  }
+
+  Future<void> markAllRead(String uid) async {
+    final snap = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .where('read', isEqualTo: false)
+        .limit(200)
+        .get();
+    if (snap.docs.isEmpty) return;
+    WriteBatch batch = _db.batch();
+    var ops = 0;
+    for (final doc in snap.docs) {
+      batch.set(doc.reference, {'read': true}, SetOptions(merge: true));
+      ops++;
+      if (ops >= 450) {
+        await batch.commit();
+        batch = _db.batch();
+        ops = 0;
+      }
+    }
+    if (ops > 0) await batch.commit();
+  }
+
+  Future<void> clearTokenOnSignOut(String uid) async {
+    try {
+      final token = await _messaging.getToken();
+      final ref = _db.collection('users').doc(uid);
+      final snap = await ref.get();
+      if (!snap.exists) return;
+      final updates = <String, dynamic>{
+        'fcmToken': null,
+        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+      };
+      if (token != null) {
+        updates['fcmTokens'] = FieldValue.arrayRemove([token]);
+      }
+      await ref.set(updates, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('clearTokenOnSignOut: $e');
     }
   }
 }

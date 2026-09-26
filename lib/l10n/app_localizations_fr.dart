@@ -104,7 +104,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noGroupsSubtitle =>
-      'Créez une caisse ou rejoignez-en une avec un code.';
+      'Commencez seul avec une caisse personnelle, créez un groupe, ou rejoignez avec un code.';
 
   @override
   String get createAGroup => 'Créer un groupe';
@@ -453,7 +453,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'Chacun peut ajouter dépôts et dépenses. Pas de hiérarchie d\'admin.';
+      'Suivez seul ou entre amis. Dans un groupe partagé, chacun peut ajouter dépôts et dépenses — pas de hiérarchie d\'admin.';
 
   @override
   String get onboardingTitle2 => 'Historique complet';
@@ -583,7 +583,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get forceUpdateBody =>
-      'Une nouvelle version d’EnCaisse est requise pour continuer. Merci de mettre à jour depuis Google Play.';
+      'Une nouvelle version d’EnCaisse est requise pour continuer. Merci de mettre à jour depuis le store.';
 
   @override
   String get updateAvailableTitle => 'Mise à jour disponible';
@@ -700,4 +700,180 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get timeLabel => 'Heure';
+
+  @override
+  String get verifyEmailTitle => 'Vérifiez votre e-mail';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'Nous avons envoyé un lien à $email. Ouvrez-le, puis appuyez sur Continuer.';
+  }
+
+  @override
+  String get resendVerification => 'Renvoyer l\'e-mail';
+
+  @override
+  String get verificationEmailSent => 'E-mail de vérification envoyé';
+
+  @override
+  String get emailVerifiedContinue => 'Continuer';
+
+  @override
+  String get emailNotVerifiedYet =>
+      'E-mail pas encore vérifié. Vérifiez votre boîte de réception.';
+
+  @override
+  String get checkVerification => 'J\'ai vérifié';
+
+  @override
+  String get settleTitle => 'Qui doit combien';
+
+  @override
+  String get settleSubtitle =>
+      'Répartition égale de la caisse selon dépôts et dépenses.';
+
+  @override
+  String get settleSettled => 'Tout le monde est à égalité';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from doit à $to';
+  }
+
+  @override
+  String get memberNet => 'Net';
+
+  @override
+  String get chartsTitle => 'Graphiques';
+
+  @override
+  String get categoryBreakdown => 'Par catégorie';
+
+  @override
+  String get exportCsv => 'Exporter CSV';
+
+  @override
+  String get exportPdf => 'Exporter PDF';
+
+  @override
+  String get exportShared => 'Export prêt à partager';
+
+  @override
+  String get exportFailed => 'Impossible d\'exporter';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get noNotifications => 'Aucune notification';
+
+  @override
+  String get noNotificationsSubtitle =>
+      'L\'activité de vos groupes apparaîtra ici.';
+
+  @override
+  String get markAllRead => 'Tout marquer comme lu';
+
+  @override
+  String get offlineBanner =>
+      'Hors ligne. Données en cache affichées si disponibles.';
+
+  @override
+  String get offlineRetry => 'Réessayer';
+
+  @override
+  String get forceUpdateBodyIos =>
+      'Une nouvelle version d\'EnCaisse est requise. Mettez à jour depuis l\'App Store.';
+
+  @override
+  String get openStore => 'Ouvrir la boutique';
+
+  @override
+  String get insightsTitle => 'Analyses';
+
+  @override
+  String get insightsOpen => 'Répartition & graphiques';
+
+  @override
+  String get personalCaisse => 'Caisse personnelle';
+
+  @override
+  String get personalCaisseSubtitle =>
+      'Suivez votre argent seul — sans groupe.';
+
+  @override
+  String get personalCaisseName => 'Ma caisse';
+
+  @override
+  String get personalBadge => 'Perso';
+
+  @override
+  String get howToUse => 'Comment utiliser EnCaisse';
+
+  @override
+  String get tourNext => 'Suivant';
+
+  @override
+  String get tourBack => 'Retour';
+
+  @override
+  String get tourSkip => 'Passer';
+
+  @override
+  String get tourDone => 'Compris';
+
+  @override
+  String get tourHome1Title => 'Votre accueil';
+
+  @override
+  String get tourHome1Body =>
+      'Cette liste montre toutes vos caisses. Appuyez pour voir dépôts, dépenses et solde en direct.';
+
+  @override
+  String get tourHome2Title => 'Suivre seul';
+
+  @override
+  String get tourHome2Body =>
+      'Besoin d’un carnet privé ? Appuyez sur + et choisissez Caisse personnelle. Pas de code, juste vous.';
+
+  @override
+  String get tourHome3Title => 'Partager';
+
+  @override
+  String get tourHome3Body =>
+      'Créez un groupe ou rejoignez avec un code à 6 caractères. Tout le monde voit le même historique transparent.';
+
+  @override
+  String get tourGroup1Title => 'Solde en direct';
+
+  @override
+  String get tourGroup1Body =>
+      'La carte verte est toujours calculée à partir des mouvements — dépôts moins dépenses. Impossible de tricher sur un total stocké.';
+
+  @override
+  String get tourGroup2Title => 'Ajouter un mouvement';
+
+  @override
+  String get tourGroup2Body =>
+      'Appuyez sur + pour un dépôt ou une dépense. Vous pouvez joindre un reçu — chaque changement reste dans l’audit.';
+
+  @override
+  String get tourGroup3Title => 'Invitation & analyses';
+
+  @override
+  String get tourGroup3Body =>
+      'Partagez le code pour inviter. Ouvrez Répartition & graphiques pour qui doit combien et les catégories.';
+
+  @override
+  String get tourGroup3BodyPersonal =>
+      'Ouvrez Répartition & graphiques pour les catégories. Cette caisse est à vous seul — l’invitation est masquée.';
+
+  @override
+  String get tapPhotoToChange => 'Appuyer pour changer la photo';
+
+  @override
+  String get tapPhotoToView => 'Appuyer pour voir';
+
+  @override
+  String get creatingPersonal => 'Ouverture de votre caisse personnelle…';
 }

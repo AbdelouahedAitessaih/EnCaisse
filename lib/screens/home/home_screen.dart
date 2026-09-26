@@ -3,18 +3,76 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/currencies.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/device_region.dart';
 import '../../widgets/branded_lottie.dart';
 import '../../widgets/encaisse_refresh.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/home_banner_ad.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _tourScheduled = false;
+  bool _openingPersonal = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _tourScheduled) return;
+      _tourScheduled = true;
+      FeatureTour.showHomeTourIfNeeded(
+        context,
+        ref.read(sharedPreferencesProvider),
+      );
+    });
+  }
+
+  Future<void> _openPersonalCaisse() async {
+    final l10n = AppLocalizations.of(context);
+    final user = ref.read(authStateProvider).value;
+    final profile = ref.read(currentUserProfileProvider).value;
+    if (user == null || _openingPersonal) return;
+
+    setState(() => _openingPersonal = true);
+    try {
+      final country = await DeviceRegion.countryCode();
+      final currency = AppCurrencies.codeForCountry(country) ?? 'MAD';
+      final group = await ref.read(groupServiceProvider).ensurePersonalGroup(
+            uid: user.uid,
+            displayName: profile?.displayName ??
+                user.displayName ??
+                l10n.member,
+            personalName: l10n.personalCaisseName,
+            photoUrl: profile?.photoUrl ?? user.photoURL,
+            currency: currency,
+          );
+      if (!mounted) return;
+      context.go('/home');
+      context.push('/groups/${group.id}');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _openingPersonal = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final groupsAsync = ref.watch(userGroupsProvider);
     final profile = ref.watch(currentUserProfileProvider).value;
@@ -25,6 +83,26 @@ class HomeScreen extends ConsumerWidget {
         title: Text(l10n.appName),
         actions: [
           IconButton(
+            tooltip: l10n.howToUse,
+            onPressed: () async {
+              final prefs = ref.read(sharedPreferencesProvider);
+              await prefs.setBool(kTourHomeDoneKey, false);
+              if (!context.mounted) return;
+              await FeatureTour.showHomeTourIfNeeded(context, prefs);
+            },
+            icon: const Icon(Icons.help_outline),
+          ),
+          IconButton(
+            tooltip: l10n.notifications,
+            onPressed: () => context.push('/notifications'),
+            icon: Badge(
+              isLabelVisible:
+                  (ref.watch(unreadNotificationsCountProvider)) > 0,
+              label: Text('${ref.watch(unreadNotificationsCountProvider)}'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+          ),
+          IconButton(
             tooltip: l10n.settings,
             onPressed: () => context.push('/settings'),
             icon: const Icon(Icons.settings_outlined),
@@ -32,6 +110,12 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             tooltip: l10n.signOut,
             onPressed: () async {
+              final uid = ref.read(authStateProvider).value?.uid;
+              if (uid != null) {
+                await ref
+                    .read(notificationServiceProvider)
+                    .clearTokenOnSignOut(uid);
+              }
               await ref.read(authServiceProvider).signOut();
               if (context.mounted) context.go('/welcome');
             },
@@ -42,6 +126,8 @@ class HomeScreen extends ConsumerWidget {
       body: Column(
         children: [
           const HomeBannerAd(),
+          if (_openingPersonal)
+            const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: EncaisseRefreshIndicator(
               onRefresh: () async {
@@ -84,6 +170,14 @@ class HomeScreen extends ConsumerWidget {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
+                                    ElevatedButton.icon(
+                                      onPressed: _openingPersonal
+                                          ? null
+                                          : _openPersonalCaisse,
+                                      icon: const Icon(Icons.person_outline),
+                                      label: Text(l10n.personalCaisse),
+                                    ),
+                                    const SizedBox(height: 12),
                                     ElevatedButton(
                                       onPressed: () =>
                                           context.push('/groups/create'),
@@ -157,7 +251,8 @@ class HomeScreen extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(8),
                                     image: group.photoUrl != null
                                         ? DecorationImage(
-                                            image: NetworkImage(group.photoUrl!),
+                                            image:
+                                                NetworkImage(group.photoUrl!),
                                             fit: BoxFit.cover,
                                           )
                                         : null,
@@ -181,15 +276,30 @@ class HomeScreen extends ConsumerWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        group.name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge,
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              group.name,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge,
+                                            ),
+                                          ),
+                                          if (group.isPersonal)
+                                            Chip(
+                                              label: Text(l10n.personalBadge),
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              padding: EdgeInsets.zero,
+                                            ),
+                                        ],
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '${l10n.inviteCode} ${group.inviteCode} · ${group.currency}',
+                                        group.isPersonal
+                                            ? '${l10n.personalCaisse} · ${group.currency}'
+                                            : '${l10n.inviteCode} ${group.inviteCode} · ${group.currency}',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium,
@@ -234,6 +344,16 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ListTile(
+                  leading: const Icon(Icons.person_outline,
+                      color: AppColors.primary),
+                  title: Text(l10n.personalCaisse),
+                  subtitle: Text(l10n.personalCaisseSubtitle),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openPersonalCaisse();
+                  },
+                ),
                 ListTile(
                   leading:
                       const Icon(Icons.group_add, color: AppColors.primary),

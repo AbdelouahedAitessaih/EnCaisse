@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
+import '../../providers/settings_provider.dart';
+import '../../router/app_router.dart';
 import '../../widgets/branded_lottie.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
 
@@ -20,6 +23,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _finish({required String route}) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await markOnboardingCompleted(prefs);
+    if (mounted) context.go(route);
   }
 
   @override
@@ -50,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: TextButton(
-                onPressed: () => context.go('/signup'),
+                onPressed: () => _finish(route: '/welcome'),
                 child: Text(l10n.skip),
               ),
             ),
@@ -107,23 +116,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (_page < pages.length - 1) {
-                      _controller.nextPage(
-                        duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOut,
-                      );
-                    } else {
-                      context.go('/signup');
-                    }
-                  },
-                  child: Text(
-                    _page < pages.length - 1 ? l10n.next : l10n.createAccount,
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_page < pages.length - 1) {
+                          _controller.nextPage(
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeOut,
+                          );
+                        } else {
+                          _finish(route: '/signup');
+                        }
+                      },
+                      child: Text(
+                        _page < pages.length - 1
+                            ? l10n.next
+                            : l10n.createAccount,
+                      ),
+                    ),
                   ),
-                ),
+                  if (_page == pages.length - 1) ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => _finish(route: '/login'),
+                      child: Text(l10n.alreadyHaveAccount),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],

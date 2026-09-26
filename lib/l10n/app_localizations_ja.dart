@@ -101,7 +101,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noGroupsYet => 'まだグループがありません';
 
   @override
-  String get noGroupsSubtitle => 'カイスを作成するか、招待コードで参加してください。';
+  String get noGroupsSubtitle => '個人の金庫から始めるか、グループを作成、またはコードで参加。';
 
   @override
   String get createAGroup => 'グループを作成';
@@ -435,7 +435,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingTitle1 => 'ひとつの共有カイス';
 
   @override
-  String get onboardingBody1 => 'グループの誰でも入金と支出を追加できます。管理者の階層はありません。';
+  String get onboardingBody1 =>
+      '一人でも友人とでも記録できます。共有グループでは全員が入金・支出を追加でき、管理者の階層はありません。';
 
   @override
   String get onboardingTitle2 => '完全な監査ログ';
@@ -556,8 +557,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get forceUpdateTitle => 'アップデートが必要です';
 
   @override
-  String get forceUpdateBody =>
-      '続行するには新しいバージョンの EnCaisse が必要です。Google Play から更新してください。';
+  String get forceUpdateBody => '続行するには新しいバージョンの EnCaisse が必要です。ストアから更新してください。';
 
   @override
   String get updateAvailableTitle => 'アップデートがあります';
@@ -671,4 +671,168 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get timeLabel => '時刻';
+
+  @override
+  String get verifyEmailTitle => 'メールを確認してください';
+
+  @override
+  String verifyEmailBody(String email) {
+    return '$email に確認リンクを送りました。開いてから続行をタップしてください。';
+  }
+
+  @override
+  String get resendVerification => 'メールを再送';
+
+  @override
+  String get verificationEmailSent => '確認メールを送信しました';
+
+  @override
+  String get emailVerifiedContinue => '続行';
+
+  @override
+  String get emailNotVerifiedYet => 'メールはまだ確認されていません。受信箱を確認してください。';
+
+  @override
+  String get checkVerification => '確認しました';
+
+  @override
+  String get settleTitle => '誰が誰に払うか';
+
+  @override
+  String get settleSubtitle => '入金と支出に基づく均等な分け方です。';
+
+  @override
+  String get settleSettled => '全員清算済み';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from は $to に支払う';
+  }
+
+  @override
+  String get memberNet => '純額';
+
+  @override
+  String get chartsTitle => 'グラフ';
+
+  @override
+  String get categoryBreakdown => 'カテゴリ別';
+
+  @override
+  String get exportCsv => 'CSVを書き出す';
+
+  @override
+  String get exportPdf => 'PDFを書き出す';
+
+  @override
+  String get exportShared => '共有の準備ができました';
+
+  @override
+  String get exportFailed => '書き出せませんでした';
+
+  @override
+  String get notifications => '通知';
+
+  @override
+  String get noNotifications => '通知はまだありません';
+
+  @override
+  String get noNotificationsSubtitle => 'グループの活動がここに表示されます。';
+
+  @override
+  String get markAllRead => 'すべて既読にする';
+
+  @override
+  String get offlineBanner => 'オフラインです。キャッシュがあれば表示します。';
+
+  @override
+  String get offlineRetry => '再試行';
+
+  @override
+  String get forceUpdateBodyIos =>
+      '新しいバージョンの EnCaisse が必要です。App Store から更新してください。';
+
+  @override
+  String get openStore => 'ストアを開く';
+
+  @override
+  String get insightsTitle => '分析';
+
+  @override
+  String get insightsOpen => '精算とグラフ';
+
+  @override
+  String get personalCaisse => '個人の金庫';
+
+  @override
+  String get personalCaisseSubtitle => 'グループなしで自分のお金を記録。';
+
+  @override
+  String get personalCaisseName => '自分の金庫';
+
+  @override
+  String get personalBadge => '個人';
+
+  @override
+  String get howToUse => 'EnCaisse の使い方';
+
+  @override
+  String get tourNext => '次へ';
+
+  @override
+  String get tourBack => '戻る';
+
+  @override
+  String get tourSkip => 'スキップ';
+
+  @override
+  String get tourDone => '了解';
+
+  @override
+  String get tourHome1Title => 'ホーム';
+
+  @override
+  String get tourHome1Body => '参加中の金庫が一覧表示されます。タップして入金・支出・残高を確認できます。';
+
+  @override
+  String get tourHome2Title => '一人で記録';
+
+  @override
+  String get tourHome2Body => '個人用ノートが必要なら + から個人の金庫を選びます。招待コードは不要です。';
+
+  @override
+  String get tourHome3Title => 'みんなと共有';
+
+  @override
+  String get tourHome3Body => 'グループを作るか、6文字のコードで参加。全員が同じ透明な履歴を見ます。';
+
+  @override
+  String get tourGroup1Title => 'ライブ残高';
+
+  @override
+  String get tourGroup1Body => '緑のカードは常に取引から計算されます（入金−支出）。改ざんできる保存残高ではありません。';
+
+  @override
+  String get tourGroup2Title => '取引を追加';
+
+  @override
+  String get tourGroup2Body => '+ で入金または支出を追加。領収書も添付でき、変更は監査ログに残ります。';
+
+  @override
+  String get tourGroup3Title => '招待と分析';
+
+  @override
+  String get tourGroup3Body => '招待コードを共有。精算とグラフで誰が誰に払うか、カテゴリ別支出を確認できます。';
+
+  @override
+  String get tourGroup3BodyPersonal => 'カテゴリ分析は精算とグラフから。この金庫はあなた専用で、招待は非表示です。';
+
+  @override
+  String get tapPhotoToChange => 'タップして写真を変更';
+
+  @override
+  String get tapPhotoToView => 'タップして表示';
+
+  @override
+  String get creatingPersonal => '個人の金庫を開いています…';
 }

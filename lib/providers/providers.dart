@@ -7,12 +7,13 @@ import '../models/models.dart';
 import '../services/ad_service.dart';
 import '../services/app_update_service.dart';
 import '../services/auth_service.dart';
+import '../services/export_service.dart';
 import '../services/group_service.dart';
 import '../services/movement_service.dart';
 import '../services/notification_service.dart';
 import '../services/review_service.dart';
 import '../services/storage_service.dart';
-
+import '../core/utils/settle.dart';
 final firebaseReadyProvider = Provider<bool>((ref) => false);
 
 final appUpdateServiceProvider =
@@ -40,7 +41,8 @@ final notificationServiceProvider =
 final reviewServiceProvider = Provider<ReviewService>((ref) => ReviewService());
 
 final authStateProvider = StreamProvider<User?>((ref) {
-  return ref.watch(authServiceProvider).authStateChanges;
+  // userChanges emits after User.reload() (emailVerified flip); authStateChanges does not.
+  return ref.watch(authServiceProvider).userChanges;
 });
 
 final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
@@ -86,4 +88,24 @@ final movementAuditProvider = StreamProvider.family<List<AuditEntry>,
   return ref
       .watch(movementServiceProvider)
       .watchAuditForMovement(args.groupId, args.movementId);
+});
+
+final exportServiceProvider = Provider<ExportService>((ref) => ExportService());
+
+final settleProvider = Provider.family<SettleSummary, String>((ref, groupId) {
+  final movements = ref.watch(movementsProvider(groupId)).value ?? const [];
+  final members = ref.watch(groupMembersProvider(groupId)).value ?? const [];
+  return computeSettle(members: members, movements: movements);
+});
+
+final inboxNotificationsProvider =
+    StreamProvider<List<AppNotification>>((ref) {
+  final user = ref.watch(authStateProvider).value;
+  if (user == null) return Stream.value(const []);
+  return ref.watch(notificationServiceProvider).watchInbox(user.uid);
+});
+
+final unreadNotificationsCountProvider = Provider<int>((ref) {
+  final items = ref.watch(inboxNotificationsProvider).value ?? const [];
+  return items.where((n) => !n.read).length;
 });

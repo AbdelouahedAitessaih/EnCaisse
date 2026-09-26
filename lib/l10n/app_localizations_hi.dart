@@ -101,7 +101,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noGroupsYet => 'अभी कोई समूह नहीं';
 
   @override
-  String get noGroupsSubtitle => 'एक कैस बनाएँ या आमंत्रण कोड से जुड़ें।';
+  String get noGroupsSubtitle =>
+      'व्यक्तिगत कैश से शुरू करें, समूह बनाएँ, या कोड से जुड़ें।';
 
   @override
   String get createAGroup => 'समूह बनाएँ';
@@ -446,7 +447,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'समूह का हर कोई जमा और खर्च जोड़ सकता है। कोई एडमिन पदानुक्रम नहीं।';
+      'अकेले या दोस्तों के साथ ट्रैक करें। साझा समूह में सभी जमा/खर्च जोड़ सकते हैं — कोई एडमिन पदानुक्रम नहीं।';
 
   @override
   String get onboardingTitle2 => 'पूर्ण ऑडिट ट्रेल';
@@ -573,7 +574,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get forceUpdateBody =>
-      'जारी रखने के लिए EnCaisse का नया संस्करण आवश्यक है। Google Play से अपडेट करें।';
+      'जारी रखने के लिए EnCaisse का नया संस्करण आवश्यक है। स्टोर से अपडेट करें।';
 
   @override
   String get updateAvailableTitle => 'अपडेट उपलब्ध';
@@ -689,4 +690,177 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get timeLabel => 'समय';
+
+  @override
+  String get verifyEmailTitle => 'अपना ईमेल सत्यापित करें';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'हमने $email पर सत्यापन लिंक भेजा है। खोलें, फिर जारी रखें टैप करें।';
+  }
+
+  @override
+  String get resendVerification => 'ईमेल फिर भेजें';
+
+  @override
+  String get verificationEmailSent => 'सत्यापन ईमेल भेजा गया';
+
+  @override
+  String get emailVerifiedContinue => 'जारी रखें';
+
+  @override
+  String get emailNotVerifiedYet => 'ईमेल अभी सत्यापित नहीं। इनबॉक्स देखें।';
+
+  @override
+  String get checkVerification => 'मैंने सत्यापित कर लिया';
+
+  @override
+  String get settleTitle => 'किसका कितना बकाया';
+
+  @override
+  String get settleSubtitle => 'जमा और खर्च के आधार पर बराबर हिस्सा।';
+
+  @override
+  String get settleSettled => 'सब बराबर हैं';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from का $to को बकाया';
+  }
+
+  @override
+  String get memberNet => 'नेट';
+
+  @override
+  String get chartsTitle => 'चार्ट';
+
+  @override
+  String get categoryBreakdown => 'श्रेणी के अनुसार';
+
+  @override
+  String get exportCsv => 'CSV निर्यात';
+
+  @override
+  String get exportPdf => 'PDF निर्यात';
+
+  @override
+  String get exportShared => 'निर्यात साझा करने के लिए तैयार';
+
+  @override
+  String get exportFailed => 'निर्यात नहीं हो सका';
+
+  @override
+  String get notifications => 'सूचनाएँ';
+
+  @override
+  String get noNotifications => 'अभी कोई सूचना नहीं';
+
+  @override
+  String get noNotificationsSubtitle => 'आपके समूहों की गतिविधि यहाँ दिखेगी।';
+
+  @override
+  String get markAllRead => 'सभी पढ़ा चिह्नित करें';
+
+  @override
+  String get offlineBanner =>
+      'आप ऑफ़लाइन हैं। उपलब्ध होने पर कैश डेटा दिख रहा है।';
+
+  @override
+  String get offlineRetry => 'फिर कोशिश करें';
+
+  @override
+  String get forceUpdateBodyIos =>
+      'EnCaisse का नया संस्करण आवश्यक है। App Store से अपडेट करें।';
+
+  @override
+  String get openStore => 'स्टोर खोलें';
+
+  @override
+  String get insightsTitle => 'विश्लेषण';
+
+  @override
+  String get insightsOpen => 'सेटल और चार्ट';
+
+  @override
+  String get personalCaisse => 'व्यक्तिगत कैश';
+
+  @override
+  String get personalCaisseSubtitle =>
+      'अकेले अपने पैसे ट्रैक करें — बिना समूह।';
+
+  @override
+  String get personalCaisseName => 'मेरी कैश';
+
+  @override
+  String get personalBadge => 'व्यक्तिगत';
+
+  @override
+  String get howToUse => 'EnCaisse कैसे उपयोग करें';
+
+  @override
+  String get tourNext => 'आगे';
+
+  @override
+  String get tourBack => 'पीछे';
+
+  @override
+  String get tourSkip => 'छोड़ें';
+
+  @override
+  String get tourDone => 'समझ गया';
+
+  @override
+  String get tourHome1Title => 'आपका होम';
+
+  @override
+  String get tourHome1Body =>
+      'यह सूची आपकी सभी कैश दिखाती है। जमा, खर्च और लाइव बैलेंस देखने के लिए टैप करें।';
+
+  @override
+  String get tourHome2Title => 'अकेले ट्रैक करें';
+
+  @override
+  String get tourHome2Body =>
+      'निजी नोटबुक चाहिए? + दबाकर व्यक्तिगत कैश चुनें। कोई कोड नहीं, सिर्फ आप।';
+
+  @override
+  String get tourHome3Title => 'दूसरों के साथ साझा करें';
+
+  @override
+  String get tourHome3Body =>
+      'समूह बनाएँ या 6-अक्षर कोड से जुड़ें। सभी को एक ही पारदर्शी इतिहास दिखता है।';
+
+  @override
+  String get tourGroup1Title => 'लाइव बैलेंस';
+
+  @override
+  String get tourGroup1Body =>
+      'हरा कार्ड हमेशा लेन-देन से बनता है — जमा घटा खर्च। धोखा देने योग्य संग्रहीत कुल नहीं।';
+
+  @override
+  String get tourGroup2Title => 'लेन-देन जोड़ें';
+
+  @override
+  String get tourGroup2Body =>
+      'जमा या खर्च के लिए + टैप करें। रसीद जोड़ सकते हैं; हर बदलाव ऑडिट में रहता है।';
+
+  @override
+  String get tourGroup3Title => 'आमंत्रण और विश्लेषण';
+
+  @override
+  String get tourGroup3Body =>
+      'कोड साझा करें। सेटल और चार्ट में देखें किसका कितना बकाया और श्रेणी खर्च।';
+
+  @override
+  String get tourGroup3BodyPersonal =>
+      'श्रेणियों के लिए सेटल और चार्ट खोलें। यह कैश सिर्फ आपकी है — आमंत्रण छिपा है।';
+
+  @override
+  String get tapPhotoToChange => 'फोटो बदलने के लिए टैप करें';
+
+  @override
+  String get tapPhotoToView => 'देखने के लिए टैप करें';
+
+  @override
+  String get creatingPersonal => 'आपकी व्यक्तिगत कैश खुल रही है…';
 }

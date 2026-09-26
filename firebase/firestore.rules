@@ -29,7 +29,9 @@ service cloud.firestore {
       return request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.inviteCode == resource.data.inviteCode
         && request.resource.data.currency == resource.data.currency
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.get('isPersonal', false)
+            == resource.data.get('isPersonal', false);
     }
 
     match /users/{uid} {

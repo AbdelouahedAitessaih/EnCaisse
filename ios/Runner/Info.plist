@@ -51,10 +51,7 @@
 	<string>EnCaisse needs camera access to capture optional receipt photos.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>EnCaisse uses this identifier to show relevant ads via AdMob.</string>
-	<!--
-	  ⚠️ AdMob APP ID — currently Google SAMPLE / TEST ID.
-	  Replace with your real iOS AdMob app ID before release.
-	-->
+	<!-- AdMob iOS app ID (same publisher as Android until dedicated iOS AdMob app). -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-7691333173853968~2642191347</string>
 	<key>UIBackgroundModes</key>

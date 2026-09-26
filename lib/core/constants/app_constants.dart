@@ -31,19 +31,24 @@ abstract final class AdMobConfig {
   static const String androidAppId =
       'ca-app-pub-7691333173853968~2642191347';
 
-  /// iOS app ID — same until a dedicated iOS AdMob app exists.
+  /// iOS AdMob app ID — create a dedicated iOS app in AdMob and replace.
+  /// Until then, uses the same publisher app entry as Android (ads may be limited on iOS).
   static const String iosAppId =
       'ca-app-pub-7691333173853968~2642191347';
 
   /// Banner on Home screen only
   static const String bannerAdUnitIdAndroid =
       'ca-app-pub-7691333173853968/9244806876';
+
+  /// iOS banner unit — replace with AdMob iOS unit when available.
   static const String bannerAdUnitIdIos =
       'ca-app-pub-7691333173853968/9244806876';
 
   /// Interstitial after creating 3rd group
   static const String interstitialAdUnitIdAndroid =
       'ca-app-pub-7691333173853968/2450619655';
+
+  /// iOS interstitial unit — replace with AdMob iOS unit when available.
   static const String interstitialAdUnitIdIos =
       'ca-app-pub-7691333173853968/2450619655';
 }

@@ -101,7 +101,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noGroupsYet => 'لا توجد مجموعات بعد';
 
   @override
-  String get noGroupsSubtitle => 'أنشئ صندوقًا أو انضم عبر رمز الدعوة.';
+  String get noGroupsSubtitle =>
+      'ابدأ وحدك بصندوق شخصي، أو أنشئ مجموعة، أو انضم برمز.';
 
   @override
   String get createAGroup => 'إنشاء مجموعة';
@@ -442,7 +443,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'يمكن للجميع إضافة الإيداعات والمصروفات. بلا تسلسل إداري.';
+      'تتبّع وحدك أو مع الأصدقاء. في مجموعة مشتركة يمكن للجميع إضافة إيداعات ومصاريف — بلا تراتبية مشرفين.';
 
   @override
   String get onboardingTitle2 => 'سجل شفاف كامل';
@@ -569,7 +570,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forceUpdateBody =>
-      'يلزم إصدار جديد من EnCaisse للمتابعة. حدّث التطبيق من Google Play.';
+      'يلزم إصدار جديد من EnCaisse للمتابعة. حدّث من المتجر.';
 
   @override
   String get updateAvailableTitle => 'يتوفر تحديث';
@@ -684,4 +685,177 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get timeLabel => 'الوقت';
+
+  @override
+  String get verifyEmailTitle => 'تحقق من بريدك';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'أرسلنا رابط تحقق إلى $email. افتحه ثم اضغط متابعة.';
+  }
+
+  @override
+  String get resendVerification => 'إعادة إرسال البريد';
+
+  @override
+  String get verificationEmailSent => 'تم إرسال بريد التحقق';
+
+  @override
+  String get emailVerifiedContinue => 'متابعة';
+
+  @override
+  String get emailNotVerifiedYet =>
+      'البريد غير مُتحقق بعد. تحقق من صندوق الوارد.';
+
+  @override
+  String get checkVerification => 'لقد تحققت';
+
+  @override
+  String get settleTitle => 'من يدين لمن';
+
+  @override
+  String get settleSubtitle =>
+      'حصة متساوية من الصندوق حسب الإيداعات والمصاريف.';
+
+  @override
+  String get settleSettled => 'الجميع متعادلون';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from يدين لـ $to';
+  }
+
+  @override
+  String get memberNet => 'صافي';
+
+  @override
+  String get chartsTitle => 'الرسوم البيانية';
+
+  @override
+  String get categoryBreakdown => 'حسب الفئة';
+
+  @override
+  String get exportCsv => 'تصدير CSV';
+
+  @override
+  String get exportPdf => 'تصدير PDF';
+
+  @override
+  String get exportShared => 'التصدير جاهز للمشاركة';
+
+  @override
+  String get exportFailed => 'تعذّر التصدير';
+
+  @override
+  String get notifications => 'الإشعارات';
+
+  @override
+  String get noNotifications => 'لا إشعارات بعد';
+
+  @override
+  String get noNotificationsSubtitle => 'ستظهر هنا نشاط مجموعاتك.';
+
+  @override
+  String get markAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get offlineBanner => 'أنت غير متصل. عرض البيانات المخزنة إن وُجدت.';
+
+  @override
+  String get offlineRetry => 'إعادة المحاولة';
+
+  @override
+  String get forceUpdateBodyIos =>
+      'يلزم إصدار جديد من EnCaisse. حدّث من App Store.';
+
+  @override
+  String get openStore => 'فتح المتجر';
+
+  @override
+  String get insightsTitle => 'التحليلات';
+
+  @override
+  String get insightsOpen => 'التسوية والرسوم';
+
+  @override
+  String get personalCaisse => 'صندوق شخصي';
+
+  @override
+  String get personalCaisseSubtitle => 'تتبّع أموالك وحدك — بلا مجموعة.';
+
+  @override
+  String get personalCaisseName => 'صندوقي';
+
+  @override
+  String get personalBadge => 'شخصي';
+
+  @override
+  String get howToUse => 'كيفية استخدام EnCaisse';
+
+  @override
+  String get tourNext => 'التالي';
+
+  @override
+  String get tourBack => 'رجوع';
+
+  @override
+  String get tourSkip => 'تخطي';
+
+  @override
+  String get tourDone => 'حسناً';
+
+  @override
+  String get tourHome1Title => 'الصفحة الرئيسية';
+
+  @override
+  String get tourHome1Body =>
+      'تعرض هذه القائمة كل صناديقك. اضغط على واحد لفتح الإيداعات والمصاريف والرصيد الحي.';
+
+  @override
+  String get tourHome2Title => 'التتبّع وحدك';
+
+  @override
+  String get tourHome2Body =>
+      'تحتاج دفتراً خاصاً؟ اضغط + واختر صندوق شخصي. بلا رمز دعوة، أنت فقط.';
+
+  @override
+  String get tourHome3Title => 'المشاركة مع الآخرين';
+
+  @override
+  String get tourHome3Body =>
+      'أنشئ مجموعة أو انضم برمز من 6 أحرف. الجميع يرى نفس السجل الشفاف.';
+
+  @override
+  String get tourGroup1Title => 'رصيد حي';
+
+  @override
+  String get tourGroup1Body =>
+      'البطاقة الخضراء تُحسب دائماً من الحركات — إيداعات ناقص مصاريف. ليست رقماً مخزّناً يمكن التلاعب به.';
+
+  @override
+  String get tourGroup2Title => 'إضافة حركة';
+
+  @override
+  String get tourGroup2Body =>
+      'اضغط + لإضافة إيداع أو مصروف. يمكنك إرفاق إيصال؛ كل تغيير يبقى في سجل التدقيق.';
+
+  @override
+  String get tourGroup3Title => 'الدعوة والتحليلات';
+
+  @override
+  String get tourGroup3Body =>
+      'شارك رمز الدعوة. افتح التسوية والرسوم لمعرفة من يدين لمن والإنفاق حسب الفئة.';
+
+  @override
+  String get tourGroup3BodyPersonal =>
+      'افتح التسوية والرسوم للفئات. هذا الصندوق لك وحدك — الدعوة مخفية.';
+
+  @override
+  String get tapPhotoToChange => 'اضغط على الصورة للتغيير';
+
+  @override
+  String get tapPhotoToView => 'اضغط للعرض';
+
+  @override
+  String get creatingPersonal => 'جارٍ فتح صندوقك الشخصي…';
 }

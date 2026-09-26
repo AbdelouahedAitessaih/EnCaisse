@@ -102,7 +102,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noGroupsSubtitle =>
-      'Create a caisse or join one with an invite code.';
+      'Start alone with a personal caisse, create a shared group, or join with an invite code.';
 
   @override
   String get createAGroup => 'Create a group';
@@ -447,7 +447,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'Everyone in the group can add deposits and expenses. No admin hierarchy.';
+      'Track alone or with friends. In a shared group everyone can add deposits and expenses — no admin hierarchy.';
 
   @override
   String get onboardingTitle2 => 'Full audit trail';
@@ -575,7 +575,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forceUpdateBody =>
-      'A new version of EnCaisse is required to continue. Please update from Google Play.';
+      'A new version of EnCaisse is required to continue. Please update from the store.';
 
   @override
   String get updateAvailableTitle => 'Update available';
@@ -692,4 +692,179 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timeLabel => 'Time';
+
+  @override
+  String get verifyEmailTitle => 'Verify your email';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'We sent a verification link to $email. Open it, then tap Continue.';
+  }
+
+  @override
+  String get resendVerification => 'Resend email';
+
+  @override
+  String get verificationEmailSent => 'Verification email sent';
+
+  @override
+  String get emailVerifiedContinue => 'Continue';
+
+  @override
+  String get emailNotVerifiedYet => 'Email not verified yet. Check your inbox.';
+
+  @override
+  String get checkVerification => 'I\'ve verified';
+
+  @override
+  String get settleTitle => 'Who owes whom';
+
+  @override
+  String get settleSubtitle =>
+      'Equal share of the caisse based on deposits and expenses.';
+
+  @override
+  String get settleSettled => 'Everyone is even';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from owes $to';
+  }
+
+  @override
+  String get memberNet => 'Net';
+
+  @override
+  String get chartsTitle => 'Charts';
+
+  @override
+  String get categoryBreakdown => 'By category';
+
+  @override
+  String get exportCsv => 'Export CSV';
+
+  @override
+  String get exportPdf => 'Export PDF';
+
+  @override
+  String get exportShared => 'Export ready to share';
+
+  @override
+  String get exportFailed => 'Could not export';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get noNotifications => 'No notifications yet';
+
+  @override
+  String get noNotificationsSubtitle =>
+      'Activity from your groups will appear here.';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get offlineBanner =>
+      'You\'re offline. Showing cached data when available.';
+
+  @override
+  String get offlineRetry => 'Retry';
+
+  @override
+  String get forceUpdateBodyIos =>
+      'A new version of EnCaisse is required. Please update from the App Store.';
+
+  @override
+  String get openStore => 'Open store';
+
+  @override
+  String get insightsTitle => 'Insights';
+
+  @override
+  String get insightsOpen => 'Settle & charts';
+
+  @override
+  String get personalCaisse => 'Personal caisse';
+
+  @override
+  String get personalCaisseSubtitle =>
+      'Track your own money alone — no group needed.';
+
+  @override
+  String get personalCaisseName => 'My caisse';
+
+  @override
+  String get personalBadge => 'Personal';
+
+  @override
+  String get howToUse => 'How to use EnCaisse';
+
+  @override
+  String get tourNext => 'Next';
+
+  @override
+  String get tourBack => 'Back';
+
+  @override
+  String get tourSkip => 'Skip';
+
+  @override
+  String get tourDone => 'Got it';
+
+  @override
+  String get tourHome1Title => 'Your home';
+
+  @override
+  String get tourHome1Body =>
+      'This list shows every caisse you belong to. Tap one to open deposits, expenses, and the live balance.';
+
+  @override
+  String get tourHome2Title => 'Track alone';
+
+  @override
+  String get tourHome2Body =>
+      'Need a private notebook for your money? Tap + and choose Personal caisse. No invite code, just you.';
+
+  @override
+  String get tourHome3Title => 'Share with others';
+
+  @override
+  String get tourHome3Body =>
+      'Create a group or join with a 6-character code. Everyone sees the same transparent history.';
+
+  @override
+  String get tourGroup1Title => 'Live balance';
+
+  @override
+  String get tourGroup1Body =>
+      'The green card is always calculated from movements — deposits minus expenses. It is never stored as a number you can cheat.';
+
+  @override
+  String get tourGroup2Title => 'Add a movement';
+
+  @override
+  String get tourGroup2Body =>
+      'Tap + to add a deposit or expense. You can attach a receipt photo and edit later — every change stays in the audit trail.';
+
+  @override
+  String get tourGroup3Title => 'Invite & insights';
+
+  @override
+  String get tourGroup3Body =>
+      'Share the invite code so friends join. Open Settle & charts to see who owes whom and spending by category.';
+
+  @override
+  String get tourGroup3BodyPersonal =>
+      'Open Settle & charts for category breakdowns. This caisse is only yours — invite is hidden.';
+
+  @override
+  String get tapPhotoToChange => 'Tap photo to change';
+
+  @override
+  String get tapPhotoToView => 'Tap to view';
+
+  @override
+  String get creatingPersonal => 'Opening your personal caisse…';
 }

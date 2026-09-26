@@ -102,3 +102,100 @@ async function clearBadTokens(uid, user, badTokens) {
   if (Object.keys(updates).length === 0) return;
   await admin.firestore().collection("users").doc(uid).set(updates, {merge: true});
 }
+
+/**
+ * Hard-delete soft-deleted movements after the 24h undo window.
+ * Also removes nested audit entries and receipt files when present.
+ * Requires Blaze + Cloud Scheduler (enabled on first deploy).
+ */
+exports.purgeExpiredSoftDeletes = functions
+  .region("us-central1")
+  .runWith({timeoutSeconds: 540, memory: "256MB"})
+  .pubsub.schedule("every 24 hours")
+  .timeZone("Etc/UTC")
+  .onRun(async () => {
+    return purgeExpiredMovements();
+  });
+
+/** Manual/HTTP trigger fallback (Cloud Scheduler or curl with auth). */
+exports.purgeExpiredSoftDeletesHttp = functions
+  .region("us-central1")
+  .runWith({timeoutSeconds: 540, memory: "256MB"})
+  .https.onRequest(async (req, res) => {
+    if (req.method !== "POST" && req.method !== "GET") {
+      res.status(405).send("Method not allowed");
+      return;
+    }
+    try {
+      const result = await purgeExpiredMovements();
+      res.status(200).json({ok: true, purged: result});
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ok: false, error: String(e.message || e)});
+    }
+  });
+
+async function purgeExpiredMovements() {
+  const cutoff = admin.firestore.Timestamp.fromDate(
+    new Date(Date.now() - 24 * 60 * 60 * 1000),
+  );
+  const snap = await admin
+    .firestore()
+    .collectionGroup("movements")
+    .where("deleted", "==", true)
+    .where("deletedAt", "<", cutoff)
+    .limit(400)
+    .get();
+
+  if (snap.empty) {
+    console.log("No expired soft-deletes to purge");
+    return 0;
+  }
+
+  let batch = admin.firestore().batch();
+  let ops = 0;
+  for (const doc of snap.docs) {
+    const data = doc.data() || {};
+    const receiptUrl = data.receiptUrl;
+    if (typeof receiptUrl === "string" && receiptUrl.length > 0) {
+      try {
+        await admin.storage().bucket().file(storagePathFromUrl(receiptUrl)).delete();
+      } catch (e) {
+        console.warn("Receipt delete skipped", doc.ref.path, e.message);
+      }
+    }
+
+    const auditSnap = await doc.ref.collection("audit").limit(200).get();
+    for (const a of auditSnap.docs) {
+      batch.delete(a.ref);
+      ops++;
+      if (ops >= 400) {
+        await batch.commit();
+        batch = admin.firestore().batch();
+        ops = 0;
+      }
+    }
+    batch.delete(doc.ref);
+    ops++;
+    if (ops >= 400) {
+      await batch.commit();
+      batch = admin.firestore().batch();
+      ops = 0;
+    }
+  }
+  if (ops > 0) await batch.commit();
+  console.log("Purged soft-deleted movements:", snap.size);
+  return snap.size;
+}
+
+function storagePathFromUrl(url) {
+  try {
+    const u = new URL(url);
+    const marker = "/o/";
+    const idx = u.pathname.indexOf(marker);
+    if (idx >= 0) {
+      return decodeURIComponent(u.pathname.slice(idx + marker.length));
+    }
+  } catch (_) {}
+  return url;
+}

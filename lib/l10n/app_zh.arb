@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "zh",
   "appName": "EnCaisse",
   "tagline": "EnCaisse, ensemble.",
@@ -30,7 +30,7 @@
   "hello": "你好",
   "helloName": "你好，{name}",
   "noGroupsYet": "暂无群组",
-  "noGroupsSubtitle": "创建一个资金池，或使用邀请码加入。",
+  "noGroupsSubtitle": "可先建个人账本，或创建群组，或用邀请码加入。",
   "createAGroup": "创建群组",
   "joinWithCode": "使用邀请码加入",
   "joinWithInviteCode": "使用邀请码加入",
@@ -138,7 +138,7 @@
   "movementNotFound": "未找到流水",
   "couldNotLoadGroups": "无法加载群组。请检查 Firebase 配置。",
   "onboardingTitle1": "一个共享资金池",
-  "onboardingBody1": "群组中每个人都可以添加存入和支出。没有管理员层级。",
+  "onboardingBody1": "可独自或与朋友记账。共享群组中所有人都能添加存入与支出 — 无管理员层级。",
   "onboardingTitle2": "完整审计记录",
   "onboardingBody2": "每次更改都会被记录。信任来自透明，而非权限。",
   "onboardingTitle3": "用邀请码邀请",
@@ -175,10 +175,10 @@
   "signUpFailed": "注册失败，请重试。",
   "googleSignInCanceled": "已取消 Google 登录。",
   "googleSignInConfigError": "尚未配置 Google 登录。请在 Firebase 中添加应用的 SHA-1，然后下载新的 google-services.json。",
-    "updateAvailableTitle": "有可用更新",
+  "updateAvailableTitle": "有可用更新",
   "updateNow": "立即更新",
   "updateAvailableBody": "EnCaisse 有新版本，包含重要改进。",
-  "forceUpdateBody": "需要更新到新版本才能继续使用 EnCaisse。请从 Google Play 更新。",
+  "forceUpdateBody": "需要更新 EnCaisse 才能继续。请从商店更新。",
   "forceUpdateTitle": "必须更新",
   "updateLater": "稍后",
   "googleSignInFailed": "Google 登录失败，请重试。",
@@ -208,5 +208,75 @@
   "deletedMarker": "已删除",
   "insufficientBalance": "余额不足。这会使钱箱变为负数。",
   "dateLabel": "日期",
-  "timeLabel": "时间"
+  "timeLabel": "时间",
+  "verifyEmailTitle": "验证您的邮箱",
+  "verifyEmailBody": "我们已向 {email} 发送验证链接。打开后点击继续。",
+  "resendVerification": "重新发送邮件",
+  "verificationEmailSent": "验证邮件已发送",
+  "emailVerifiedContinue": "继续",
+  "emailNotVerifiedYet": "邮箱尚未验证。请检查收件箱。",
+  "checkVerification": "我已验证",
+  "settleTitle": "谁欠谁",
+  "settleSubtitle": "根据存入与支出平均分摊。",
+  "settleSettled": "大家已结清",
+  "settleOwes": "{from} 欠 {to}",
+  "memberNet": "净值",
+  "chartsTitle": "图表",
+  "categoryBreakdown": "按类别",
+  "exportCsv": "导出 CSV",
+  "exportPdf": "导出 PDF",
+  "exportShared": "导出已准备好分享",
+  "exportFailed": "无法导出",
+  "notifications": "通知",
+  "noNotifications": "暂无通知",
+  "noNotificationsSubtitle": "群组动态将显示在这里。",
+  "markAllRead": "全部标为已读",
+  "offlineBanner": "您处于离线状态。有缓存时将显示缓存数据。",
+  "offlineRetry": "重试",
+  "forceUpdateBodyIos": "需要更新 EnCaisse。请从 App Store 更新。",
+  "openStore": "打开商店",
+  "insightsTitle": "分析",
+  "insightsOpen": "结算与图表",
+  "personalCaisse": "个人账本",
+  "personalCaisseSubtitle": "独自记账 — 无需群组。",
+  "personalCaisseName": "我的账本",
+  "personalBadge": "个人",
+  "howToUse": "如何使用 EnCaisse",
+  "tourNext": "下一步",
+  "tourBack": "返回",
+  "tourSkip": "跳过",
+  "tourDone": "知道了",
+  "tourHome1Title": "首页",
+  "tourHome1Body": "此列表显示您的所有账本。点开即可查看存入、支出和实时余额。",
+  "tourHome2Title": "独自记账",
+  "tourHome2Body": "需要私人账本？点 + 选择个人账本。无需邀请码，只有您自己。",
+  "tourHome3Title": "与他人共享",
+  "tourHome3Body": "创建群组或用 6 位邀请码加入。所有人看到同一透明记录。",
+  "tourGroup1Title": "实时余额",
+  "tourGroup1Body": "绿色卡片始终由流水计算：存入减支出。不是可被篡改的存档总额。",
+  "tourGroup2Title": "添加流水",
+  "tourGroup2Body": "点 + 添加存入或支出。可附收据；每次更改都会保留在审计记录中。",
+  "tourGroup3Title": "邀请与分析",
+  "tourGroup3Body": "分享邀请码。打开结算与图表查看谁欠谁以及分类支出。",
+  "tourGroup3BodyPersonal": "打开结算与图表查看分类。此账本仅属于您 — 邀请已隐藏。",
+  "tapPhotoToChange": "点按照片以更换",
+  "tapPhotoToView": "点按查看",
+  "creatingPersonal": "正在打开您的个人账本…",
+  "@verifyEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@settleOwes": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  }
 }

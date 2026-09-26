@@ -13,6 +13,7 @@ class AppUpdateConfig {
     required this.forceUpdate,
     this.message,
     this.playStoreUrl,
+    this.appStoreUrl,
   });
 
   final int minVersionCode;
@@ -20,6 +21,7 @@ class AppUpdateConfig {
   final bool forceUpdate;
   final String? message;
   final String? playStoreUrl;
+  final String? appStoreUrl;
 
   factory AppUpdateConfig.fromMap(Map<String, dynamic>? data) {
     final map = data ?? const <String, dynamic>{};
@@ -29,6 +31,7 @@ class AppUpdateConfig {
       forceUpdate: map['forceUpdate'] as bool? ?? false,
       message: map['message'] as String?,
       playStoreUrl: map['playStoreUrl'] as String?,
+      appStoreUrl: map['appStoreUrl'] as String?,
     );
   }
 }
@@ -61,6 +64,10 @@ class AppUpdateService {
 
   static const playStorePackageUrl =
       'https://play.google.com/store/apps/details?id=com.encaisse.encaisse';
+
+  /// Set real App Store ID in Firestore `config/appUpdate.appStoreUrl` when live.
+  static const appStoreSearchUrl =
+      'https://apps.apple.com/search?term=EnCaisse';
 
   Future<AppUpdateDecision> checkForUpdate() async {
     final info = await PackageInfo.fromPlatform();
@@ -106,8 +113,11 @@ class AppUpdateService {
     }
   }
 
-  /// Prefer Play in-app update; fall back to opening the Play Store page.
-  Future<bool> startUpdate({required bool immediate}) async {
+  /// Prefer Play in-app update on Android; open the correct store otherwise.
+  Future<bool> startUpdate({
+    required bool immediate,
+    AppUpdateConfig? config,
+  }) async {
     if (!kIsWeb && Platform.isAndroid) {
       try {
         final info = await InAppUpdate.checkForUpdate();
@@ -132,19 +142,34 @@ class AppUpdateService {
           }
         }
       } catch (e, st) {
-        debugPrint('In-app update failed, opening Play Store: $e\n$st');
+        debugPrint('In-app update failed, opening store: $e\n$st');
       }
     }
-    return openPlayStore();
+    return openStore(config: config);
   }
 
-  Future<bool> openPlayStore({String? url}) async {
-    final uri = Uri.parse(url?.trim().isNotEmpty == true
+  Future<bool> openStore({AppUpdateConfig? config, String? url}) async {
+    final resolved = url?.trim().isNotEmpty == true
         ? url!.trim()
-        : playStorePackageUrl);
+        : storeUrlForPlatform(config);
+    final uri = Uri.parse(resolved);
     if (await canLaunchUrl(uri)) {
       return launchUrl(uri, mode: LaunchMode.externalApplication);
     }
     return false;
   }
+
+  String storeUrlForPlatform(AppUpdateConfig? config) {
+    if (!kIsWeb && Platform.isIOS) {
+      final ios = config?.appStoreUrl?.trim();
+      if (ios != null && ios.isNotEmpty) return ios;
+      return appStoreSearchUrl;
+    }
+    final play = config?.playStoreUrl?.trim();
+    if (play != null && play.isNotEmpty) return play;
+    return playStorePackageUrl;
+  }
+
+  @Deprecated('Use openStore')
+  Future<bool> openPlayStore({String? url}) => openStore(url: url);
 }

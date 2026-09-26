@@ -19,6 +19,7 @@ import 'router/app_router.dart';
 import 'services/device_region.dart';
 import 'services/notification_service.dart';
 import 'widgets/force_update_gate.dart';
+import 'widgets/offline_banner.dart';
 
 void _enableAndroidPhotoPicker() {
   final impl = ImagePickerPlatform.instance;
@@ -32,6 +33,15 @@ Future<void> main() async {
   _enableAndroidPhotoPicker();
 
   final prefs = await SharedPreferences.getInstance();
+  if (!prefs.containsKey(kOnboardingCompletedKey)) {
+    final upgrading = prefs.containsKey('auth_remembered_email') ||
+        prefs.containsKey('settings_theme_mode') ||
+        prefs.containsKey('movement_success_count') ||
+        prefs.containsKey('review_asked');
+    if (upgrading) {
+      await prefs.setBool(kOnboardingCompletedKey, true);
+    }
+  }
 
   var firebaseReady = false;
   try {
@@ -91,7 +101,15 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp> {
     _notifUid = uid;
     // Ensure users/{uid} exists with name/email before FCM token merge.
     await ref.read(authServiceProvider).repairCurrentProfile();
+    service.onOpenGroup = (groupId) {
+      if (!mounted) return;
+      ref.read(routerProvider).go('/groups/$groupId');
+    };
     await service.initialize(uid: uid);
+    final pending = service.takePendingGroupId();
+    if (pending != null && pending.isNotEmpty && mounted) {
+      ref.read(routerProvider).go('/groups/$pending');
+    }
   }
 
   @override
@@ -126,7 +144,9 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp> {
       routerConfig: router,
       builder: (context, child) {
         return ForceUpdateGate(
-          child: child ?? const SizedBox.shrink(),
+          child: OfflineBanner(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

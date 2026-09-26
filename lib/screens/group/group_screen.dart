@@ -14,7 +14,9 @@ import '../../widgets/animated_balance.dart';
 import '../../widgets/branded_lottie.dart';
 import '../../widgets/compact_dialog.dart';
 import '../../widgets/encaisse_refresh.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/movement_tile.dart';
+import '../../providers/settings_provider.dart';
 
 class GroupScreen extends ConsumerStatefulWidget {
   const GroupScreen({super.key, required this.groupId});
@@ -30,6 +32,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   String? _userFilter;
   DateTimeRange? _dateFilter;
   bool _closingGroup = false;
+  bool _tourScheduled = false;
 
   String get groupId => widget.groupId;
 
@@ -139,10 +142,21 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 title: Text(l10n.changeGroupPhoto),
                 onTap: () => Navigator.pop(ctx, _GroupMenuAction.photo),
               ),
+              if (!group.isPersonal)
+                ListTile(
+                  leading: const Icon(Icons.people_outline),
+                  title: Text(l10n.manageMembers),
+                  onTap: () => Navigator.pop(ctx, _GroupMenuAction.members),
+                ),
               ListTile(
-                leading: const Icon(Icons.people_outline),
-                title: Text(l10n.manageMembers),
-                onTap: () => Navigator.pop(ctx, _GroupMenuAction.members),
+                leading: const Icon(Icons.table_view_outlined),
+                title: Text(l10n.exportCsv),
+                onTap: () => Navigator.pop(ctx, _GroupMenuAction.exportCsv),
+              ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf_outlined),
+                title: Text(l10n.exportPdf),
+                onTap: () => Navigator.pop(ctx, _GroupMenuAction.exportPdf),
               ),
               ListTile(
                 leading:
@@ -167,11 +181,54 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         await _changeGroupPhoto(context, ref, group);
       case _GroupMenuAction.members:
         _showMembersSheet(context, ref, group, members);
+      case _GroupMenuAction.exportCsv:
+        await _export(context, ref, group, members, pdf: false);
+      case _GroupMenuAction.exportPdf:
+        await _export(context, ref, group, members, pdf: true);
       case _GroupMenuAction.delete:
         await _confirmDeleteGroup(context, ref, group);
     }
   }
 
+  Future<void> _export(
+    BuildContext context,
+    WidgetRef ref,
+    Group group,
+    List<GroupMember> members, {
+    required bool pdf,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final movements = ref.read(movementsProvider(group.id)).value ?? [];
+    final balance = ref.read(balanceProvider(group.id));
+    try {
+      final export = ref.read(exportServiceProvider);
+      if (pdf) {
+        await export.sharePdf(
+          group: group,
+          movements: movements,
+          members: members,
+          balance: balance,
+        );
+      } else {
+        await export.shareCsv(
+          group: group,
+          movements: movements,
+          members: members,
+        );
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.exportShared)),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.exportFailed)),
+        );
+      }
+    }
+  }
   Future<void> _showRenameDialog(
     BuildContext context,
     WidgetRef ref,
@@ -374,6 +431,42 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     }
   }
 
+  Future<void> _onGroupPhotoTap(
+    BuildContext context,
+    WidgetRef ref,
+    Group group, {
+    required bool isCreator,
+  }) async {
+    if (group.photoUrl != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => Dialog(
+          insetPadding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InteractiveViewer(
+                child: Image.network(group.photoUrl!, fit: BoxFit.contain),
+              ),
+              if (isCreator)
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _changeGroupPhoto(context, ref, group);
+                  },
+                  child: Text(AppLocalizations.of(context).changeGroupPhoto),
+                ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+    if (isCreator) {
+      await _changeGroupPhoto(context, ref, group);
+    }
+  }
+
   Future<void> _confirmLeaveGroup(
     BuildContext context,
     WidgetRef ref,
@@ -562,7 +655,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         final allActive = (movementsAsync.value ?? [])
             .where((m) => !m.deleted)
             .toList();
-        final visible = _applyFilters(movementsAsync.value ?? []);
+        // Keep soft-deleted only while undo is still possible.
+        final listSource = (movementsAsync.value ?? [])
+            .where((m) => !m.deleted || m.canUndo)
+            .toList();
+        final visible = _applyFilters(listSource);
         final categories = {
           ...allActive.map((m) => m.category),
           if (_categoryFilter != null) _categoryFilter!,
@@ -588,6 +685,18 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final isCreator = user != null && group.createdBy == user.uid;
 
+        if (!_tourScheduled) {
+          _tourScheduled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            FeatureTour.showGroupTourIfNeeded(
+              context,
+              ref.read(sharedPreferencesProvider),
+              isPersonal: group.isPersonal,
+            );
+          });
+        }
+
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
@@ -603,43 +712,51 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             title: Text(group.name),
             actions: [
               IconButton(
-                tooltip: myMember?.notificationsMuted == true
-                    ? l10n.unmuteNotifications
-                    : l10n.muteNotifications,
-                onPressed: user == null
-                    ? null
-                    : () async {
-                        final muted = !(myMember?.notificationsMuted ?? false);
-                        await ref
-                            .read(groupServiceProvider)
-                            .setNotificationsMuted(
-                              groupId: groupId,
-                              uid: user.uid,
-                              muted: muted,
-                            );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                muted
-                                    ? l10n.notificationsMuted
-                                    : l10n.notificationsEnabled,
+                tooltip: l10n.insightsOpen,
+                onPressed: () => context.push('/groups/$groupId/insights'),
+                icon: const Icon(Icons.insights_outlined),
+              ),
+              if (!group.isPersonal)
+                IconButton(
+                  tooltip: myMember?.notificationsMuted == true
+                      ? l10n.unmuteNotifications
+                      : l10n.muteNotifications,
+                  onPressed: user == null
+                      ? null
+                      : () async {
+                          final muted =
+                              !(myMember?.notificationsMuted ?? false);
+                          await ref
+                              .read(groupServiceProvider)
+                              .setNotificationsMuted(
+                                groupId: groupId,
+                                uid: user.uid,
+                                muted: muted,
+                              );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  muted
+                                      ? l10n.notificationsMuted
+                                      : l10n.notificationsEnabled,
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                icon: Icon(
-                  myMember?.notificationsMuted == true
-                      ? Icons.notifications_off_outlined
-                      : Icons.notifications_outlined,
+                            );
+                          }
+                        },
+                  icon: Icon(
+                    myMember?.notificationsMuted == true
+                        ? Icons.notifications_off_outlined
+                        : Icons.notifications_outlined,
+                  ),
                 ),
-              ),
-              IconButton(
-                tooltip: l10n.inviteFriends,
-                onPressed: () => _showInviteSheet(context, group),
-                icon: const Icon(Icons.person_add_alt_1_outlined),
-              ),
+              if (!group.isPersonal)
+                IconButton(
+                  tooltip: l10n.inviteFriends,
+                  onPressed: () => _showInviteSheet(context, group),
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                ),
               if (isCreator)
                 IconButton(
                   tooltip: l10n.manageGroup,
@@ -669,20 +786,28 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     child: Column(
                       children: [
-                        if (group.photoUrl != null) ...[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: AspectRatio(
-                              aspectRatio: 16 / 7,
-                              child: Image.network(
-                                group.photoUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const SizedBox.shrink(),
-                              ),
+                        _GroupPhotoBanner(
+                          photoUrl: group.photoUrl,
+                          canEdit: isCreator,
+                          onTap: () => _onGroupPhotoTap(
+                            context,
+                            ref,
+                            group,
+                            isCreator: isCreator,
+                          ),
+                          changeHint: l10n.tapPhotoToChange,
+                          viewHint: l10n.tapPhotoToView,
+                        ),
+                        if (group.isPersonal) ...[
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Chip(
+                              avatar: const Icon(Icons.person, size: 16),
+                              label: Text(l10n.personalBadge),
+                              visualDensity: VisualDensity.compact,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                         ],
                         Container(
                           width: double.infinity,
@@ -721,6 +846,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                       color: AppColors.deposit,
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: _MiniStat(
                                       label: l10n.outLabel,
@@ -731,75 +857,92 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                       color: AppColors.expense,
                                     ),
                                   ),
-                                  Expanded(
-                                    child: _MiniStat(
-                                      label: l10n.members,
-                                      value: '${members.length}',
-                                      color: scheme.onSurface,
+                                  if (!group.isPersonal) ...[
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _MiniStat(
+                                        label: l10n.members,
+                                        value: '${members.length}',
+                                        color: scheme.onSurface,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Container(
+                        SizedBox(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: scheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: scheme.outline),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.inviteCode,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.shareCodeSoFriends,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      group.inviteCode,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium
-                                          ?.copyWith(
-                                            color: AppColors.primary,
-                                            letterSpacing: 4,
-                                          ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.copyCode,
-                                    onPressed: () => _copyInviteCode(
-                                      context,
-                                      group.inviteCode,
-                                    ),
-                                    icon: const Icon(Icons.copy),
-                                    color: AppColors.primary,
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.share,
-                                    onPressed: () =>
-                                        _shareInvite(context, group),
-                                    icon: const Icon(Icons.ios_share),
-                                    color: AppColors.primary,
-                                  ),
-                                ],
-                              ),
-                            ],
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                context.push('/groups/$groupId/insights'),
+                            icon: const Icon(Icons.insights_outlined),
+                            label: Text(l10n.insightsOpen),
                           ),
                         ),
+                        if (!group.isPersonal) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: scheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: scheme.outline),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.inviteCode,
+                                  style:
+                                      Theme.of(context).textTheme.labelLarge,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.shareCodeSoFriends,
+                                  style:
+                                      Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        group.inviteCode,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                              color: AppColors.primary,
+                                              letterSpacing: 4,
+                                            ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: l10n.copyCode,
+                                      onPressed: () => _copyInviteCode(
+                                        context,
+                                        group.inviteCode,
+                                      ),
+                                      icon: const Icon(Icons.copy),
+                                      color: AppColors.primary,
+                                    ),
+                                    IconButton(
+                                      tooltip: l10n.share,
+                                      onPressed: () =>
+                                          _shareInvite(context, group),
+                                      icon: const Icon(Icons.ios_share),
+                                      color: AppColors.primary,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -903,7 +1046,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   }
 }
 
-enum _GroupMenuAction { rename, photo, members, delete }
+enum _GroupMenuAction { rename, photo, members, exportCsv, exportPdf, delete }
 
 class _RenameGroupPage extends StatefulWidget {
   const _RenameGroupPage({required this.initialName});
@@ -999,11 +1142,24 @@ class _MiniStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: 2),
         Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(color: color),
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
         ),
       ],
     );
@@ -1184,6 +1340,102 @@ class _FilterPill extends StatelessWidget {
             color: selected ? AppColors.primary : scheme.onSurfaceVariant,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GroupPhotoBanner extends StatelessWidget {
+  const _GroupPhotoBanner({
+    required this.photoUrl,
+    required this.canEdit,
+    required this.onTap,
+    required this.changeHint,
+    required this.viewHint,
+  });
+
+  final String? photoUrl;
+  final bool canEdit;
+  final VoidCallback onTap;
+  final String changeHint;
+  final String viewHint;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhoto = photoUrl != null && photoUrl!.trim().isNotEmpty;
+    if (!hasPhoto && !canEdit) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AspectRatio(
+              aspectRatio: 16 / 7,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (hasPhoto)
+                    Image.network(
+                      photoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        color: AppColors.primaryLight,
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.broken_image_outlined),
+                      ),
+                    )
+                  else
+                    Container(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.add_a_photo_outlined,
+                              color: AppColors.primary, size: 32),
+                          const SizedBox(height: 8),
+                          Text(
+                            changeHint,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (hasPhoto)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        color: Colors.black54,
+                        child: Text(
+                          canEdit ? changeHint : viewHint,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

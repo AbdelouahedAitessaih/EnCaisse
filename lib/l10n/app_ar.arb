@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ar",
   "appName": "إنكايس",
   "tagline": "إنكايس، معًا.",
@@ -30,7 +30,7 @@
   "hello": "مرحبًا",
   "helloName": "مرحبًا، {name}",
   "noGroupsYet": "لا توجد مجموعات بعد",
-  "noGroupsSubtitle": "أنشئ صندوقًا أو انضم عبر رمز الدعوة.",
+  "noGroupsSubtitle": "ابدأ وحدك بصندوق شخصي، أو أنشئ مجموعة، أو انضم برمز.",
   "createAGroup": "إنشاء مجموعة",
   "joinWithCode": "الانضمام برمز",
   "joinWithInviteCode": "الانضمام برمز الدعوة",
@@ -138,7 +138,7 @@
   "movementNotFound": "الحركة غير موجودة",
   "couldNotLoadGroups": "تعذّر تحميل المجموعات. تحقق من Firebase.",
   "onboardingTitle1": "صندوق مشترك واحد",
-  "onboardingBody1": "يمكن للجميع إضافة الإيداعات والمصروفات. بلا تسلسل إداري.",
+  "onboardingBody1": "تتبّع وحدك أو مع الأصدقاء. في مجموعة مشتركة يمكن للجميع إضافة إيداعات ومصاريف — بلا تراتبية مشرفين.",
   "onboardingTitle2": "سجل شفاف كامل",
   "onboardingBody2": "كل تغيير يُسجَّل. الثقة من الشفافية لا من الصلاحيات.",
   "onboardingTitle3": "دعوة برمز",
@@ -175,10 +175,10 @@
   "signUpFailed": "فشل إنشاء الحساب. حاول مرة أخرى.",
   "googleSignInCanceled": "تم إلغاء تسجيل الدخول عبر Google.",
   "googleSignInConfigError": "تسجيل الدخول عبر Google غير مضبوط. أضف SHA-1 للتطبيق في Firebase ثم نزّل google-services.json جديدًا.",
-    "updateAvailableTitle": "يتوفر تحديث",
+  "updateAvailableTitle": "يتوفر تحديث",
   "updateNow": "حدّث الآن",
   "updateAvailableBody": "يتوفر إصدار أحدث من EnCaisse مع تحسينات مهمة.",
-  "forceUpdateBody": "يلزم إصدار جديد من EnCaisse للمتابعة. حدّث التطبيق من Google Play.",
+  "forceUpdateBody": "يلزم إصدار جديد من EnCaisse للمتابعة. حدّث من المتجر.",
   "forceUpdateTitle": "تحديث مطلوب",
   "updateLater": "لاحقاً",
   "googleSignInFailed": "فشل تسجيل الدخول عبر Google. حاول مرة أخرى.",
@@ -208,5 +208,75 @@
   "deletedMarker": "محذوف",
   "insufficientBalance": "رصيد غير كافٍ. هذا سيجعل الصندوق سالباً.",
   "dateLabel": "التاريخ",
-  "timeLabel": "الوقت"
+  "timeLabel": "الوقت",
+  "verifyEmailTitle": "تحقق من بريدك",
+  "verifyEmailBody": "أرسلنا رابط تحقق إلى {email}. افتحه ثم اضغط متابعة.",
+  "resendVerification": "إعادة إرسال البريد",
+  "verificationEmailSent": "تم إرسال بريد التحقق",
+  "emailVerifiedContinue": "متابعة",
+  "emailNotVerifiedYet": "البريد غير مُتحقق بعد. تحقق من صندوق الوارد.",
+  "checkVerification": "لقد تحققت",
+  "settleTitle": "من يدين لمن",
+  "settleSubtitle": "حصة متساوية من الصندوق حسب الإيداعات والمصاريف.",
+  "settleSettled": "الجميع متعادلون",
+  "settleOwes": "{from} يدين لـ {to}",
+  "memberNet": "صافي",
+  "chartsTitle": "الرسوم البيانية",
+  "categoryBreakdown": "حسب الفئة",
+  "exportCsv": "تصدير CSV",
+  "exportPdf": "تصدير PDF",
+  "exportShared": "التصدير جاهز للمشاركة",
+  "exportFailed": "تعذّر التصدير",
+  "notifications": "الإشعارات",
+  "noNotifications": "لا إشعارات بعد",
+  "noNotificationsSubtitle": "ستظهر هنا نشاط مجموعاتك.",
+  "markAllRead": "تعليم الكل كمقروء",
+  "offlineBanner": "أنت غير متصل. عرض البيانات المخزنة إن وُجدت.",
+  "offlineRetry": "إعادة المحاولة",
+  "forceUpdateBodyIos": "يلزم إصدار جديد من EnCaisse. حدّث من App Store.",
+  "openStore": "فتح المتجر",
+  "insightsTitle": "التحليلات",
+  "insightsOpen": "التسوية والرسوم",
+  "personalCaisse": "صندوق شخصي",
+  "personalCaisseSubtitle": "تتبّع أموالك وحدك — بلا مجموعة.",
+  "personalCaisseName": "صندوقي",
+  "personalBadge": "شخصي",
+  "howToUse": "كيفية استخدام EnCaisse",
+  "tourNext": "التالي",
+  "tourBack": "رجوع",
+  "tourSkip": "تخطي",
+  "tourDone": "حسناً",
+  "tourHome1Title": "الصفحة الرئيسية",
+  "tourHome1Body": "تعرض هذه القائمة كل صناديقك. اضغط على واحد لفتح الإيداعات والمصاريف والرصيد الحي.",
+  "tourHome2Title": "التتبّع وحدك",
+  "tourHome2Body": "تحتاج دفتراً خاصاً؟ اضغط + واختر صندوق شخصي. بلا رمز دعوة، أنت فقط.",
+  "tourHome3Title": "المشاركة مع الآخرين",
+  "tourHome3Body": "أنشئ مجموعة أو انضم برمز من 6 أحرف. الجميع يرى نفس السجل الشفاف.",
+  "tourGroup1Title": "رصيد حي",
+  "tourGroup1Body": "البطاقة الخضراء تُحسب دائماً من الحركات — إيداعات ناقص مصاريف. ليست رقماً مخزّناً يمكن التلاعب به.",
+  "tourGroup2Title": "إضافة حركة",
+  "tourGroup2Body": "اضغط + لإضافة إيداع أو مصروف. يمكنك إرفاق إيصال؛ كل تغيير يبقى في سجل التدقيق.",
+  "tourGroup3Title": "الدعوة والتحليلات",
+  "tourGroup3Body": "شارك رمز الدعوة. افتح التسوية والرسوم لمعرفة من يدين لمن والإنفاق حسب الفئة.",
+  "tourGroup3BodyPersonal": "افتح التسوية والرسوم للفئات. هذا الصندوق لك وحدك — الدعوة مخفية.",
+  "tapPhotoToChange": "اضغط على الصورة للتغيير",
+  "tapPhotoToView": "اضغط للعرض",
+  "creatingPersonal": "جارٍ فتح صندوقك الشخصي…",
+  "@verifyEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@settleOwes": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1,49 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/providers.dart';
+import '../providers/settings_provider.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
+import '../screens/auth/verify_email_screen.dart';
 import '../screens/group/create_group_screen.dart';
+import '../screens/group/group_insights_screen.dart';
 import '../screens/group/group_screen.dart';
 import '../screens/group/join_group_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/movement/movement_detail_screen.dart';
 import '../screens/movement/movement_form_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/onboarding/welcome_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 
+const kOnboardingCompletedKey = 'onboarding_completed';
+
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final prefs = ref.watch(sharedPreferencesProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/welcome',
     refreshListenable: _AuthRefresh(ref),
     redirect: (context, state) {
-      final loggingIn = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/signup' ||
-          state.matchedLocation == '/welcome' ||
-          state.matchedLocation == '/onboarding';
+      final loc = state.matchedLocation;
+      final loggingIn = loc == '/login' ||
+          loc == '/signup' ||
+          loc == '/welcome' ||
+          loc == '/onboarding';
+      final verifying = loc == '/verify-email';
 
-      final user = authState.value;
+      final streamUser = authState.value;
+      // Live user after reload — auth stream can briefly lag.
+      final user = ref.read(authServiceProvider).currentUser ?? streamUser;
       final isLoading = authState.isLoading;
+      final onboardingDone = prefs.getBool(kOnboardingCompletedKey) ?? false;
 
       if (isLoading) return null;
 
-      if (user == null && !loggingIn) {
-        return '/welcome';
+      if (user == null) {
+        if (!onboardingDone && loc != '/onboarding') {
+          return '/onboarding';
+        }
+        if (onboardingDone && loc == '/onboarding') {
+          return '/welcome';
+        }
+        if (!loggingIn && !verifying) {
+          return onboardingDone ? '/welcome' : '/onboarding';
+        }
+        return null;
       }
 
-      if (user != null &&
-          (state.matchedLocation == '/welcome' ||
-              state.matchedLocation == '/login' ||
-              state.matchedLocation == '/signup')) {
+      final auth = ref.read(authServiceProvider);
+      if (auth.needsEmailVerification(user) && !verifying) {
+        return '/verify-email';
+      }
+      if (!auth.needsEmailVerification(user) && verifying) {
+        return '/home';
+      }
+
+      if (loc == '/welcome' || loc == '/login' || loc == '/signup') {
+        return '/home';
+      }
+      if (loc == '/onboarding') {
         return '/home';
       }
 
@@ -67,8 +97,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => const VerifyEmailScreen(),
+      ),
+      GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/settings',
@@ -93,6 +131,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           return GroupScreen(groupId: groupId);
         },
         routes: [
+          GoRoute(
+            path: 'insights',
+            builder: (context, state) {
+              final groupId = state.pathParameters['groupId']!;
+              return GroupInsightsScreen(groupId: groupId);
+            },
+          ),
           GoRoute(
             path: 'movements/new',
             builder: (context, state) {
@@ -136,4 +181,8 @@ class _AuthRefresh extends ChangeNotifier {
   }
 
   final Ref _ref;
+}
+
+Future<void> markOnboardingCompleted(SharedPreferences prefs) async {
+  await prefs.setBool(kOnboardingCompletedKey, true);
 }

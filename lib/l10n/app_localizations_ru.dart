@@ -103,7 +103,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noGroupsSubtitle =>
-      'Создайте кассу или присоединитесь по коду приглашения.';
+      'Начните с личной кассы, создайте группу или войдите по коду.';
 
   @override
   String get createAGroup => 'Создать группу';
@@ -452,7 +452,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingBody1 =>
-      'Каждый в группе может добавлять взносы и расходы. Без иерархии админов.';
+      'Учёт в одиночку или с друзьями. В общей группе все могут добавлять взносы и расходы — без иерархии админов.';
 
   @override
   String get onboardingTitle2 => 'Полный журнал аудита';
@@ -581,7 +581,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get forceUpdateBody =>
-      'Для продолжения нужна новая версия EnCaisse. Обновите приложение в Google Play.';
+      'Нужна новая версия EnCaisse. Обновите из магазина.';
 
   @override
   String get updateAvailableTitle => 'Доступно обновление';
@@ -697,4 +697,178 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get timeLabel => 'Время';
+
+  @override
+  String get verifyEmailTitle => 'Подтвердите email';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'Мы отправили ссылку на $email. Откройте её, затем нажмите Продолжить.';
+  }
+
+  @override
+  String get resendVerification => 'Отправить письмо снова';
+
+  @override
+  String get verificationEmailSent => 'Письмо для подтверждения отправлено';
+
+  @override
+  String get emailVerifiedContinue => 'Продолжить';
+
+  @override
+  String get emailNotVerifiedYet =>
+      'Email ещё не подтверждён. Проверьте почту.';
+
+  @override
+  String get checkVerification => 'Я подтвердил';
+
+  @override
+  String get settleTitle => 'Кто кому должен';
+
+  @override
+  String get settleSubtitle => 'Равная доля кассы по взносам и расходам.';
+
+  @override
+  String get settleSettled => 'Все в расчёте';
+
+  @override
+  String settleOwes(String from, String to) {
+    return '$from должен $to';
+  }
+
+  @override
+  String get memberNet => 'Итого';
+
+  @override
+  String get chartsTitle => 'Графики';
+
+  @override
+  String get categoryBreakdown => 'По категориям';
+
+  @override
+  String get exportCsv => 'Экспорт CSV';
+
+  @override
+  String get exportPdf => 'Экспорт PDF';
+
+  @override
+  String get exportShared => 'Экспорт готов к отправке';
+
+  @override
+  String get exportFailed => 'Не удалось экспортировать';
+
+  @override
+  String get notifications => 'Уведомления';
+
+  @override
+  String get noNotifications => 'Пока нет уведомлений';
+
+  @override
+  String get noNotificationsSubtitle =>
+      'Активность ваших групп появится здесь.';
+
+  @override
+  String get markAllRead => 'Отметить всё прочитанным';
+
+  @override
+  String get offlineBanner =>
+      'Нет сети. Показаны кэшированные данные, если есть.';
+
+  @override
+  String get offlineRetry => 'Повторить';
+
+  @override
+  String get forceUpdateBodyIos =>
+      'Нужна новая версия EnCaisse. Обновите из App Store.';
+
+  @override
+  String get openStore => 'Открыть магазин';
+
+  @override
+  String get insightsTitle => 'Аналитика';
+
+  @override
+  String get insightsOpen => 'Расчёт и графики';
+
+  @override
+  String get personalCaisse => 'Личная касса';
+
+  @override
+  String get personalCaisseSubtitle => 'Учёт денег в одиночку — без группы.';
+
+  @override
+  String get personalCaisseName => 'Моя касса';
+
+  @override
+  String get personalBadge => 'Личное';
+
+  @override
+  String get howToUse => 'Как пользоваться EnCaisse';
+
+  @override
+  String get tourNext => 'Далее';
+
+  @override
+  String get tourBack => 'Назад';
+
+  @override
+  String get tourSkip => 'Пропустить';
+
+  @override
+  String get tourDone => 'Понятно';
+
+  @override
+  String get tourHome1Title => 'Главная';
+
+  @override
+  String get tourHome1Body =>
+      'Список всех ваших касс. Нажмите, чтобы открыть взносы, расходы и живой баланс.';
+
+  @override
+  String get tourHome2Title => 'Учёт в одиночку';
+
+  @override
+  String get tourHome2Body =>
+      'Нужен личный блокнот? Нажмите + и выберите Личная касса. Без кода — только вы.';
+
+  @override
+  String get tourHome3Title => 'Делиться с другими';
+
+  @override
+  String get tourHome3Body =>
+      'Создайте группу или войдите по коду из 6 символов. У всех одна прозрачная история.';
+
+  @override
+  String get tourGroup1Title => 'Живой баланс';
+
+  @override
+  String get tourGroup1Body =>
+      'Зелёная карточка всегда считается из движений: взносы минус расходы. Это не сохранённая сумма, которую можно подделать.';
+
+  @override
+  String get tourGroup2Title => 'Добавить движение';
+
+  @override
+  String get tourGroup2Body =>
+      'Нажмите +, чтобы добавить взнос или расход. Можно прикрепить чек; каждое изменение остаётся в аудите.';
+
+  @override
+  String get tourGroup3Title => 'Приглашение и аналитика';
+
+  @override
+  String get tourGroup3Body =>
+      'Поделитесь кодом. Откройте Расчёт и графики, чтобы увидеть кто кому должен и траты по категориям.';
+
+  @override
+  String get tourGroup3BodyPersonal =>
+      'Откройте Расчёт и графики по категориям. Эта касса только ваша — приглашение скрыто.';
+
+  @override
+  String get tapPhotoToChange => 'Нажмите фото, чтобы изменить';
+
+  @override
+  String get tapPhotoToView => 'Нажмите, чтобы посмотреть';
+
+  @override
+  String get creatingPersonal => 'Открываем вашу личную кассу…';
 }

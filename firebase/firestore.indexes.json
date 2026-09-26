@@ -9,10 +9,11 @@
       ]
     },
     {
-      "collectionGroup": "memberships",
-      "queryScope": "COLLECTION",
+      "collectionGroup": "movements",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "joinedAt", "order": "DESCENDING" }
+        { "fieldPath": "deleted", "order": "ASCENDING" },
+        { "fieldPath": "deletedAt", "order": "ASCENDING" }
       ]
     }
   ],

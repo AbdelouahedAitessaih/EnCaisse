@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../widgets/feature_tour.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -63,6 +64,56 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(email),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/profile'),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.help_outline, color: AppColors.primary),
+            title: Text(l10n.howToUse),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final prefs = ref.read(sharedPreferencesProvider);
+              await prefs.setBool(kTourHomeDoneKey, false);
+              await prefs.setBool(kTourGroupDoneKey, false);
+              if (!context.mounted) return;
+              await FeatureTour.showTour(
+                context,
+                steps: [
+                  (
+                    title: l10n.tourHome1Title,
+                    body: l10n.tourHome1Body,
+                    icon: Icons.home_outlined,
+                  ),
+                  (
+                    title: l10n.tourHome2Title,
+                    body: l10n.tourHome2Body,
+                    icon: Icons.person_outline,
+                  ),
+                  (
+                    title: l10n.tourHome3Title,
+                    body: l10n.tourHome3Body,
+                    icon: Icons.group_add_outlined,
+                  ),
+                  (
+                    title: l10n.tourGroup1Title,
+                    body: l10n.tourGroup1Body,
+                    icon: Icons.account_balance_wallet_outlined,
+                  ),
+                  (
+                    title: l10n.tourGroup2Title,
+                    body: l10n.tourGroup2Body,
+                    icon: Icons.add_circle_outline,
+                  ),
+                  (
+                    title: l10n.tourGroup3Title,
+                    body: l10n.tourGroup3Body,
+                    icon: Icons.insights_outlined,
+                  ),
+                ],
+              );
+              await prefs.setBool(kTourHomeDoneKey, true);
+              await prefs.setBool(kTourGroupDoneKey, true);
+            },
           ),
           const SizedBox(height: 24),
           Text(l10n.appearance, style: Theme.of(context).textTheme.titleLarge),

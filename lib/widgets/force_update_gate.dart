@@ -85,6 +85,7 @@ class _ForceUpdateGateState extends ConsumerState<ForceUpdateGate> {
     try {
       await ref.read(appUpdateServiceProvider).startUpdate(
             immediate: immediate,
+            config: _decision?.config,
           );
     } finally {
       if (mounted) setState(() => _updating = false);
@@ -101,9 +102,12 @@ class _ForceUpdateGateState extends ConsumerState<ForceUpdateGate> {
     }
 
     final l10n = AppLocalizations.of(context);
+    final defaultMsg = Theme.of(context).platform == TargetPlatform.iOS
+        ? l10n.forceUpdateBodyIos
+        : l10n.forceUpdateBody;
     final message = decision.config.message?.trim().isNotEmpty == true
         ? decision.config.message!
-        : l10n.forceUpdateBody;
+        : defaultMsg;
 
     return Stack(
       fit: StackFit.expand,

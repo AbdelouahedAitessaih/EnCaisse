@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ru",
   "appName": "EnCaisse",
   "tagline": "EnCaisse, ensemble.",
@@ -30,7 +30,7 @@
   "hello": "Здравствуйте",
   "helloName": "Здравствуйте, {name}",
   "noGroupsYet": "Пока нет групп",
-  "noGroupsSubtitle": "Создайте кассу или присоединитесь по коду приглашения.",
+  "noGroupsSubtitle": "Начните с личной кассы, создайте группу или войдите по коду.",
   "createAGroup": "Создать группу",
   "joinWithCode": "Войти по коду",
   "joinWithInviteCode": "Войти по коду приглашения",
@@ -138,7 +138,7 @@
   "movementNotFound": "Операция не найдена",
   "couldNotLoadGroups": "Не удалось загрузить группы. Проверьте настройку Firebase.",
   "onboardingTitle1": "Одна общая касса",
-  "onboardingBody1": "Каждый в группе может добавлять взносы и расходы. Без иерархии админов.",
+  "onboardingBody1": "Учёт в одиночку или с друзьями. В общей группе все могут добавлять взносы и расходы — без иерархии админов.",
   "onboardingTitle2": "Полный журнал аудита",
   "onboardingBody2": "Каждое изменение записывается. Доверие строится на прозрачности, а не на правах.",
   "onboardingTitle3": "Приглашение по коду",
@@ -175,10 +175,10 @@
   "signUpFailed": "Не удалось зарегистрироваться. Попробуйте снова.",
   "googleSignInCanceled": "Вход через Google отменён.",
   "googleSignInConfigError": "Google Sign-In не настроен. Добавьте SHA-1 в Firebase и скачайте новый google-services.json.",
-    "updateAvailableTitle": "Доступно обновление",
+  "updateAvailableTitle": "Доступно обновление",
   "updateNow": "Обновить",
   "updateAvailableBody": "Доступна новая версия EnCaisse с важными улучшениями.",
-  "forceUpdateBody": "Для продолжения нужна новая версия EnCaisse. Обновите приложение в Google Play.",
+  "forceUpdateBody": "Нужна новая версия EnCaisse. Обновите из магазина.",
   "forceUpdateTitle": "Требуется обновление",
   "updateLater": "Позже",
   "googleSignInFailed": "Не удалось войти через Google. Попробуйте снова.",
@@ -208,5 +208,75 @@
   "deletedMarker": "удалено",
   "insufficientBalance": "Недостаточно средств. Касса стала бы отрицательной.",
   "dateLabel": "Дата",
-  "timeLabel": "Время"
+  "timeLabel": "Время",
+  "verifyEmailTitle": "Подтвердите email",
+  "verifyEmailBody": "Мы отправили ссылку на {email}. Откройте её, затем нажмите Продолжить.",
+  "resendVerification": "Отправить письмо снова",
+  "verificationEmailSent": "Письмо для подтверждения отправлено",
+  "emailVerifiedContinue": "Продолжить",
+  "emailNotVerifiedYet": "Email ещё не подтверждён. Проверьте почту.",
+  "checkVerification": "Я подтвердил",
+  "settleTitle": "Кто кому должен",
+  "settleSubtitle": "Равная доля кассы по взносам и расходам.",
+  "settleSettled": "Все в расчёте",
+  "settleOwes": "{from} должен {to}",
+  "memberNet": "Итого",
+  "chartsTitle": "Графики",
+  "categoryBreakdown": "По категориям",
+  "exportCsv": "Экспорт CSV",
+  "exportPdf": "Экспорт PDF",
+  "exportShared": "Экспорт готов к отправке",
+  "exportFailed": "Не удалось экспортировать",
+  "notifications": "Уведомления",
+  "noNotifications": "Пока нет уведомлений",
+  "noNotificationsSubtitle": "Активность ваших групп появится здесь.",
+  "markAllRead": "Отметить всё прочитанным",
+  "offlineBanner": "Нет сети. Показаны кэшированные данные, если есть.",
+  "offlineRetry": "Повторить",
+  "forceUpdateBodyIos": "Нужна новая версия EnCaisse. Обновите из App Store.",
+  "openStore": "Открыть магазин",
+  "insightsTitle": "Аналитика",
+  "insightsOpen": "Расчёт и графики",
+  "personalCaisse": "Личная касса",
+  "personalCaisseSubtitle": "Учёт денег в одиночку — без группы.",
+  "personalCaisseName": "Моя касса",
+  "personalBadge": "Личное",
+  "howToUse": "Как пользоваться EnCaisse",
+  "tourNext": "Далее",
+  "tourBack": "Назад",
+  "tourSkip": "Пропустить",
+  "tourDone": "Понятно",
+  "tourHome1Title": "Главная",
+  "tourHome1Body": "Список всех ваших касс. Нажмите, чтобы открыть взносы, расходы и живой баланс.",
+  "tourHome2Title": "Учёт в одиночку",
+  "tourHome2Body": "Нужен личный блокнот? Нажмите + и выберите Личная касса. Без кода — только вы.",
+  "tourHome3Title": "Делиться с другими",
+  "tourHome3Body": "Создайте группу или войдите по коду из 6 символов. У всех одна прозрачная история.",
+  "tourGroup1Title": "Живой баланс",
+  "tourGroup1Body": "Зелёная карточка всегда считается из движений: взносы минус расходы. Это не сохранённая сумма, которую можно подделать.",
+  "tourGroup2Title": "Добавить движение",
+  "tourGroup2Body": "Нажмите +, чтобы добавить взнос или расход. Можно прикрепить чек; каждое изменение остаётся в аудите.",
+  "tourGroup3Title": "Приглашение и аналитика",
+  "tourGroup3Body": "Поделитесь кодом. Откройте Расчёт и графики, чтобы увидеть кто кому должен и траты по категориям.",
+  "tourGroup3BodyPersonal": "Откройте Расчёт и графики по категориям. Эта касса только ваша — приглашение скрыто.",
+  "tapPhotoToChange": "Нажмите фото, чтобы изменить",
+  "tapPhotoToView": "Нажмите, чтобы посмотреть",
+  "creatingPersonal": "Открываем вашу личную кассу…",
+  "@verifyEmailBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@settleOwes": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  }
 }

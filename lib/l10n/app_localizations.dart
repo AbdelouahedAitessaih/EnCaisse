@@ -295,7 +295,7 @@ abstract class AppLocalizations {
   /// No description provided for @noGroupsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Create a caisse or join one with an invite code.'**
+  /// **'Start alone with a personal caisse, create a shared group, or join with an invite code.'**
   String get noGroupsSubtitle;
 
   /// No description provided for @createAGroup.
@@ -943,7 +943,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingBody1.
   ///
   /// In en, this message translates to:
-  /// **'Everyone in the group can add deposits and expenses. No admin hierarchy.'**
+  /// **'Track alone or with friends. In a shared group everyone can add deposits and expenses — no admin hierarchy.'**
   String get onboardingBody1;
 
   /// No description provided for @onboardingTitle2.
@@ -1177,7 +1177,7 @@ abstract class AppLocalizations {
   /// No description provided for @forceUpdateBody.
   ///
   /// In en, this message translates to:
-  /// **'A new version of EnCaisse is required to continue. Please update from Google Play.'**
+  /// **'A new version of EnCaisse is required to continue. Please update from the store.'**
   String get forceUpdateBody;
 
   /// No description provided for @updateAvailableTitle.
@@ -1365,6 +1365,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time'**
   String get timeLabel;
+
+  /// No description provided for @verifyEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get verifyEmailTitle;
+
+  /// No description provided for @verifyEmailBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a verification link to {email}. Open it, then tap Continue.'**
+  String verifyEmailBody(String email);
+
+  /// No description provided for @resendVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get resendVerification;
+
+  /// No description provided for @verificationEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent'**
+  String get verificationEmailSent;
+
+  /// No description provided for @emailVerifiedContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get emailVerifiedContinue;
+
+  /// No description provided for @emailNotVerifiedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Email not verified yet. Check your inbox.'**
+  String get emailNotVerifiedYet;
+
+  /// No description provided for @checkVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve verified'**
+  String get checkVerification;
+
+  /// No description provided for @settleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who owes whom'**
+  String get settleTitle;
+
+  /// No description provided for @settleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Equal share of the caisse based on deposits and expenses.'**
+  String get settleSubtitle;
+
+  /// No description provided for @settleSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is even'**
+  String get settleSettled;
+
+  /// No description provided for @settleOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} owes {to}'**
+  String settleOwes(String from, String to);
+
+  /// No description provided for @memberNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get memberNet;
+
+  /// No description provided for @chartsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts'**
+  String get chartsTitle;
+
+  /// No description provided for @categoryBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'By category'**
+  String get categoryBreakdown;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportCsv;
+
+  /// No description provided for @exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get exportPdf;
+
+  /// No description provided for @exportShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Export ready to share'**
+  String get exportShared;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export'**
+  String get exportFailed;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotifications;
+
+  /// No description provided for @noNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity from your groups will appear here.'**
+  String get noNotificationsSubtitle;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Showing cached data when available.'**
+  String get offlineBanner;
+
+  /// No description provided for @offlineRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get offlineRetry;
+
+  /// No description provided for @forceUpdateBodyIos.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of EnCaisse is required. Please update from the App Store.'**
+  String get forceUpdateBodyIos;
+
+  /// No description provided for @openStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Open store'**
+  String get openStore;
+
+  /// No description provided for @insightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insightsTitle;
+
+  /// No description provided for @insightsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle & charts'**
+  String get insightsOpen;
+
+  /// No description provided for @personalCaisse.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal caisse'**
+  String get personalCaisse;
+
+  /// No description provided for @personalCaisseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your own money alone — no group needed.'**
+  String get personalCaisseSubtitle;
+
+  /// No description provided for @personalCaisseName.
+  ///
+  /// In en, this message translates to:
+  /// **'My caisse'**
+  String get personalCaisseName;
+
+  /// No description provided for @personalBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get personalBadge;
+
+  /// No description provided for @howToUse.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use EnCaisse'**
+  String get howToUse;
+
+  /// No description provided for @tourNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tourNext;
+
+  /// No description provided for @tourBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get tourBack;
+
+  /// No description provided for @tourSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tourSkip;
+
+  /// No description provided for @tourDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get tourDone;
+
+  /// No description provided for @tourHome1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your home'**
+  String get tourHome1Title;
+
+  /// No description provided for @tourHome1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'This list shows every caisse you belong to. Tap one to open deposits, expenses, and the live balance.'**
+  String get tourHome1Body;
+
+  /// No description provided for @tourHome2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Track alone'**
+  String get tourHome2Title;
+
+  /// No description provided for @tourHome2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Need a private notebook for your money? Tap + and choose Personal caisse. No invite code, just you.'**
+  String get tourHome2Body;
+
+  /// No description provided for @tourHome3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with others'**
+  String get tourHome3Title;
+
+  /// No description provided for @tourHome3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a group or join with a 6-character code. Everyone sees the same transparent history.'**
+  String get tourHome3Body;
+
+  /// No description provided for @tourGroup1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Live balance'**
+  String get tourGroup1Title;
+
+  /// No description provided for @tourGroup1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'The green card is always calculated from movements — deposits minus expenses. It is never stored as a number you can cheat.'**
+  String get tourGroup1Body;
+
+  /// No description provided for @tourGroup2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a movement'**
+  String get tourGroup2Title;
+
+  /// No description provided for @tourGroup2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add a deposit or expense. You can attach a receipt photo and edit later — every change stays in the audit trail.'**
+  String get tourGroup2Body;
+
+  /// No description provided for @tourGroup3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite & insights'**
+  String get tourGroup3Title;
+
+  /// No description provided for @tourGroup3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the invite code so friends join. Open Settle & charts to see who owes whom and spending by category.'**
+  String get tourGroup3Body;
+
+  /// No description provided for @tourGroup3BodyPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settle & charts for category breakdowns. This caisse is only yours — invite is hidden.'**
+  String get tourGroup3BodyPersonal;
+
+  /// No description provided for @tapPhotoToChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap photo to change'**
+  String get tapPhotoToChange;
+
+  /// No description provided for @tapPhotoToView.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to view'**
+  String get tapPhotoToView;
+
+  /// No description provided for @creatingPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening your personal caisse…'**
+  String get creatingPersonal;
 }
 
 class _AppLocalizationsDelegate
