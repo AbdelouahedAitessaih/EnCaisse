@@ -5,14 +5,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/currencies.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../widgets/authorized_image.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/device_region.dart';
 import '../../widgets/branded_lottie.dart';
 import '../../widgets/encaisse_refresh.dart';
 import '../../widgets/feature_tour.dart';
 import '../../widgets/home_banner_ad.dart';
+import '../../widgets/group_balance_preview.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -48,11 +51,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final country = await DeviceRegion.countryCode();
       final currency = AppCurrencies.codeForCountry(country) ?? 'MAD';
-      final group = await ref.read(groupServiceProvider).ensurePersonalGroup(
+      final group = await ref
+          .read(groupServiceProvider)
+          .ensurePersonalGroup(
             uid: user.uid,
-            displayName: profile?.displayName ??
-                user.displayName ??
-                l10n.member,
+            displayName:
+                profile?.displayName ?? user.displayName ?? l10n.member,
             personalName: l10n.personalCaisseName,
             photoUrl: profile?.photoUrl ?? user.photoURL,
             currency: currency,
@@ -63,7 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     } finally {
@@ -96,8 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             tooltip: l10n.notifications,
             onPressed: () => context.push('/notifications'),
             icon: Badge(
-              isLabelVisible:
-                  (ref.watch(unreadNotificationsCountProvider)) > 0,
+              isLabelVisible: (ref.watch(unreadNotificationsCountProvider)) > 0,
               label: Text('${ref.watch(unreadNotificationsCountProvider)}'),
               child: const Icon(Icons.notifications_outlined),
             ),
@@ -125,9 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: Column(
         children: [
-          const HomeBannerAd(),
-          if (_openingPersonal)
-            const LinearProgressIndicator(minHeight: 2),
+          if (_openingPersonal) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: EncaisseRefreshIndicator(
               onRefresh: () async {
@@ -202,7 +203,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   return ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    itemCount: groups.length + 1,
+                    itemCount: groups.length + 2,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
                     itemBuilder: (context, index) {
@@ -212,15 +213,127 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 profile.displayName.split(' ').first,
                               )
                             : l10n.hello;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            hello,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
+                        final largeText =
+                            MediaQuery.textScalerOf(context).scale(16) >= 20;
+                        final homeActionWidth = largeText
+                            ? MediaQuery.sizeOf(context).width - 32
+                            : (MediaQuery.sizeOf(context).width - 40) / 2;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              hello,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    AppColors.primary,
+                                    Color(0xFF0B5948),
+                                  ],
+                                  begin: AlignmentDirectional.topStart,
+                                  end: AlignmentDirectional.bottomEnd,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l10n.yourCaisses,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge
+                                              ?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          l10n.homeOverview,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.86,
+                                                ),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: Colors.white.withValues(
+                                      alpha: 0.16,
+                                    ),
+                                    child: Text(
+                                      '${groups.length}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  SizedBox(
+                                    width: homeActionWidth,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () =>
+                                          context.push('/groups/create'),
+                                      icon: const Icon(
+                                        Icons.group_add_outlined,
+                                      ),
+                                      label: Text(l10n.createAGroup),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: homeActionWidth,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () =>
+                                          context.push('/groups/join'),
+                                      icon: const Icon(Icons.vpn_key_outlined),
+                                      label: Text(l10n.joinGroup),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      if (index == groups.length + 1) {
+                        return const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: HomeBannerAd(),
                         );
                       }
                       final group = groups[index - 1];
+                      final largeText =
+                          MediaQuery.textScalerOf(context).scale(16) >= 20;
                       return Material(
                         color: scheme.surface,
                         child: InkWell(
@@ -243,22 +356,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
                                     color: AppColors.primaryLight.withValues(
-                                      alpha: Theme.of(context).brightness ==
+                                      alpha:
+                                          Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? 0.2
                                           : 1,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
-                                    image: group.photoUrl != null
-                                        ? DecorationImage(
-                                            image:
-                                                NetworkImage(group.photoUrl!),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
                                   ),
-                                  child: group.photoUrl == null
-                                      ? Text(
+                                  child: group.photoUrl != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: AuthorizedImage(
+                                            url: group.photoUrl!,
+                                            width: 48,
+                                            height: 48,
+                                          ),
+                                        )
+                                      : Text(
                                           group.name.isNotEmpty
                                               ? group.name[0].toUpperCase()
                                               : 'E',
@@ -267,8 +384,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                             fontWeight: FontWeight.w700,
                                             fontSize: 20,
                                           ),
-                                        )
-                                      : null,
+                                        ),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -276,43 +392,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              group.name,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleLarge,
+                                      if (largeText) ...[
+                                        Text(
+                                          group.name,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.titleLarge,
+                                        ),
+                                        if (group.isPersonal)
+                                          Align(
+                                            alignment: AlignmentDirectional
+                                                .centerStart,
+                                            child: Chip(
+                                              label: Text(l10n.personalBadge),
                                             ),
                                           ),
-                                          if (group.isPersonal)
-                                            Chip(
-                                              label: Text(l10n.personalBadge),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              padding: EdgeInsets.zero,
+                                      ] else
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                group.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.titleLarge,
+                                              ),
                                             ),
-                                        ],
-                                      ),
+                                            if (group.isPersonal)
+                                              Chip(
+                                                label: Text(l10n.personalBadge),
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                          ],
+                                        ),
                                       const SizedBox(height: 2),
                                       Text(
                                         group.isPersonal
                                             ? '${l10n.personalCaisse} · ${group.currency}'
                                             : '${l10n.inviteCode} ${group.inviteCode} · ${group.currency}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
                                       ),
+                                      const SizedBox(height: 4),
+                                      GroupBalancePreview(group: group),
                                     ],
                                   ),
                                 ),
                                 Icon(
                                   Icons.chevron_right,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.color,
                                 ),
                               ],
                             ),
@@ -345,8 +482,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.person_outline,
-                      color: AppColors.primary),
+                  leading: const Icon(
+                    Icons.person_outline,
+                    color: AppColors.primary,
+                  ),
                   title: Text(l10n.personalCaisse),
                   subtitle: Text(l10n.personalCaisseSubtitle),
                   onTap: () {
@@ -355,8 +494,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                 ),
                 ListTile(
-                  leading:
-                      const Icon(Icons.group_add, color: AppColors.primary),
+                  leading: const Icon(
+                    Icons.group_add,
+                    color: AppColors.primary,
+                  ),
                   title: Text(l10n.createAGroup),
                   onTap: () {
                     Navigator.pop(ctx);

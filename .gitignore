@@ -59,6 +59,9 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+android/key.properties
+android/*.jks
+android/*.keystore
 
 # Generated / local tooling
 *.freezed.dart

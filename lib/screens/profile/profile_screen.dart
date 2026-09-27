@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/image_picker_utils.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../widgets/authorized_image.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -101,7 +103,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = userFacingError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -130,10 +132,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final preview = _localPhotoPath != null
         ? FileImage(File(_localPhotoPath!))
         : (_remotePhotoUrl != null && _remotePhotoUrl!.isNotEmpty
-            ? NetworkImage(_remotePhotoUrl!)
+            ? (_remotePhotoUrl!.startsWith('storage://') ||
+                    _remotePhotoUrl!.contains('firebasestorage.googleapis.com')
+                ? null
+                : NetworkImage(_remotePhotoUrl!))
             : (resolvedPhoto != null && resolvedPhoto.isNotEmpty
-                ? NetworkImage(resolvedPhoto)
+                ? (resolvedPhoto.startsWith('storage://') ||
+                        resolvedPhoto.contains('firebasestorage.googleapis.com')
+                    ? null
+                    : NetworkImage(resolvedPhoto))
                 : null));
+    final privatePhoto = _localPhotoPath == null &&
+        ((_remotePhotoUrl?.startsWith('storage://') ?? false) ||
+            (_remotePhotoUrl?.contains('firebasestorage.googleapis.com') ?? false) ||
+            (_remotePhotoUrl == null &&
+                (resolvedPhoto?.startsWith('storage://') ?? false)) ||
+            (_remotePhotoUrl == null &&
+                (resolvedPhoto?.contains('firebasestorage.googleapis.com') ?? false)));
 
     final initial = resolvedName.isNotEmpty
         ? resolvedName[0].toUpperCase()
@@ -156,7 +171,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         radius: 56,
                         backgroundColor: AppColors.primaryLight,
                         backgroundImage: preview as ImageProvider?,
-                        child: preview == null
+                        child: privatePhoto
+                            ? ClipOval(
+                                child: AuthorizedImage(
+                                  url: _remotePhotoUrl ?? resolvedPhoto!,
+                                  width: 112,
+                                  height: 112,
+                                ),
+                              )
+                            : preview == null
                             ? Text(
                                 initial,
                                 style: const TextStyle(

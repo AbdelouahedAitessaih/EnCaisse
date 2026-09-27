@@ -50,6 +50,8 @@ class StorageService {
       throw UnsupportedError('Image upload is not supported on web.');
     }
     await ref.putFile(File(localPath), metadata);
-    return ref.getDownloadURL();
+    // Keep a path reference. Download URLs contain bearer tokens that bypass
+    // Storage Rules when shared outside the app.
+    return 'storage://${ref.fullPath}';
   }
 }

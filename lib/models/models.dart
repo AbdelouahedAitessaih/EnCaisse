@@ -10,6 +10,8 @@ class UserProfile {
     this.fcmToken,
     this.movementSuccessCount = 0,
     this.groupsCreatedCount = 0,
+    this.activityNotificationsEnabled = true,
+    this.remindersEnabled = false,
   });
 
   final String uid;
@@ -20,6 +22,8 @@ class UserProfile {
   final String? fcmToken;
   final int movementSuccessCount;
   final int groupsCreatedCount;
+  final bool activityNotificationsEnabled;
+  final bool remindersEnabled;
 
   factory UserProfile.fromMap(String uid, Map<String, dynamic> data) {
     return UserProfile(
@@ -31,6 +35,9 @@ class UserProfile {
       fcmToken: data['fcmToken'] as String?,
       movementSuccessCount: (data['movementSuccessCount'] as num?)?.toInt() ?? 0,
       groupsCreatedCount: (data['groupsCreatedCount'] as num?)?.toInt() ?? 0,
+      activityNotificationsEnabled:
+          data['activityNotificationsEnabled'] as bool? ?? true,
+      remindersEnabled: data['remindersEnabled'] as bool? ?? false,
     );
   }
 
@@ -42,6 +49,8 @@ class UserProfile {
         'fcmToken': fcmToken,
         'movementSuccessCount': movementSuccessCount,
         'groupsCreatedCount': groupsCreatedCount,
+        'activityNotificationsEnabled': activityNotificationsEnabled,
+        'remindersEnabled': remindersEnabled,
       };
 
   UserProfile copyWith({
@@ -51,6 +60,8 @@ class UserProfile {
     String? fcmToken,
     int? movementSuccessCount,
     int? groupsCreatedCount,
+    bool? activityNotificationsEnabled,
+    bool? remindersEnabled,
     bool clearPhotoUrl = false,
   }) {
     return UserProfile(
@@ -63,6 +74,9 @@ class UserProfile {
       movementSuccessCount:
           movementSuccessCount ?? this.movementSuccessCount,
       groupsCreatedCount: groupsCreatedCount ?? this.groupsCreatedCount,
+      activityNotificationsEnabled:
+          activityNotificationsEnabled ?? this.activityNotificationsEnabled,
+      remindersEnabled: remindersEnabled ?? this.remindersEnabled,
     );
   }
 }
@@ -313,6 +327,51 @@ class AuditEntry {
         'before': before,
         'after': after,
       };
+}
+
+enum SettlementStatus { pending, confirmed, cancelled }
+
+class Settlement {
+  const Settlement({
+    required this.id,
+    required this.fromUid,
+    required this.fromName,
+    required this.toUid,
+    required this.toName,
+    required this.amount,
+    required this.status,
+    required this.createdAt,
+    this.confirmedAt,
+  });
+
+  final String id;
+  final String fromUid;
+  final String fromName;
+  final String toUid;
+  final String toName;
+  final double amount;
+  final SettlementStatus status;
+  final DateTime createdAt;
+  final DateTime? confirmedAt;
+
+  factory Settlement.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? {};
+    return Settlement(
+      id: doc.id,
+      fromUid: data['fromUid'] as String? ?? '',
+      fromName: data['fromName'] as String? ?? 'Member',
+      toUid: data['toUid'] as String? ?? '',
+      toName: data['toName'] as String? ?? 'Member',
+      amount: (data['amount'] as num?)?.toDouble() ?? 0,
+      status: switch (data['status']) {
+        'confirmed' => SettlementStatus.confirmed,
+        'cancelled' => SettlementStatus.cancelled,
+        _ => SettlementStatus.pending,
+      },
+      createdAt: _toDate(data['createdAt']) ?? DateTime.now(),
+      confirmedAt: _toDate(data['confirmedAt']),
+    );
+  }
 }
 
 class BalanceSummary {

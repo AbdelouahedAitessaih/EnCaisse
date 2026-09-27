@@ -6,21 +6,47 @@ service firebase.storage {
     }
 
     function isImage() {
-      return request.resource.contentType.matches('image/.*')
+      return request.resource != null
+        && request.resource.contentType.matches('image/.*')
         && request.resource.size < 5 * 1024 * 1024;
     }
 
-    match /users/{uid}/{allPaths=**} {
-      allow read: if signedIn();
-      allow write: if signedIn()
-        && request.auth.uid == uid
-        && isImage();
+    function isGroupMember(groupId) {
+      return signedIn()
+        && firestore.exists(
+          /databases/(default)/documents/groups/$(groupId)/members/$(request.auth.uid)
+        );
     }
 
-    // Covers cover.jpg and nested receipts/{id}.jpg
-    match /groups/{groupId}/{allPaths=**} {
+    function isGroupCreator(groupId) {
+      return signedIn()
+        && firestore.get(
+          /databases/(default)/documents/groups/$(groupId)
+        ).data.createdBy == request.auth.uid;
+    }
+
+    match /users/{uid}/avatar.jpg {
+      // Avatar URLs are shared in group member profiles. Access still requires
+      // authentication, and the path is limited to the avatar object.
       allow read: if signedIn();
-      allow write: if signedIn() && isImage();
+      allow create, update: if signedIn()
+        && request.auth.uid == uid
+        && isImage();
+      allow delete: if false;
+    }
+
+    match /groups/{groupId}/cover.jpg {
+      allow read: if isGroupMember(groupId);
+      allow create, update: if isGroupCreator(groupId) && isImage();
+      allow delete: if false;
+    }
+
+    match /groups/{groupId}/receipts/{fileName} {
+      allow read: if isGroupMember(groupId);
+      allow create, update: if isGroupMember(groupId)
+        && fileName.matches('^[A-Za-z0-9_-]+\\.jpg$')
+        && isImage();
+      allow delete: if false;
     }
   }
 }

@@ -65,6 +65,14 @@ abstract final class AppTheme {
     required Color inputFill,
     required Color chipBg,
   }) {
+    // Keep every Material text style aligned with the active theme. Widgets
+    // using styles not explicitly customized below (for example bodySmall or
+    // titleSmall) should not inherit a platform default text color.
+    final themedTextTheme = base.textTheme.apply(
+      bodyColor: onSurface,
+      displayColor: onSurface,
+    );
+
     return base.copyWith(
       scaffoldBackgroundColor: scaffold,
       colorScheme: ColorScheme(
@@ -243,7 +251,7 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
       ),
-      textTheme: TextTheme(
+      textTheme: themedTextTheme.copyWith(
         displayLarge: TextStyle(
           fontSize: 40,
           fontWeight: FontWeight.w700,

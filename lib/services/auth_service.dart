@@ -104,14 +104,13 @@ class AuthService {
   }
 
   Future<UserProfile> signInWithGoogle() async {
-    // Debug (`flutter run`) is signed with the debug keystore → native works.
-    // Play Store builds are re-signed by Play App Signing; Credential Manager
-    // often fails there (especially Huawei) with a fake "canceled" and never
-    // reaches our browser fallback. Use Firebase browser OAuth first on
-    // Android release — same path many working apps use.
-    final androidRelease =
-        !kIsWeb && Platform.isAndroid && kReleaseMode;
-    if (androidRelease) {
+    // Credential Manager can report a misleading "canceled" on Android
+    // devices even when the account picker never appeared. Start with
+    // Firebase's browser OAuth flow on every Android build so these devices
+    // do not get blocked by the native picker. Keep native sign-in as a
+    // fallback for devices where the browser flow itself is unavailable.
+    final android = !kIsWeb && Platform.isAndroid;
+    if (android) {
       try {
         return await _signInWithGoogleBrowser();
       } catch (e, st) {

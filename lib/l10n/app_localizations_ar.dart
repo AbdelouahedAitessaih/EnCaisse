@@ -236,10 +236,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterAll => 'الكل';
 
   @override
+  String get filters => 'الفلاتر';
+
+  @override
+  String get applyFilters => 'تطبيق';
+
+  @override
   String get filterUser => 'المستخدم';
 
   @override
   String get filterDate => 'التاريخ';
+
+  @override
+  String get filterAnyTime => 'كل التواريخ';
+
+  @override
+  String get filterThisMonth => 'هذا الشهر';
+
+  @override
+  String get filterLast30Days => 'آخر 30 يومًا';
+
+  @override
+  String get filterChooseDates => 'اختيار التواريخ';
 
   @override
   String get clearFilters => 'مسح الفلاتر';
@@ -459,7 +477,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingBody3 => 'أنشئ مجموعة أو انضم برمز من 6 أحرف.';
 
   @override
-  String get welcomeSubtitle => 'صندوق جماعي مشترك وشفاف للجميع.';
+  String get welcomeSubtitle => 'تابع أموالك وحدك أو مع الآخرين.';
 
   @override
   String get validStartingAmount =>
@@ -775,19 +793,53 @@ class AppLocalizationsAr extends AppLocalizations {
   String get insightsTitle => 'التحليلات';
 
   @override
-  String get insightsOpen => 'التسوية والرسوم';
+  String get insightsOpen => 'التحليلات';
+
+  @override
+  String get yourCaisses => 'صناديقك';
+
+  @override
+  String get homeOverview => 'أموالك كلها في مكان واحد.';
 
   @override
   String get personalCaisse => 'صندوق شخصي';
 
   @override
-  String get personalCaisseSubtitle => 'تتبّع أموالك وحدك — بلا مجموعة.';
+  String get personalCaisseSubtitle => 'مساحة خاصة لمتابعة أموالك.';
 
   @override
   String get personalCaisseName => 'صندوقي';
 
   @override
   String get personalBadge => 'شخصي';
+
+  @override
+  String get manageCaisse => 'إدارة صندوقك';
+
+  @override
+  String get renameCaisse => 'إعادة تسمية الصندوق';
+
+  @override
+  String get changeCaissePhoto => 'تغيير صورة الصندوق';
+
+  @override
+  String get caissePhotoUpdated => 'تم تحديث صورة الصندوق';
+
+  @override
+  String get caisseRenamed => 'تم تغيير اسم الصندوق';
+
+  @override
+  String get deleteCaisse => 'حذف الصندوق';
+
+  @override
+  String get deleteCaisseConfirm => 'هل تريد حذف هذا الصندوق؟';
+
+  @override
+  String get deleteCaisseHint =>
+      'سيؤدي ذلك إلى حذف صندوقك وجميع حركاته نهائياً. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get caisseDeleted => 'تم حذف الصندوق';
 
   @override
   String get howToUse => 'كيفية استخدام EnCaisse';
@@ -848,7 +900,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tourGroup3BodyPersonal =>
-      'افتح التسوية والرسوم للفئات. هذا الصندوق لك وحدك — الدعوة مخفية.';
+      'افتح التحليلات لمراجعة الإنفاق حسب الفئة. هذا الصندوق لك وحدك.';
 
   @override
   String get tapPhotoToChange => 'اضغط على الصورة للتغيير';

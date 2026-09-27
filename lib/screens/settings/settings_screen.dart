@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/engagement_copy.dart';
 import '../../providers/providers.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/feature_tour.dart';
+import '../../widgets/authorized_image.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -26,6 +28,7 @@ class SettingsScreen extends ConsumerWidget {
         ? profile!.email
         : (user?.email ?? '');
     final photoUrl = profile?.photoUrl ?? user?.photoURL;
+    final notificationCopy = EngagementCopy.of(context);
     final languages = <(Locale?, String)>[
       (null, l10n.languageSystem),
       (const Locale('en'), l10n.languageEnglish),
@@ -50,15 +53,27 @@ class SettingsScreen extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
               backgroundColor: AppColors.primaryLight,
-              backgroundImage:
-                  photoUrl != null ? NetworkImage(photoUrl) : null,
+              backgroundImage: photoUrl != null &&
+                      !photoUrl.startsWith('storage://') &&
+                      !photoUrl.contains('firebasestorage.googleapis.com')
+                  ? NetworkImage(photoUrl)
+                  : null,
               child: photoUrl == null
                   ? Text(
                       (displayName.isNotEmpty ? displayName[0] : 'U')
                           .toUpperCase(),
                       style: const TextStyle(color: AppColors.primary),
                     )
-                  : null,
+                  : (photoUrl.startsWith('storage://') ||
+                          photoUrl.contains('firebasestorage.googleapis.com')
+                      ? ClipOval(
+                          child: AuthorizedImage(
+                            url: photoUrl,
+                            width: 40,
+                            height: 40,
+                          ),
+                        )
+                      : null),
             ),
             title: Text(displayName),
             subtitle: Text(email),
@@ -116,6 +131,39 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 24),
+          Text(l10n.notifications, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: profile?.activityNotificationsEnabled ?? true,
+            title: Text(notificationCopy.activityNotifications),
+            subtitle: Text(notificationCopy.activityNotificationsHint),
+            onChanged: user == null || profile == null
+                ? null
+                : (enabled) => ref
+                    .read(notificationServiceProvider)
+                    .setNotificationPreferences(
+                      uid: user.uid,
+                      activityEnabled: enabled,
+                      remindersEnabled: profile.remindersEnabled,
+                    ),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: profile?.remindersEnabled ?? false,
+            title: Text(notificationCopy.reminderNotifications),
+            subtitle: Text(notificationCopy.reminderNotificationsHint),
+            onChanged: user == null || profile == null
+                ? null
+                : (enabled) => ref
+                    .read(notificationServiceProvider)
+                    .setNotificationPreferences(
+                      uid: user.uid,
+                      activityEnabled: profile.activityNotificationsEnabled,
+                      remindersEnabled: enabled,
+                    ),
+          ),
+          const SizedBox(height: 16),
           Text(l10n.appearance, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           Text(l10n.themeMode, style: Theme.of(context).textTheme.labelLarge),
@@ -161,8 +209,68 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 28),
+          const Divider(),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.delete_forever_outlined, color: AppColors.error),
+            title: Text(_accountDeletionCopy(context).$1),
+            subtitle: Text(_accountDeletionCopy(context).$2),
+            onTap: () => _deleteAccount(context, ref),
+          ),
         ],
       ),
+    );
+  }
+}
+
+(String, String, String, String) _accountDeletionCopy(BuildContext context) {
+  if (Localizations.localeOf(context).languageCode == 'fr') {
+    return (
+      'Supprimer le compte',
+      'Supprimer votre compte et vos donnees personnelles.',
+      'Confirmer la suppression ?',
+      'Cette action est definitive. Supprimez les groupes que vous avez crees avant votre compte.',
+    );
+  }
+  return (
+    'Delete account',
+    'Delete your account and personal data.',
+    'Confirm deletion?',
+    'This is permanent. Delete groups you created before deleting your account.',
+  );
+}
+
+Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+  final copy = _accountDeletionCopy(context);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(copy.$3),
+      content: Text(copy.$4),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(AppLocalizations.of(context).cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text(copy.$1),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+
+  try {
+    await ref.read(backendServiceProvider).call('deleteAccount', const {});
+    await ref.read(authServiceProvider).signOut();
+    if (context.mounted) context.go('/welcome');
+  } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$error')),
     );
   }
 }

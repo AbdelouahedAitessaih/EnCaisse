@@ -104,6 +104,9 @@ class NotificationsScreen extends ConsumerWidget {
                     }
                     if (n.groupId.isNotEmpty && context.mounted) {
                       context.push('/groups/${n.groupId}');
+                    } else if (n.type == 'engagement_no_group' &&
+                        context.mounted) {
+                      context.go('/home');
                     }
                   },
                 );

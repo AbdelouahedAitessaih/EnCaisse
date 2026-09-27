@@ -50,10 +50,21 @@ class FeatureTour {
           builder: (ctx, setState) {
             final step = steps[index];
             final isLast = index == steps.length - 1;
+            final theme = Theme.of(ctx);
             return AlertDialog(
               icon: Icon(step.icon, color: AppColors.primary, size: 40),
-              title: Text(step.title),
-              content: Text(step.body),
+              title: Text(
+                step.title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              content: Text(
+                step.body,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               actions: [
                 if (index > 0)
                   TextButton(

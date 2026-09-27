@@ -56,6 +56,7 @@ class SettleSummary {
 SettleSummary computeSettle({
   required List<GroupMember> members,
   required List<Movement> movements,
+  List<Settlement> settlements = const [],
 }) {
   if (members.isEmpty) {
     return const SettleSummary(memberNets: [], transfers: []);
@@ -83,6 +84,14 @@ SettleSummary computeSettle({
     }
   }
 
+  for (final payment in settlements) {
+    if (payment.status != SettlementStatus.confirmed) continue;
+    depositsBy[payment.fromUid] =
+        (depositsBy[payment.fromUid] ?? 0) + payment.amount.abs();
+    expensesBy[payment.toUid] =
+        (expensesBy[payment.toUid] ?? 0) + payment.amount.abs();
+  }
+
   final names = <String, String>{
     for (final m in members) m.uid: m.displayName,
   };
@@ -94,6 +103,11 @@ SettleSummary computeSettle({
           ? mov.createdByName
           : mov.createdBy,
     );
+  }
+  for (final payment in settlements) {
+    if (payment.status != SettlementStatus.confirmed) continue;
+    names.putIfAbsent(payment.fromUid, () => payment.fromName);
+    names.putIfAbsent(payment.toUid, () => payment.toName);
   }
 
   final uids = {...depositsBy.keys, ...expensesBy.keys, ...names.keys};

@@ -238,10 +238,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get filterAll => 'Todos';
 
   @override
+  String get filters => 'Filtros';
+
+  @override
+  String get applyFilters => 'Aplicar';
+
+  @override
   String get filterUser => 'Usuario';
 
   @override
   String get filterDate => 'Fecha';
+
+  @override
+  String get filterAnyTime => 'Cualquier fecha';
+
+  @override
+  String get filterThisMonth => 'Este mes';
+
+  @override
+  String get filterLast30Days => 'Últimos 30 días';
+
+  @override
+  String get filterChooseDates => 'Elegir fechas';
 
   @override
   String get clearFilters => 'Borrar filtros';
@@ -470,7 +488,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get welcomeSubtitle =>
-      'Dinero de grupo compartido, transparente para todos.';
+      'Controla tu dinero a solas o con otras personas.';
 
   @override
   String get validStartingAmount =>
@@ -791,19 +809,54 @@ class AppLocalizationsEs extends AppLocalizations {
   String get insightsTitle => 'Análisis';
 
   @override
-  String get insightsOpen => 'Reparto y gráficos';
+  String get insightsOpen => 'Análisis';
+
+  @override
+  String get yourCaisses => 'Tus cajas';
+
+  @override
+  String get homeOverview => 'Todo tu dinero en un solo lugar.';
 
   @override
   String get personalCaisse => 'Caja personal';
 
   @override
-  String get personalCaisseSubtitle => 'Lleva tu dinero solo — sin grupo.';
+  String get personalCaisseSubtitle =>
+      'Un espacio privado para llevar tus cuentas.';
 
   @override
   String get personalCaisseName => 'Mi caja';
 
   @override
   String get personalBadge => 'Personal';
+
+  @override
+  String get manageCaisse => 'Gestionar tu caja';
+
+  @override
+  String get renameCaisse => 'Cambiar nombre de la caja';
+
+  @override
+  String get changeCaissePhoto => 'Cambiar foto de la caja';
+
+  @override
+  String get caissePhotoUpdated => 'Foto de la caja actualizada';
+
+  @override
+  String get caisseRenamed => 'Caja renombrada';
+
+  @override
+  String get deleteCaisse => 'Eliminar caja';
+
+  @override
+  String get deleteCaisseConfirm => '¿Eliminar esta caja?';
+
+  @override
+  String get deleteCaisseHint =>
+      'Esto eliminará permanentemente tu caja y todos sus movimientos. No se puede deshacer.';
+
+  @override
+  String get caisseDeleted => 'Caja eliminada';
 
   @override
   String get howToUse => 'Cómo usar EnCaisse';
@@ -864,7 +917,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tourGroup3BodyPersonal =>
-      'Abre Reparto y gráficos para las categorías. Esta caja es solo tuya: la invitación está oculta.';
+      'Abre Análisis para ver los gastos por categoría. Esta caja es solo tuya.';
 
   @override
   String get tapPhotoToChange => 'Toca la foto para cambiarla';

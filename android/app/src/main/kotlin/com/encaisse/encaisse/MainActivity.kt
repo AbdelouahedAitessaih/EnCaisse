@@ -16,6 +16,8 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             if (call.method == "getCountryCode") {
                 result.success(resolveCountryCode())
+            } else if (call.method == "getTimeZoneId") {
+                result.success(java.util.TimeZone.getDefault().id)
             } else {
                 result.notImplemented()
             }

@@ -14,6 +14,10 @@ import UIKit
         binaryMessenger: registrar.messenger()
       )
       channel.setMethodCallHandler { call, result in
+        if call.method == "getTimeZoneId" {
+          result(TimeZone.current.identifier)
+          return
+        }
         guard call.method == "getCountryCode" else {
           result(FlutterMethodNotImplemented)
           return

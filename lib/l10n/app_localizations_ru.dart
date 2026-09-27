@@ -238,10 +238,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get filterAll => 'Все';
 
   @override
+  String get filters => 'Фильтры';
+
+  @override
+  String get applyFilters => 'Применить';
+
+  @override
   String get filterUser => 'Пользователь';
 
   @override
   String get filterDate => 'Дата';
+
+  @override
+  String get filterAnyTime => 'За всё время';
+
+  @override
+  String get filterThisMonth => 'В этом месяце';
+
+  @override
+  String get filterLast30Days => 'Последние 30 дней';
+
+  @override
+  String get filterChooseDates => 'Выбрать даты';
 
   @override
   String get clearFilters => 'Сбросить фильтры';
@@ -470,7 +488,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get welcomeSubtitle =>
-      'Общие групповые средства, прозрачные для всех.';
+      'Учитывайте свои деньги сами или вместе с другими.';
 
   @override
   String get validStartingAmount =>
@@ -788,19 +806,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String get insightsTitle => 'Аналитика';
 
   @override
-  String get insightsOpen => 'Расчёт и графики';
+  String get insightsOpen => 'Аналитика';
+
+  @override
+  String get yourCaisses => 'Ваши кассы';
+
+  @override
+  String get homeOverview => 'Все ваши деньги в одном месте.';
 
   @override
   String get personalCaisse => 'Личная касса';
 
   @override
-  String get personalCaisseSubtitle => 'Учёт денег в одиночку — без группы.';
+  String get personalCaisseSubtitle =>
+      'Личное пространство для учёта ваших денег.';
 
   @override
   String get personalCaisseName => 'Моя касса';
 
   @override
   String get personalBadge => 'Личное';
+
+  @override
+  String get manageCaisse => 'Управление вашей кассой';
+
+  @override
+  String get renameCaisse => 'Переименовать кассу';
+
+  @override
+  String get changeCaissePhoto => 'Изменить фото кассы';
+
+  @override
+  String get caissePhotoUpdated => 'Фото кассы обновлено';
+
+  @override
+  String get caisseRenamed => 'Касса переименована';
+
+  @override
+  String get deleteCaisse => 'Удалить кассу';
+
+  @override
+  String get deleteCaisseConfirm => 'Удалить эту кассу?';
+
+  @override
+  String get deleteCaisseHint =>
+      'Касса и все её операции будут удалены безвозвратно. Это действие нельзя отменить.';
+
+  @override
+  String get caisseDeleted => 'Касса удалена';
 
   @override
   String get howToUse => 'Как пользоваться EnCaisse';
@@ -861,7 +914,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tourGroup3BodyPersonal =>
-      'Откройте Расчёт и графики по категориям. Эта касса только ваша — приглашение скрыто.';
+      'Откройте аналитику расходов по категориям. Эта касса только для вас.';
 
   @override
   String get tapPhotoToChange => 'Нажмите фото, чтобы изменить';

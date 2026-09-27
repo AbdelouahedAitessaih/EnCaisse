@@ -5,10 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 
 import '../models/models.dart';
+import 'device_region.dart';
 
 /// Push + local notifications for movement alerts, joins, and weekly digest.
 ///
@@ -31,15 +30,15 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _local;
 
   static const eventChannelId = 'encaisse_events';
-  static const _weeklyChannelId = 'encaisse_weekly';
 
   bool _initialized = false;
   StreamSubscription<String>? _tokenRefreshSub;
   StreamSubscription<RemoteMessage>? _foregroundSub;
+  StreamSubscription<RemoteMessage>? _openedSub;
+  DateTime? _lastActivityWriteAt;
+  String? _lastActivityWriteUid;
 
   Future<void> initialize({required String? uid}) async {
-    tz.initializeTimeZones();
-
     if (!_initialized) {
       const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
       const iosInit = DarwinInitializationSettings(
@@ -50,6 +49,8 @@ class NotificationService {
       await _local.initialize(
         const InitializationSettings(android: androidInit, iOS: iosInit),
       );
+      // Remove the old generic weekly nag that prior app versions scheduled.
+      await _local.cancel(1001);
       await _createChannels();
       _initialized = true;
     }
@@ -59,6 +60,8 @@ class NotificationService {
       badge: true,
       sound: true,
     );
+
+    if (uid != null) await recordAppActivity(uid);
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
       return;
@@ -75,6 +78,8 @@ class NotificationService {
     await _foregroundSub?.cancel();
     _foregroundSub =
         FirebaseMessaging.onMessage.listen(_showForegroundMessage);
+    await _openedSub?.cancel();
+    _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpen);
 
     if (uid != null) {
       await _saveToken(uid);
@@ -83,9 +88,6 @@ class NotificationService {
           _messaging.onTokenRefresh.listen((token) => _persistToken(uid, token));
     }
 
-    await scheduleWeeklyDigest();
-
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpen);
     final initial = await _messaging.getInitialMessage();
     if (initial != null) {
       _pendingGroupId = initial.data['groupId'] as String?;
@@ -118,6 +120,10 @@ class NotificationService {
   Future<void> stopListening() async {
     await _tokenRefreshSub?.cancel();
     _tokenRefreshSub = null;
+    await _foregroundSub?.cancel();
+    _foregroundSub = null;
+    await _openedSub?.cancel();
+    _openedSub = null;
   }
 
   Future<void> _createChannels() async {
@@ -130,14 +136,6 @@ class NotificationService {
         'Caisse activity',
         description: 'New movements and member joins',
         importance: Importance.high,
-      ),
-    );
-    await android?.createNotificationChannel(
-      const AndroidNotificationChannel(
-        _weeklyChannelId,
-        'Weekly digest',
-        description: 'Your caisse summary for the week',
-        importance: Importance.defaultImportance,
       ),
     );
   }
@@ -159,6 +157,45 @@ class NotificationService {
       'fcmTokens': FieldValue.arrayUnion([token]),
       'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  Future<void> setNotificationPreferences({
+    required String uid,
+    required bool activityEnabled,
+    required bool remindersEnabled,
+  }) async {
+    await _db.collection('users').doc(uid).set({
+      'activityNotificationsEnabled': activityEnabled,
+      'remindersEnabled': remindersEnabled,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> recordAppActivity(String uid) async {
+    final now = DateTime.now();
+    if (_lastActivityWriteUid == uid &&
+        _lastActivityWriteAt != null &&
+        now.difference(_lastActivityWriteAt!) < const Duration(minutes: 30)) {
+      return;
+    }
+    final zoneId = await DeviceRegion.timeZoneId();
+    await _db.collection('users').doc(uid).set({
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      if (zoneId != null && zoneId.isNotEmpty) 'timeZone': zoneId,
+    }, SetOptions(merge: true));
+    _lastActivityWriteUid = uid;
+    _lastActivityWriteAt = now;
+  }
+
+  Future<void> recordGroupViewed({
+    required String uid,
+    required String groupId,
+  }) async {
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('memberships')
+        .doc(groupId)
+        .set({'lastViewedAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
   }
 
   Future<void> _showForegroundMessage(RemoteMessage message) async {
@@ -197,82 +234,6 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
     );
-  }
-
-  Future<void> scheduleWeeklyDigest({
-    String body = 'Open EnCaisse to see your caisse this week.',
-  }) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var next = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10);
-    while (next.weekday != DateTime.sunday || next.isBefore(now)) {
-      next = next.add(const Duration(days: 1));
-    }
-
-    await _local.zonedSchedule(
-      1001,
-      'Your caisse this week',
-      body,
-      next,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _weeklyChannelId,
-          'Weekly digest',
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-    );
-  }
-
-  /// Fan-out to every non-muted member except [actorUid].
-  /// Docs in `users/{uid}/notifications` trigger Cloud Function → FCM push.
-  Future<void> notifyGroupEvent({
-    required String groupId,
-    required String title,
-    required String body,
-    required String actorUid,
-    required String type,
-    String? actorName,
-  }) async {
-    final members = await _db
-        .collection('groups')
-        .doc(groupId)
-        .collection('members')
-        .get();
-
-    WriteBatch batch = _db.batch();
-    var ops = 0;
-    for (final member in members.docs) {
-      if (member.id == actorUid) continue;
-      final muted = member.data()['notificationsMuted'] as bool? ?? false;
-      if (muted) continue;
-
-      final notifRef = _db
-          .collection('users')
-          .doc(member.id)
-          .collection('notifications')
-          .doc();
-      batch.set(notifRef, {
-        'groupId': groupId,
-        'title': title,
-        'body': body,
-        'type': type,
-        'actorUid': actorUid,
-        if (actorName != null) 'actorName': actorName,
-        'createdAt': FieldValue.serverTimestamp(),
-        'read': false,
-      });
-      ops++;
-      if (ops >= 450) {
-        await batch.commit();
-        batch = _db.batch();
-        ops = 0;
-      }
-    }
-    if (ops > 0) {
-      await batch.commit();
-    }
   }
 
   Stream<List<AppNotification>> watchInbox(String uid) {

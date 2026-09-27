@@ -74,12 +74,14 @@ class EncaisseApp extends ConsumerStatefulWidget {
   ConsumerState<EncaisseApp> createState() => _EncaisseAppState();
 }
 
-class _EncaisseAppState extends ConsumerState<EncaisseApp> {
+class _EncaisseAppState extends ConsumerState<EncaisseApp>
+    with WidgetsBindingObserver {
   String? _notifUid;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await DeviceRegion.preload();
       if (!ref.read(firebaseReadyProvider)) return;
@@ -88,6 +90,19 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp> {
       }
       await _syncNotifications(ref.read(authStateProvider).asData?.value?.uid);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _notifUid != null) {
+      ref.read(notificationServiceProvider).recordAppActivity(_notifUid!);
+    }
   }
 
   Future<void> _syncNotifications(String? uid) async {

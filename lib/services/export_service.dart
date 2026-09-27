@@ -14,6 +14,7 @@ class ExportService {
     required Group group,
     required List<Movement> movements,
     required List<GroupMember> members,
+    List<Settlement> settlements = const [],
   }) async {
     final buf = StringBuffer();
     buf.writeln('id,type,amount,title,category,createdBy,createdAt,deleted');
@@ -33,12 +34,25 @@ class ExportService {
       );
     }
 
-    final settle = computeSettle(members: members, movements: movements);
+    final settle = computeSettle(
+      members: members,
+      movements: movements,
+      settlements: settlements,
+    );
     buf.writeln();
     buf.writeln('settle_from,settle_to,amount');
     for (final t in settle.transfers) {
       buf.writeln(
         '${_csv(t.fromName)},${_csv(t.toName)},${t.amount.toStringAsFixed(2)}',
+      );
+    }
+    buf.writeln();
+    buf.writeln('payment_from,payment_to,amount,status,created_at');
+    for (final payment in settlements) {
+      buf.writeln(
+        '${_csv(payment.fromName)},${_csv(payment.toName)},'
+        '${payment.amount.toStringAsFixed(2)},${payment.status.name},'
+        '${_csv(payment.createdAt.toIso8601String())}',
       );
     }
 
@@ -59,8 +73,13 @@ class ExportService {
     required List<Movement> movements,
     required List<GroupMember> members,
     required BalanceSummary balance,
+    List<Settlement> settlements = const [],
   }) async {
-    final settle = computeSettle(members: members, movements: movements);
+    final settle = computeSettle(
+      members: members,
+      movements: movements,
+      settlements: settlements,
+    );
     final active = movements.where((m) => !m.deleted).toList();
     final doc = pw.Document();
     doc.addPage(
@@ -95,6 +114,21 @@ class ExportService {
               (t) => pw.Text(
                 '${t.fromName} → ${t.toName}: '
                 '${formatMoney(t.amount, currency: group.currency)}',
+              ),
+            ),
+          pw.SizedBox(height: 16),
+          pw.Text(
+            'Recent repayments',
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+          ),
+          if (settlements.isEmpty)
+            pw.Text('No repayments recorded')
+          else
+            ...settlements.take(20).map(
+              (payment) => pw.Text(
+                '${payment.fromName} → ${payment.toName}: '
+                '${formatMoney(payment.amount, currency: group.currency)} '
+                '(${payment.status.name})',
               ),
             ),
           pw.SizedBox(height: 16),

@@ -1,9 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     function signedIn() {
       return request.auth != null;
+    }
+
+    function ownsUser(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
 
     function isGroupMember(groupId) {
@@ -17,111 +20,103 @@ service cloud.firestore {
           == request.auth.uid;
     }
 
-    function isStartingBalance() {
-      return resource.data.get('isStartingBalance', false) == true;
-    }
-
-    function willBeStartingBalance() {
-      return request.resource.data.get('isStartingBalance', false) == true;
-    }
-
-    function groupCoreUnchanged() {
-      return request.resource.data.createdBy == resource.data.createdBy
-        && request.resource.data.inviteCode == resource.data.inviteCode
-        && request.resource.data.currency == resource.data.currency
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.get('isPersonal', false)
-            == resource.data.get('isPersonal', false);
+    function validProfileKeys() {
+      return request.resource.data.keys().hasOnly([
+        'displayName', 'email', 'photoUrl', 'createdAt', 'fcmToken',
+        'fcmTokens', 'fcmTokenUpdatedAt', 'movementSuccessCount',
+        'groupsCreatedCount', 'activityNotificationsEnabled',
+        'remindersEnabled', 'lastActiveAt', 'timeZone'
+      ]);
     }
 
     match /users/{uid} {
-      allow read: if signedIn();
-      allow create: if signedIn() && request.auth.uid == uid;
-      // Owner may update their profile (name, photo, fcmToken, repair missing fields).
-      allow update: if signedIn() && request.auth.uid == uid;
+      allow read: if ownsUser(uid);
+      allow create: if ownsUser(uid) && validProfileKeys();
+      allow update: if ownsUser(uid)
+        && validProfileKeys()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName', 'email', 'photoUrl', 'createdAt', 'fcmToken',
+          'fcmTokens', 'fcmTokenUpdatedAt', 'movementSuccessCount',
+          'groupsCreatedCount', 'activityNotificationsEnabled',
+          'remindersEnabled', 'lastActiveAt', 'timeZone'
+        ]);
       allow delete: if false;
 
       match /memberships/{groupId} {
-        allow read: if signedIn() && request.auth.uid == uid;
-        allow create, update: if signedIn()
-          && (request.auth.uid == uid || isGroupCreator(groupId));
-        allow delete: if signedIn()
-          && (request.auth.uid == uid || isGroupCreator(groupId));
+        allow read: if ownsUser(uid);
+        allow create: if false;
+        allow update: if (isGroupCreator(groupId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['name', 'isPersonal']))
+          || (ownsUser(uid)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['lastViewedAt'])
+            && request.resource.data.lastViewedAt is timestamp);
+        allow delete: if ownsUser(uid) || isGroupCreator(groupId);
       }
 
       match /notifications/{notifId} {
-        allow read, update: if signedIn() && request.auth.uid == uid;
-        allow create: if signedIn();
-        allow delete: if signedIn() && request.auth.uid == uid;
+        allow read: if ownsUser(uid);
+        allow create, delete: if false;
+        allow update: if ownsUser(uid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['read'])
+          && request.resource.data.read is bool;
       }
     }
 
-    // Public app update policy (min/force version). Clients read only.
+    match /inviteCodes/{code} {
+      allow read, write: if false;
+    }
+
     match /config/{docId} {
       allow read: if true;
       allow write: if false;
     }
 
     match /groups/{groupId} {
-      allow get: if signedIn();
-      allow list: if signedIn();
-
-      allow create: if signedIn()
-        && request.resource.data.keys().hasAll([
-          'name', 'createdBy', 'createdAt', 'inviteCode', 'currency'
-        ])
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.name is string
-        && request.resource.data.inviteCode is string
-        && request.resource.data.currency is string;
-
-      // Creator may change name and/or photoUrl.
+      allow read: if isGroupMember(groupId);
+      allow create: if false;
       allow update: if isGroupCreator(groupId)
-        && groupCoreUnchanged()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['name', 'photoUrl'])
         && request.resource.data.name is string
-        && request.resource.data.name.size() >= 2;
-
-      allow delete: if isGroupCreator(groupId);
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 60
+        && (!('photoUrl' in request.resource.data)
+          || request.resource.data.photoUrl is string);
+      allow delete: if false;
 
       match /members/{uid} {
-        allow read: if signedIn()
-          && (request.auth.uid == uid || isGroupMember(groupId));
-        allow create: if signedIn() && request.auth.uid == uid;
-        allow update: if signedIn()
-          && (request.auth.uid == uid || isGroupMember(groupId));
-        // Creator may delete any member (including self when deleting the group).
-        // Other members may only delete themselves (leave); never the creator.
+        allow read: if isGroupMember(groupId);
+        allow create: if false;
+        allow update: if ownsUser(uid)
+          && isGroupMember(groupId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['displayName', 'photoUrl', 'notificationsMuted'])
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 80
+          && request.resource.data.notificationsMuted is bool;
         allow delete: if signedIn() && (
-          isGroupCreator(groupId)
-          || (
-            request.auth.uid == uid
-            && uid != get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy
-          )
+          (request.auth.uid == uid
+            && uid != get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy)
+          || isGroupCreator(groupId)
         );
       }
 
       match /movements/{movementId} {
         allow read: if isGroupMember(groupId);
-
-        allow create: if isGroupMember(groupId)
-          && request.resource.data.createdBy == request.auth.uid
-          && (!willBeStartingBalance() || isGroupCreator(groupId));
-
-        allow update: if isGroupMember(groupId)
-          && (!isStartingBalance() || isGroupCreator(groupId))
-          && (
-            !isStartingBalance()
-            || request.resource.data.isStartingBalance == true
-          );
-
-        allow delete: if isGroupCreator(groupId);
+        allow write: if false;
       }
 
       match /audit/{auditId} {
         allow read: if isGroupMember(groupId);
-        allow create: if isGroupMember(groupId);
-        allow update: if false;
-        allow delete: if isGroupCreator(groupId);
+        allow write: if false;
+      }
+
+      match /settlements/{settlementId} {
+        allow read: if isGroupMember(groupId);
+        allow write: if false;
       }
     }
   }

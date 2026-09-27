@@ -239,10 +239,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filterAll => 'Tous';
 
   @override
+  String get filters => 'Filtres';
+
+  @override
+  String get applyFilters => 'Appliquer';
+
+  @override
   String get filterUser => 'Utilisateur';
 
   @override
   String get filterDate => 'Date';
+
+  @override
+  String get filterAnyTime => 'Toutes les dates';
+
+  @override
+  String get filterThisMonth => 'Ce mois-ci';
+
+  @override
+  String get filterLast30Days => '30 derniers jours';
+
+  @override
+  String get filterChooseDates => 'Choisir les dates';
 
   @override
   String get clearFilters => 'Effacer les filtres';
@@ -470,8 +488,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Créez un groupe ou rejoignez-en un avec un code à 6 caractères.';
 
   @override
-  String get welcomeSubtitle =>
-      'Caisse de groupe partagée, transparente pour tous.';
+  String get welcomeSubtitle => 'Suivez votre argent seul ou à plusieurs.';
 
   @override
   String get validStartingAmount =>
@@ -792,20 +809,54 @@ class AppLocalizationsFr extends AppLocalizations {
   String get insightsTitle => 'Analyses';
 
   @override
-  String get insightsOpen => 'Répartition & graphiques';
+  String get insightsOpen => 'Analyses';
+
+  @override
+  String get yourCaisses => 'Vos caisses';
+
+  @override
+  String get homeOverview => 'Tout votre argent au même endroit.';
 
   @override
   String get personalCaisse => 'Caisse personnelle';
 
   @override
   String get personalCaisseSubtitle =>
-      'Suivez votre argent seul — sans groupe.';
+      'Un espace privé pour suivre votre argent.';
 
   @override
   String get personalCaisseName => 'Ma caisse';
 
   @override
   String get personalBadge => 'Perso';
+
+  @override
+  String get manageCaisse => 'Gérer votre caisse';
+
+  @override
+  String get renameCaisse => 'Renommer la caisse';
+
+  @override
+  String get changeCaissePhoto => 'Modifier la photo de la caisse';
+
+  @override
+  String get caissePhotoUpdated => 'Photo de la caisse modifiée';
+
+  @override
+  String get caisseRenamed => 'Caisse renommée';
+
+  @override
+  String get deleteCaisse => 'Supprimer la caisse';
+
+  @override
+  String get deleteCaisseConfirm => 'Supprimer cette caisse ?';
+
+  @override
+  String get deleteCaisseHint =>
+      'La suppression efface définitivement votre caisse et tous ses mouvements. Cette action est irréversible.';
+
+  @override
+  String get caisseDeleted => 'Caisse supprimée';
 
   @override
   String get howToUse => 'Comment utiliser EnCaisse';
@@ -866,7 +917,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tourGroup3BodyPersonal =>
-      'Ouvrez Répartition & graphiques pour les catégories. Cette caisse est à vous seul — l’invitation est masquée.';
+      'Ouvrez Analyses pour consulter les dépenses par catégorie. Cette caisse est réservée à vous.';
 
   @override
   String get tapPhotoToChange => 'Appuyer pour changer la photo';

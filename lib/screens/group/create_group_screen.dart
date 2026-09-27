@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/currencies.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../services/device_region.dart';
@@ -95,8 +96,9 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         // Keep Home under the group so the back button works.
         context.go('/home');
         context.push('/groups/${group.id}');
-      }    } catch (e) {
-      setState(() => _error = e.toString());
+      }
+    } catch (e) {
+      setState(() => _error = userFacingError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

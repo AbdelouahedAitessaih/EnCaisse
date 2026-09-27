@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/formatters.dart';
 import '../core/utils/settle.dart';
+import '../l10n/engagement_copy.dart';
 import '../l10n/app_localizations.dart';
 import '../models/models.dart';
+
+EngagementCopy _copy(BuildContext context) => EngagementCopy.of(context);
 
 class GroupInsightsSection extends StatelessWidget {
   const GroupInsightsSection({
@@ -14,12 +17,22 @@ class GroupInsightsSection extends StatelessWidget {
     required this.settle,
     required this.currency,
     this.showSettle = true,
+    this.currentUid,
+    this.settlements = const [],
+    this.onRecordPayment,
+    this.onConfirmSettlement,
+    this.onCancelSettlement,
   });
 
   final BalanceSummary balance;
   final SettleSummary settle;
   final String currency;
   final bool showSettle;
+  final String? currentUid;
+  final List<Settlement> settlements;
+  final Future<void> Function(SettleTransfer transfer)? onRecordPayment;
+  final Future<void> Function(Settlement settlement)? onConfirmSettlement;
+  final Future<void> Function(Settlement settlement)? onCancelSettlement;
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +67,20 @@ class GroupInsightsSection extends StatelessWidget {
                   l10n.settleSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  _copy(context).settlementExplanation,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const SizedBox(height: 12),
-                if (settle.isSettled)
+                if (settle.isSettled &&
+                    balance.deposits == 0 &&
+                    balance.expenses == 0)
+                  Text(
+                    l10n.noMovementsSubtitle,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  )
+                else if (settle.isSettled)
                   Text(
                     l10n.settleSettled,
                     style: const TextStyle(color: AppColors.deposit),
@@ -64,20 +89,115 @@ class GroupInsightsSection extends StatelessWidget {
                   ...settle.transfers.map((t) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.swap_horiz, size: 18),
+                          Row(
+                            children: [
+                              const Icon(Icons.swap_horiz, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${l10n.settleOwes(t.fromName, t.toName)} · '
+                                  '${formatMoney(t.amount, currency: currency)}',
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (currentUid == t.fromUid && onRecordPayment != null)
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton.icon(
+                                onPressed: () => onRecordPayment!(t),
+                                icon: const Icon(Icons.payments_outlined),
+                                label: Text(_copy(context).recordPayment),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  }),
+                if (settlements.isNotEmpty) ...[
+                  const Divider(height: 24),
+                  Text(
+                    _copy(context).settlementHistory,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  ...settlements.take(5).map((payment) {
+                    final isConfirmed =
+                        payment.status == SettlementStatus.confirmed;
+                    final isCancelled =
+                        payment.status == SettlementStatus.cancelled;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            isConfirmed
+                                ? Icons.check_circle
+                                : isCancelled
+                                    ? Icons.cancel_outlined
+                                    : Icons.schedule,
+                            size: 18,
+                            color: isConfirmed
+                                ? AppColors.deposit
+                                : isCancelled
+                                    ? scheme.outline
+                                    : scheme.secondary,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(
-                              '${l10n.settleOwes(t.fromName, t.toName)} · '
-                              '${formatMoney(t.amount, currency: currency)}',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_copy(context).paymentLine(payment.fromName, payment.toName)} · '
+                                  '${formatMoney(payment.amount, currency: currency)}',
+                                ),
+                                Text(
+                                  isConfirmed
+                                      ? _copy(context).paymentConfirmed
+                                      : isCancelled
+                                          ? _copy(context).paymentCancelled
+                                          : _copy(context).awaitingConfirmation,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                if (!isConfirmed &&
+                                    !isCancelled &&
+                                    currentUid == payment.toUid &&
+                                    onConfirmSettlement != null)
+                                  Align(
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    child: TextButton.icon(
+                                      onPressed: () =>
+                                          onConfirmSettlement!(payment),
+                                      icon: const Icon(Icons.done_all),
+                                      label: Text(_copy(context).confirmReceived),
+                                    ),
+                                  ),
+                                if (!isConfirmed &&
+                                    !isCancelled &&
+                                    (currentUid == payment.fromUid ||
+                                        currentUid == payment.toUid) &&
+                                    onCancelSettlement != null)
+                                  Align(
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    child: TextButton(
+                                      onPressed: () =>
+                                          onCancelSettlement!(payment),
+                                      child: Text(_copy(context).cancelPayment),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     );
                   }),
+                ],
                 if (settle.memberNets.isNotEmpty) ...[
                   const Divider(height: 24),
                   ...settle.memberNets.map((m) {
@@ -93,8 +213,10 @@ class GroupInsightsSection extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${l10n.memberNet}: '
-                            '${formatMoney(m.net, currency: currency)}',
+                            m.delta.abs() < 0.01
+                                ? _copy(context).youAreSettled
+                                : '${m.delta < 0 ? _copy(context).memberOwes : _copy(context).memberIsOwed} '
+                                    '${formatMoney(m.delta.abs(), currency: currency)}',
                             style: TextStyle(
                               color: m.delta >= 0
                                   ? AppColors.deposit

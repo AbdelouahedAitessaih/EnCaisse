@@ -550,6 +550,18 @@ abstract class AppLocalizations {
   /// **'All'**
   String get filterAll;
 
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get applyFilters;
+
   /// No description provided for @filterUser.
   ///
   /// In en, this message translates to:
@@ -561,6 +573,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Date'**
   String get filterDate;
+
+  /// No description provided for @filterAnyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time'**
+  String get filterAnyTime;
+
+  /// No description provided for @filterThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get filterThisMonth;
+
+  /// No description provided for @filterLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get filterLast30Days;
+
+  /// No description provided for @filterChooseDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose dates'**
+  String get filterChooseDates;
 
   /// No description provided for @clearFilters.
   ///
@@ -973,7 +1009,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Shared group cash, transparent for everyone.'**
+  /// **'Track your money solo or with others.'**
   String get welcomeSubtitle;
 
   /// No description provided for @validStartingAmount.
@@ -1531,8 +1567,20 @@ abstract class AppLocalizations {
   /// No description provided for @insightsOpen.
   ///
   /// In en, this message translates to:
-  /// **'Settle & charts'**
+  /// **'Insights'**
   String get insightsOpen;
+
+  /// No description provided for @yourCaisses.
+  ///
+  /// In en, this message translates to:
+  /// **'Your caisses'**
+  String get yourCaisses;
+
+  /// No description provided for @homeOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your money, all in one place.'**
+  String get homeOverview;
 
   /// No description provided for @personalCaisse.
   ///
@@ -1543,7 +1591,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalCaisseSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Track your own money alone — no group needed.'**
+  /// **'A private place to track your own money.'**
   String get personalCaisseSubtitle;
 
   /// No description provided for @personalCaisseName.
@@ -1557,6 +1605,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Personal'**
   String get personalBadge;
+
+  /// No description provided for @manageCaisse.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your caisse'**
+  String get manageCaisse;
+
+  /// No description provided for @renameCaisse.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename caisse'**
+  String get renameCaisse;
+
+  /// No description provided for @changeCaissePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change caisse photo'**
+  String get changeCaissePhoto;
+
+  /// No description provided for @caissePhotoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Caisse photo updated'**
+  String get caissePhotoUpdated;
+
+  /// No description provided for @caisseRenamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Caisse renamed'**
+  String get caisseRenamed;
+
+  /// No description provided for @deleteCaisse.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete caisse'**
+  String get deleteCaisse;
+
+  /// No description provided for @deleteCaisseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this caisse?'**
+  String get deleteCaisseConfirm;
+
+  /// No description provided for @deleteCaisseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your caisse and all movements. This cannot be undone.'**
+  String get deleteCaisseHint;
+
+  /// No description provided for @caisseDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Caisse deleted'**
+  String get caisseDeleted;
 
   /// No description provided for @howToUse.
   ///
@@ -1663,7 +1765,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourGroup3BodyPersonal.
   ///
   /// In en, this message translates to:
-  /// **'Open Settle & charts for category breakdowns. This caisse is only yours — invite is hidden.'**
+  /// **'Open Insights to see spending by category. This caisse is just for you.'**
   String get tourGroup3BodyPersonal;
 
   /// No description provided for @tapPhotoToChange.

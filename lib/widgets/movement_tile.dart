@@ -27,12 +27,13 @@ class MovementTile extends StatelessWidget {
     final color = isDeposit ? AppColors.deposit : AppColors.expense;
     final iconBg = isDeposit
         ? (isDark
-            ? AppColors.deposit.withValues(alpha: 0.18)
-            : AppColors.primaryLight)
+              ? AppColors.deposit.withValues(alpha: 0.18)
+              : AppColors.primaryLight)
         : (isDark
-            ? AppColors.expense.withValues(alpha: 0.18)
-            : AppColors.accentLight);
+              ? AppColors.expense.withValues(alpha: 0.18)
+              : AppColors.accentLight);
     final locale = Localizations.localeOf(context).toString();
+    final largeText = MediaQuery.textScalerOf(context).scale(16) >= 18;
     final date = formatMovementDate(movement.createdAt, locale: locale);
     final time = formatMovementTime(movement.createdAt, locale: locale);
 
@@ -69,26 +70,45 @@ class MovementTile extends StatelessWidget {
                     Text(
                       movement.title,
                       style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${movement.category} · ${movement.createdByName}',
                       style: Theme.of(context).textTheme.bodyMedium,
-                      maxLines: 1,
+                      maxLines: largeText ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '$date · $time',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: largeText ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    if (largeText) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(
+                          signedAmount(
+                            movement.amount,
+                            movement.type.value,
+                            currency: currency,
+                          ),
+                          maxLines: 2,
+                          textAlign: TextAlign.end,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleMedium?.copyWith(color: color),
+                        ),
+                      ),
+                    ],
                     if (movement.hasReceipt) ...[
                       const SizedBox(height: 4),
                       Row(
@@ -101,9 +121,7 @@ class MovementTile extends StatelessWidget {
                           const SizedBox(width: 2),
                           Text(
                             AppLocalizations.of(context).receipt,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: scheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w600,
@@ -116,13 +134,23 @@ class MovementTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                signedAmount(movement.amount, movement.type.value,
-                    currency: currency),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: color,
+              if (!largeText)
+                Flexible(
+                  flex: 0,
+                  child: Text(
+                    signedAmount(
+                      movement.amount,
+                      movement.type.value,
+                      currency: currency,
                     ),
-              ),
+                    maxLines: 2,
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: color),
+                  ),
+                ),
             ],
           ),
         ),
@@ -138,10 +166,7 @@ class MovementTile extends StatelessWidget {
       builder: (context, offset, c) {
         return FractionalTranslation(
           translation: offset,
-          child: Opacity(
-            opacity: 1 - offset.dx * 8,
-            child: c,
-          ),
+          child: Opacity(opacity: 1 - offset.dx * 8, child: c),
         );
       },
       child: child,

@@ -5,16 +5,19 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/user_error.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/image_picker_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
+import '../../widgets/authorized_image.dart';
 import '../../widgets/animated_balance.dart';
 import '../../widgets/branded_lottie.dart';
 import '../../widgets/compact_dialog.dart';
 import '../../widgets/encaisse_refresh.dart';
 import '../../widgets/feature_tour.dart';
+import '../../widgets/home_banner_ad.dart';
 import '../../widgets/movement_tile.dart';
 import '../../providers/settings_provider.dart';
 
@@ -34,15 +37,29 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   bool _closingGroup = false;
   bool _tourScheduled = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final uid = ref.read(authStateProvider).value?.uid;
+      if (uid != null) {
+        ref
+            .read(notificationServiceProvider)
+            .recordGroupViewed(uid: uid, groupId: widget.groupId);
+      }
+    });
+  }
+
   String get groupId => widget.groupId;
 
   void _copyInviteCode(BuildContext context, String code) {
     final l10n = AppLocalizations.of(context);
     Clipboard.setData(ClipboardData(text: code));
     HapticFeedback.selectionClick();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.inviteCodeCopied(code))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.inviteCodeCopied(code))));
   }
 
   void _shareInvite(BuildContext context, Group group) {
@@ -79,10 +96,10 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 Text(
                   group.inviteCode,
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: AppColors.primary,
-                        letterSpacing: 6,
-                        fontSize: 36,
-                      ),
+                    color: AppColors.primary,
+                    letterSpacing: 6,
+                    fontSize: 36,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -134,12 +151,18 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
-                title: Text(l10n.renameGroup),
+                title: Text(
+                  group.isPersonal ? l10n.renameCaisse : l10n.renameGroup,
+                ),
                 onTap: () => Navigator.pop(ctx, _GroupMenuAction.rename),
               ),
               ListTile(
                 leading: const Icon(Icons.image_outlined),
-                title: Text(l10n.changeGroupPhoto),
+                title: Text(
+                  group.isPersonal
+                      ? l10n.changeCaissePhoto
+                      : l10n.changeGroupPhoto,
+                ),
                 onTap: () => Navigator.pop(ctx, _GroupMenuAction.photo),
               ),
               if (!group.isPersonal)
@@ -159,10 +182,12 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 onTap: () => Navigator.pop(ctx, _GroupMenuAction.exportPdf),
               ),
               ListTile(
-                leading:
-                    const Icon(Icons.delete_outline, color: AppColors.accent),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.accent,
+                ),
                 title: Text(
-                  l10n.deleteGroup,
+                  group.isPersonal ? l10n.deleteCaisse : l10n.deleteGroup,
                   style: const TextStyle(color: AppColors.accent),
                 ),
                 onTap: () => Navigator.pop(ctx, _GroupMenuAction.delete),
@@ -199,6 +224,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   }) async {
     final l10n = AppLocalizations.of(context);
     final movements = ref.read(movementsProvider(group.id)).value ?? [];
+    final settlements = ref.read(settlementsProvider(group.id)).value ?? [];
     final balance = ref.read(balanceProvider(group.id));
     try {
       final export = ref.read(exportServiceProvider);
@@ -208,27 +234,30 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
           movements: movements,
           members: members,
           balance: balance,
+          settlements: settlements,
         );
       } else {
         await export.shareCsv(
           group: group,
           movements: movements,
           members: members,
+          settlements: settlements,
         );
       }
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportShared)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.exportShared)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportFailed)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.exportFailed)));
       }
     }
   }
+
   Future<void> _showRenameDialog(
     BuildContext context,
     WidgetRef ref,
@@ -240,26 +269,32 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final name = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (ctx) => _RenameGroupPage(initialName: group.name),
+        builder: (ctx) => _RenameGroupPage(
+          initialName: group.name,
+          isPersonal: group.isPersonal,
+        ),
       ),
     );
     if (name == null || !context.mounted) return;
     if (name.length < 2 || name == group.name) return;
 
     try {
-      await ref.read(groupServiceProvider).updateGroupName(
-            groupId: group.id,
-            name: name,
-          );
+      await ref
+          .read(groupServiceProvider)
+          .updateGroupName(groupId: group.id, name: name);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.groupRenamed)),
+          SnackBar(
+            content: Text(
+              group.isPersonal ? l10n.caisseRenamed : l10n.groupRenamed,
+            ),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     }
@@ -300,7 +335,12 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: AppColors.primaryLight,
-                          backgroundImage: member.photoUrl != null
+                          backgroundImage:
+                              member.photoUrl != null &&
+                                  !member.photoUrl!.startsWith('storage://') &&
+                                  !member.photoUrl!.contains(
+                                    'firebasestorage.googleapis.com',
+                                  )
                               ? NetworkImage(member.photoUrl!)
                               : null,
                           child: member.photoUrl == null
@@ -308,7 +348,20 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                   member.displayName.isNotEmpty
                                       ? member.displayName[0].toUpperCase()
                                       : '?',
-                                  style: const TextStyle(color: AppColors.primary),
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                  ),
+                                )
+                              : member.photoUrl!.startsWith('storage://') ||
+                                    member.photoUrl!.contains(
+                                      'firebasestorage.googleapis.com',
+                                    )
+                              ? ClipOval(
+                                  child: AuthorizedImage(
+                                    url: member.photoUrl!,
+                                    width: 40,
+                                    height: 40,
+                                  ),
                                 )
                               : null,
                         ),
@@ -359,8 +412,9 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                         );
                                     if (context.mounted) {
                                       Navigator.pop(ctx);
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text(l10n.memberRemoved),
                                         ),
@@ -368,11 +422,14 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            l10n.errorWithDetails('$e'),
+                                            l10n.errorWithDetails(
+                                              userFacingError(e),
+                                            ),
                                           ),
                                         ),
                                       );
@@ -381,7 +438,9 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                 },
                                 child: Text(
                                   l10n.removeMember,
-                                  style: const TextStyle(color: AppColors.accent),
+                                  style: const TextStyle(
+                                    color: AppColors.accent,
+                                  ),
                                 ),
                               ),
                       );
@@ -402,30 +461,31 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     Group group,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final file = await pickGalleryImage(
-      imageQuality: 80,
-      maxWidth: 1280,
-    );
+    final file = await pickGalleryImage(imageQuality: 80, maxWidth: 1280);
     if (file == null || !context.mounted) return;
 
     try {
-      final url = await ref.read(storageServiceProvider).uploadGroupImage(
-            groupId: group.id,
-            localPath: file.path,
-          );
-      await ref.read(groupServiceProvider).updateGroupPhoto(
-            groupId: group.id,
-            photoUrl: url,
-          );
+      final url = await ref
+          .read(storageServiceProvider)
+          .uploadGroupImage(groupId: group.id, localPath: file.path);
+      await ref
+          .read(groupServiceProvider)
+          .updateGroupPhoto(groupId: group.id, photoUrl: url);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.groupPhotoUpdated)),
+          SnackBar(
+            content: Text(
+              group.isPersonal
+                  ? l10n.caissePhotoUpdated
+                  : l10n.groupPhotoUpdated,
+            ),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     }
@@ -446,7 +506,10 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               InteractiveViewer(
-                child: Image.network(group.photoUrl!, fit: BoxFit.contain),
+                child: AuthorizedImage(
+                  url: group.photoUrl!,
+                  fit: BoxFit.contain,
+                ),
               ),
               if (isCreator)
                 TextButton(
@@ -454,7 +517,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                     Navigator.pop(ctx);
                     _changeGroupPhoto(context, ref, group);
                   },
-                  child: Text(AppLocalizations.of(context).changeGroupPhoto),
+                  child: Text(
+                    group.isPersonal
+                        ? AppLocalizations.of(context).changeCaissePhoto
+                        : AppLocalizations.of(context).changeGroupPhoto,
+                  ),
                 ),
             ],
           ),
@@ -499,20 +566,19 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     if (ok != true || !context.mounted) return;
 
     try {
-      await ref.read(groupServiceProvider).leaveGroup(
-            groupId: group.id,
-            uid: user.uid,
-          );
+      await ref
+          .read(groupServiceProvider)
+          .leaveGroup(groupId: group.id, uid: user.uid);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.leftGroup)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.leftGroup)));
         context.go('/home');
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     }
@@ -530,8 +596,12 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final ok = await showCompactDialog<bool>(
       context: context,
       builder: (ctx) => CompactAlertDialog(
-        title: Text(l10n.deleteGroupConfirm),
-        content: Text(l10n.deleteGroupHint),
+        title: Text(
+          group.isPersonal ? l10n.deleteCaisseConfirm : l10n.deleteGroupConfirm,
+        ),
+        content: Text(
+          group.isPersonal ? l10n.deleteCaisseHint : l10n.deleteGroupHint,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -540,7 +610,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              l10n.deleteGroup,
+              group.isPersonal ? l10n.deleteCaisse : l10n.deleteGroup,
               style: const TextStyle(color: AppColors.accent),
             ),
           ),
@@ -552,20 +622,23 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     setState(() => _closingGroup = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(groupServiceProvider).deleteGroup(
-            groupId: group.id,
-            creatorUid: user.uid,
-          );
+      await ref
+          .read(groupServiceProvider)
+          .deleteGroup(groupId: group.id, creatorUid: user.uid);
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text(l10n.groupDeleted)),
+        SnackBar(
+          content: Text(
+            group.isPersonal ? l10n.caisseDeleted : l10n.groupDeleted,
+          ),
+        ),
       );
       context.go('/home');
     } catch (e) {
       if (mounted) {
         setState(() => _closingGroup = false);
         messenger.showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     }
@@ -601,20 +674,33 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     return list.toList();
   }
 
-  bool get _hasFilters =>
-      _categoryFilter != null || _userFilter != null || _dateFilter != null;
-
-  Future<void> _pickDateRange() async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: _dateFilter,
-      helpText: AppLocalizations.of(context).filterDate,
-    );
-    if (picked != null) {
-      setState(() => _dateFilter = picked);
+  Future<void> _showFilterSheet({
+    required List<String> categories,
+    required List<({String uid, String name})> users,
+    required bool showUsers,
+  }) async {
+    final result =
+        await showModalBottomSheet<
+          ({String? category, String? user, DateTimeRange? date})
+        >(
+          context: context,
+          isScrollControlled: true,
+          showDragHandle: true,
+          builder: (context) => _MovementFilterSheet(
+            categories: categories,
+            users: users,
+            showUsers: showUsers,
+            category: _categoryFilter,
+            user: _userFilter,
+            date: _dateFilter,
+          ),
+        );
+    if (result != null && mounted) {
+      setState(() {
+        _categoryFilter = result.category;
+        _userFilter = result.user;
+        _dateFilter = result.date;
+      });
     }
   }
 
@@ -629,12 +715,16 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
 
     return groupAsync.when(
       loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(),
         body: Center(
-          child: Text(AppLocalizations.of(context).errorWithDetails('$e')),
+          child: Text(
+            AppLocalizations.of(context).errorWithDetails(userFacingError(e)),
+          ),
         ),
       ),
       data: (group) {
@@ -648,7 +738,9 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
           }
           return Scaffold(
             appBar: AppBar(),
-            body: Center(child: Text(AppLocalizations.of(context).groupNotFound)),
+            body: Center(
+              child: Text(AppLocalizations.of(context).groupNotFound),
+            ),
           );
         }
 
@@ -663,8 +755,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         final categories = {
           ...allActive.map((m) => m.category),
           if (_categoryFilter != null) _categoryFilter!,
-        }.toList()
-          ..sort();
+        }.toList()..sort();
         final userOptions = <({String uid, String name})>[];
         final seenUids = <String>{};
         for (final m in members) {
@@ -674,14 +765,21 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         }
         for (final mov in allActive) {
           if (seenUids.add(mov.createdBy)) {
-            userOptions.add(
-              (uid: mov.createdBy, name: mov.createdByName),
-            );
+            userOptions.add((uid: mov.createdBy, name: mov.createdByName));
           }
         }
         userOptions.sort((a, b) => a.name.compareTo(b.name));
         final l10n = AppLocalizations.of(context);
         final scheme = Theme.of(context).colorScheme;
+        final hasMovementFilters =
+            !movementsAsync.isLoading && allActive.isNotEmpty;
+        final availableActionWidth = MediaQuery.sizeOf(context).width - 32;
+        final largeText = MediaQuery.textScalerOf(context).scale(16) >= 20;
+        final actionWidth = largeText
+            ? availableActionWidth
+            : (hasMovementFilters
+                  ? (availableActionWidth - 12) / 2
+                  : availableActionWidth);
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final isCreator = user != null && group.createdBy == user.uid;
 
@@ -711,11 +809,6 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             ),
             title: Text(group.name),
             actions: [
-              IconButton(
-                tooltip: l10n.insightsOpen,
-                onPressed: () => context.push('/groups/$groupId/insights'),
-                icon: const Icon(Icons.insights_outlined),
-              ),
               if (!group.isPersonal)
                 IconButton(
                   tooltip: myMember?.notificationsMuted == true
@@ -759,7 +852,9 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 ),
               if (isCreator)
                 IconButton(
-                  tooltip: l10n.manageGroup,
+                  tooltip: group.isPersonal
+                      ? l10n.manageCaisse
+                      : l10n.manageGroup,
                   onPressed: () =>
                       _showManageMenu(context, ref, group, members),
                   icon: const Icon(Icons.more_vert),
@@ -875,11 +970,42 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () =>
-                                context.push('/groups/$groupId/insights'),
-                            icon: const Icon(Icons.insights_outlined),
-                            label: Text(l10n.insightsOpen),
+                          child: Wrap(
+                            spacing: 12,
+                            runSpacing: 8,
+                            children: [
+                              SizedBox(
+                                width: actionWidth,
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      context.push('/groups/$groupId/insights'),
+                                  icon: const Icon(Icons.insights_outlined),
+                                  label: Text(l10n.insightsTitle),
+                                ),
+                              ),
+                              if (hasMovementFilters)
+                                SizedBox(
+                                  width: actionWidth,
+                                  child: _MovementFilters(
+                                    l10n: l10n,
+                                    users: userOptions,
+                                    categoryFilter: _categoryFilter,
+                                    userFilter: _userFilter,
+                                    dateFilter: _dateFilter,
+                                    onOpen: () => _showFilterSheet(
+                                      categories: categories,
+                                      users: userOptions,
+                                      showUsers: !group.isPersonal,
+                                    ),
+                                    onClearCategory: () =>
+                                        setState(() => _categoryFilter = null),
+                                    onClearUser: () =>
+                                        setState(() => _userFilter = null),
+                                    onClearDate: () =>
+                                        setState(() => _dateFilter = null),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         if (!group.isPersonal) ...[
@@ -897,14 +1023,12 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                               children: [
                                 Text(
                                   l10n.inviteCode,
-                                  style:
-                                      Theme.of(context).textTheme.labelLarge,
+                                  style: Theme.of(context).textTheme.labelLarge,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   l10n.shareCodeSoFriends,
-                                  style:
-                                      Theme.of(context).textTheme.bodyMedium,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
@@ -947,35 +1071,18 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                     ),
                   ),
                 ),
-                if (!movementsAsync.isLoading && allActive.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: _MovementFilters(
-                        l10n: l10n,
-                        categories: categories,
-                        users: userOptions,
-                        categoryFilter: _categoryFilter,
-                        userFilter: _userFilter,
-                        dateFilter: _dateFilter,
-                        hasFilters: _hasFilters,
-                        onCategory: (value) =>
-                            setState(() => _categoryFilter = value),
-                        onUser: (value) => setState(() => _userFilter = value),
-                        onDateTap: _pickDateRange,
-                        onClearDate: () => setState(() => _dateFilter = null),
-                        onClearAll: () => setState(() {
-                          _categoryFilter = null;
-                          _userFilter = null;
-                          _dateFilter = null;
-                        }),
-                      ),
-                    ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: HomeBannerAd(),
                   ),
+                ),
                 if (movementsAsync.isLoading)
                   const SliverFillRemaining(
                     child: Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
                     ),
                   )
                 else if (allActive.isEmpty)
@@ -1014,34 +1121,96 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                   )
                 else
                   SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final movement = visible[index];
-                        return MovementTile(
-                          key: ValueKey(
-                            '${movement.id}_${movement.updatedAt.millisecondsSinceEpoch}',
-                          ),
-                          movement: movement,
-                          currency: group.currency,
-                          animateIn: index == 0,
-                          onTap: () => context.push(
-                            '/groups/$groupId/movements/${movement.id}',
-                          ),
-                        );
-                      },
-                      childCount: visible.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final movement = visible[index];
+                      return MovementTile(
+                        key: ValueKey(
+                          '${movement.id}_${movement.updatedAt.millisecondsSinceEpoch}',
+                        ),
+                        movement: movement,
+                        currency: group.currency,
+                        animateIn: index == 0,
+                        onTap: () => context.push(
+                          '/groups/$groupId/movements/${movement.id}',
+                        ),
+                      );
+                    }, childCount: visible.length),
                   ),
-                const SliverToBoxAdapter(child: SizedBox(height: 88)),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () => context.push('/groups/$groupId/movements/new'),
+            tooltip: l10n.addMovement,
+            onPressed: () => _showAddMovementSheet(context, groupId, l10n),
             child: const Icon(Icons.add),
           ),
         );
       },
+    );
+  }
+
+  void _showAddMovementSheet(
+    BuildContext pageContext,
+    String groupId,
+    AppLocalizations l10n,
+  ) {
+    showModalBottomSheet<void>(
+      context: pageContext,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    l10n.addMovement,
+                    style: Theme.of(sheetContext).textTheme.titleLarge,
+                  ),
+                ),
+                ListTile(
+                  minTileHeight: 64,
+                  leading: const CircleAvatar(
+                    backgroundColor: AppColors.primaryLight,
+                    child: Icon(Icons.arrow_downward, color: AppColors.deposit),
+                  ),
+                  title: Text(l10n.deposit),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    pageContext.push(
+                      '/groups/$groupId/movements/new',
+                      extra: MovementType.deposit,
+                    );
+                  },
+                ),
+                ListTile(
+                  minTileHeight: 64,
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.accentLight,
+                    child: Icon(Icons.arrow_upward, color: AppColors.expense),
+                  ),
+                  title: Text(l10n.expense),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    pageContext.push(
+                      '/groups/$groupId/movements/new',
+                      extra: MovementType.expense,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1049,9 +1218,10 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
 enum _GroupMenuAction { rename, photo, members, exportCsv, exportPdf, delete }
 
 class _RenameGroupPage extends StatefulWidget {
-  const _RenameGroupPage({required this.initialName});
+  const _RenameGroupPage({required this.initialName, this.isPersonal = false});
 
   final String initialName;
+  final bool isPersonal;
 
   @override
   State<_RenameGroupPage> createState() => _RenameGroupPageState();
@@ -1083,13 +1253,8 @@ class _RenameGroupPageState extends State<_RenameGroupPage> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.renameGroup),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: Text(l10n.save),
-          ),
-        ],
+        title: Text(widget.isPersonal ? l10n.renameCaisse : l10n.renameGroup),
+        actions: [TextButton(onPressed: _save, child: Text(l10n.save))],
       ),
       body: SafeArea(
         child: Padding(
@@ -1156,9 +1321,9 @@ class _MiniStat extends StatelessWidget {
             value,
             maxLines: 1,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
@@ -1169,180 +1334,384 @@ class _MiniStat extends StatelessWidget {
 class _MovementFilters extends StatelessWidget {
   const _MovementFilters({
     required this.l10n,
-    required this.categories,
     required this.users,
     required this.categoryFilter,
     required this.userFilter,
     required this.dateFilter,
-    required this.hasFilters,
-    required this.onCategory,
-    required this.onUser,
-    required this.onDateTap,
+    required this.onOpen,
+    required this.onClearCategory,
+    required this.onClearUser,
     required this.onClearDate,
-    required this.onClearAll,
   });
 
-  static const _filterAll = '__all__';
-
   final AppLocalizations l10n;
-  final List<String> categories;
   final List<({String uid, String name})> users;
   final String? categoryFilter;
   final String? userFilter;
   final DateTimeRange? dateFilter;
-  final bool hasFilters;
-  final ValueChanged<String?> onCategory;
-  final ValueChanged<String?> onUser;
-  final VoidCallback onDateTap;
+  final VoidCallback onOpen;
+  final VoidCallback onClearCategory;
+  final VoidCallback onClearUser;
   final VoidCallback onClearDate;
-  final VoidCallback onClearAll;
 
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
-    final selectedUserName = userFilter == null
-        ? null
-        : users
-            .where((u) => u.uid == userFilter)
-            .map((u) => u.name)
-            .firstOrNull;
-    final dateLabel = dateFilter == null
-        ? l10n.filterDate
-        : '${formatMovementDate(dateFilter!.start, locale: locale)}'
-            ' – ${formatMovementDate(dateFilter!.end, locale: locale)}';
-
+    final selectedUserName = users
+        .where((u) => u.uid == userFilter)
+        .map((u) => u.name)
+        .firstOrNull;
+    final activeCount = [
+      categoryFilter,
+      userFilter,
+      dateFilter,
+    ].where((value) => value != null).length;
+    final chips = <Widget>[];
+    if (categoryFilter != null) {
+      chips.add(
+        _ActiveFilterChip(label: categoryFilter!, onDeleted: onClearCategory),
+      );
+    }
+    if (userFilter != null && selectedUserName != null) {
+      chips.add(
+        _ActiveFilterChip(label: selectedUserName, onDeleted: onClearUser),
+      );
+    }
+    if (dateFilter != null) {
+      chips.add(
+        _ActiveFilterChip(
+          label:
+              '${formatMovementDate(dateFilter!.start, locale: locale)} – '
+              '${formatMovementDate(dateFilter!.end, locale: locale)}',
+          onDeleted: onClearDate,
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              PopupMenuButton<String>(
-                // PopupMenuItem value:null never fires onSelected — use sentinel.
-                constraints: const BoxConstraints(maxHeight: 280),
-                position: PopupMenuPosition.under,
-                onSelected: (value) =>
-                    onCategory(value == _filterAll ? null : value),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: _filterAll,
-                    child: Text(l10n.filterAll),
-                  ),
-                  ...categories.map(
-                    (c) => PopupMenuItem(value: c, child: Text(c)),
-                  ),
-                ],
-                child: _FilterPill(
-                  label: categoryFilter ?? l10n.category,
-                  selected: categoryFilter != null,
-                  icon: Icons.category_outlined,
-                ),
-              ),
-              const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                constraints: const BoxConstraints(maxHeight: 280),
-                position: PopupMenuPosition.under,
-                onSelected: (value) =>
-                    onUser(value == _filterAll ? null : value),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: _filterAll,
-                    child: Text(l10n.filterAll),
-                  ),
-                  ...users.map(
-                    (u) => PopupMenuItem(
-                      value: u.uid,
-                      child: Text(u.name),
+        SizedBox(
+          height: 52,
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: onOpen,
+            icon: const Icon(Icons.tune_rounded, size: 18),
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.filters),
+                if (activeCount > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$activeCount',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
-                child: _FilterPill(
-                  label: selectedUserName ?? l10n.filterUser,
-                  selected: userFilter != null,
-                  icon: Icons.person_outline,
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: onDateTap,
-                onLongPress: dateFilter != null ? onClearDate : null,
-                borderRadius: BorderRadius.circular(8),
-                child: _FilterPill(
-                  label: dateLabel,
-                  selected: dateFilter != null,
-                  icon: Icons.calendar_today_outlined,
-                ),
-              ),
-              if (hasFilters) ...[
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: onClearAll,
-                  child: Text(l10n.clearFilters),
-                ),
               ],
-            ],
+            ),
           ),
         ),
+        if (chips.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 2, children: chips),
+        ],
       ],
     );
   }
 }
 
-class _FilterPill extends StatelessWidget {
-  const _FilterPill({
-    required this.label,
-    required this.selected,
-    required this.icon,
+class _ActiveFilterChip extends StatelessWidget {
+  const _ActiveFilterChip({required this.label, required this.onDeleted});
+  final String label;
+  final VoidCallback onDeleted;
+
+  @override
+  Widget build(BuildContext context) => InputChip(
+    label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    onDeleted: onDeleted,
+    deleteIcon: const Icon(Icons.close_rounded, size: 16),
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+  );
+}
+
+class _MovementFilterSheet extends StatefulWidget {
+  const _MovementFilterSheet({
+    required this.categories,
+    required this.users,
+    required this.showUsers,
+    required this.category,
+    required this.user,
+    required this.date,
   });
 
-  final String label;
-  final bool selected;
-  final IconData icon;
+  final List<String> categories;
+  final List<({String uid, String name})> users;
+  final bool showUsers;
+  final String? category;
+  final String? user;
+  final DateTimeRange? date;
+
+  @override
+  State<_MovementFilterSheet> createState() => _MovementFilterSheetState();
+}
+
+class _MovementFilterSheetState extends State<_MovementFilterSheet> {
+  late String? _category = widget.category;
+  late String? _user = widget.user;
+  late DateTimeRange? _date = widget.date;
+
+  AppLocalizations get l10n => AppLocalizations.of(context);
+  int get _count =>
+      [_category, _user, _date].where((value) => value != null).length;
+
+  DateTimeRange _thisMonthRange() {
+    final now = DateTime.now();
+    return DateTimeRange(
+      start: DateTime(now.year, now.month),
+      end: DateTime(now.year, now.month, now.day),
+    );
+  }
+
+  DateTimeRange _last30DaysRange() {
+    final today = DateTime.now();
+    final end = DateTime(today.year, today.month, today.day);
+    return DateTimeRange(
+      start: end.subtract(const Duration(days: 29)),
+      end: end,
+    );
+  }
+
+  bool _sameCalendarDays(DateTimeRange? first, DateTimeRange second) =>
+      first != null &&
+      first.start.year == second.start.year &&
+      first.start.month == second.start.month &&
+      first.start.day == second.start.day &&
+      first.end.year == second.end.year &&
+      first.end.month == second.end.month &&
+      first.end.day == second.end.day;
+
+  Future<void> _chooseDate() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: _date,
+      helpText: l10n.filterChooseDates,
+    );
+    if (picked != null && mounted) setState(() => _date = picked);
+  }
+
+  void _apply() => Navigator.of(
+    context,
+  ).pop((category: _category, user: _user, date: _date));
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: selected
-            ? AppColors.primary.withValues(alpha: 0.12)
-            : scheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: selected ? AppColors.primary : scheme.outline,
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final dateLabel = _date == null
+        ? l10n.filterDate
+        : '${formatMovementDate(_date!.start, locale: locale)} – '
+              '${formatMovementDate(_date!.end, locale: locale)}';
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          0,
+          20,
+          16 + MediaQuery.viewInsetsOf(context).bottom,
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: selected ? AppColors.primary : scheme.onSurfaceVariant,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .78,
           ),
-          const SizedBox(width: 6),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 160),
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: selected ? AppColors.primary : scheme.onSurface,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.filters, style: theme.textTheme.titleLarge),
+                const SizedBox(height: 20),
+                _FilterSection(
+                  title: l10n.category,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _FilterChoice(
+                        label: l10n.filterAll,
+                        selected: _category == null,
+                        onTap: () => setState(() => _category = null),
+                      ),
+                      ...widget.categories.map(
+                        (category) => _FilterChoice(
+                          label: category,
+                          selected: _category == category,
+                          onTap: () => setState(() => _category = category),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                if (widget.showUsers) ...[
+                  const SizedBox(height: 18),
+                  _FilterSection(
+                    title: l10n.filterUser,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _FilterChoice(
+                          label: l10n.filterAll,
+                          selected: _user == null,
+                          onTap: () => setState(() => _user = null),
+                        ),
+                        ...widget.users.map(
+                          (user) => _FilterChoice(
+                            label: user.name,
+                            selected: _user == user.uid,
+                            onTap: () => setState(() => _user = user.uid),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                _FilterSection(
+                  title: l10n.filterDate,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _FilterChoice(
+                            label: l10n.filterAnyTime,
+                            selected: _date == null,
+                            onTap: () => setState(() => _date = null),
+                          ),
+                          _FilterChoice(
+                            label: l10n.filterThisMonth,
+                            selected: _sameCalendarDays(
+                              _date,
+                              _thisMonthRange(),
+                            ),
+                            onTap: () =>
+                                setState(() => _date = _thisMonthRange()),
+                          ),
+                          _FilterChoice(
+                            label: l10n.filterLast30Days,
+                            selected: _sameCalendarDays(
+                              _date,
+                              _last30DaysRange(),
+                            ),
+                            onTap: () =>
+                                setState(() => _date = _last30DaysRange()),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _chooseDate,
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        label: Text(
+                          _date == null ||
+                                  _sameCalendarDays(_date, _thisMonthRange()) ||
+                                  _sameCalendarDays(_date, _last30DaysRange())
+                              ? l10n.filterChooseDates
+                              : dateLabel,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: _count == 0
+                          ? null
+                          : () => setState(() {
+                              _category = null;
+                              _user = null;
+                              _date = null;
+                            }),
+                      child: Text(l10n.clearFilters),
+                    ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: _apply,
+                      child: Text(l10n.applyFilters),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 2),
-          Icon(
-            Icons.expand_more,
-            size: 18,
-            color: selected ? AppColors.primary : scheme.onSurfaceVariant,
-          ),
-        ],
+        ),
       ),
     );
   }
+}
+
+class _FilterSection extends StatelessWidget {
+  const _FilterSection({required this.title, required this.child});
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ),
+      child,
+    ],
+  );
+}
+
+class _FilterChoice extends StatelessWidget {
+  const _FilterChoice({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(minHeight: 48),
+    child: ChoiceChip(
+      label: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),
+      selected: selected,
+      onSelected: (_) => onTap(),
+    ),
+  );
 }
 
 class _GroupPhotoBanner extends StatelessWidget {
@@ -1382,10 +1751,10 @@ class _GroupPhotoBanner extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   if (hasPhoto)
-                    Image.network(
-                      photoUrl!,
+                    AuthorizedImage(
+                      url: photoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
+                      errorBuilder: (_, _) => Container(
                         color: AppColors.primaryLight,
                         alignment: Alignment.center,
                         child: const Icon(Icons.broken_image_outlined),
@@ -1398,14 +1767,15 @@ class _GroupPhotoBanner extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.add_a_photo_outlined,
-                              color: AppColors.primary, size: 32),
+                          const Icon(
+                            Icons.add_a_photo_outlined,
+                            color: AppColors.primary,
+                            size: 32,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             changeHint,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: AppColors.primary),
                           ),
                         ],

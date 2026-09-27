@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/providers.dart';
 import '../providers/settings_provider.dart';
+import '../models/models.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/verify_email_screen.dart';
@@ -35,7 +36,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: _AuthRefresh(ref),
     redirect: (context, state) {
       final loc = state.matchedLocation;
-      final loggingIn = loc == '/login' ||
+      final loggingIn =
+          loc == '/login' ||
           loc == '/signup' ||
           loc == '/welcome' ||
           loc == '/onboarding';
@@ -88,10 +90,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
@@ -100,10 +99,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/verify-email',
         builder: (context, state) => const VerifyEmailScreen(),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
-      ),
+      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
@@ -142,7 +138,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'movements/new',
             builder: (context, state) {
               final groupId = state.pathParameters['groupId']!;
-              return MovementFormScreen(groupId: groupId);
+              return MovementFormScreen(
+                groupId: groupId,
+                initialType: state.extra is MovementType
+                    ? state.extra as MovementType
+                    : null,
+              );
             },
           ),
           GoRoute(

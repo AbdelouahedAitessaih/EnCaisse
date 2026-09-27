@@ -237,10 +237,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filterAll => 'सभी';
 
   @override
+  String get filters => 'फ़िल्टर';
+
+  @override
+  String get applyFilters => 'लागू करें';
+
+  @override
   String get filterUser => 'उपयोगकर्ता';
 
   @override
   String get filterDate => 'तारीख';
+
+  @override
+  String get filterAnyTime => 'कोई भी तारीख';
+
+  @override
+  String get filterThisMonth => 'इस महीने';
+
+  @override
+  String get filterLast30Days => 'पिछले 30 दिन';
+
+  @override
+  String get filterChooseDates => 'तारीखें चुनें';
 
   @override
   String get clearFilters => 'फ़िल्टर हटाएँ';
@@ -464,7 +482,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'समूह बनाएँ या 6-अक्षर के आमंत्रण कोड से जुड़ें।';
 
   @override
-  String get welcomeSubtitle => 'साझा समूह नकद, सभी के लिए पारदर्शी।';
+  String get welcomeSubtitle => 'अपना पैसा अकेले या दूसरों के साथ संभालें।';
 
   @override
   String get validStartingAmount =>
@@ -779,20 +797,53 @@ class AppLocalizationsHi extends AppLocalizations {
   String get insightsTitle => 'विश्लेषण';
 
   @override
-  String get insightsOpen => 'सेटल और चार्ट';
+  String get insightsOpen => 'विश्लेषण';
+
+  @override
+  String get yourCaisses => 'आपकी कैश';
+
+  @override
+  String get homeOverview => 'आपका पैसा, एक ही जगह पर।';
 
   @override
   String get personalCaisse => 'व्यक्तिगत कैश';
 
   @override
-  String get personalCaisseSubtitle =>
-      'अकेले अपने पैसे ट्रैक करें — बिना समूह।';
+  String get personalCaisseSubtitle => 'अपने पैसे का हिसाब रखने की निजी जगह।';
 
   @override
   String get personalCaisseName => 'मेरी कैश';
 
   @override
   String get personalBadge => 'व्यक्तिगत';
+
+  @override
+  String get manageCaisse => 'अपनी कैश प्रबंधित करें';
+
+  @override
+  String get renameCaisse => 'कैश का नाम बदलें';
+
+  @override
+  String get changeCaissePhoto => 'कैश की फ़ोटो बदलें';
+
+  @override
+  String get caissePhotoUpdated => 'कैश की फ़ोटो अपडेट हुई';
+
+  @override
+  String get caisseRenamed => 'कैश का नाम बदल दिया गया';
+
+  @override
+  String get deleteCaisse => 'कैश हटाएँ';
+
+  @override
+  String get deleteCaisseConfirm => 'क्या यह कैश हटाएँ?';
+
+  @override
+  String get deleteCaisseHint =>
+      'इससे आपकी कैश और उसके सभी लेनदेन स्थायी रूप से हट जाएँगे। इसे पूर्ववत नहीं किया जा सकता।';
+
+  @override
+  String get caisseDeleted => 'कैश हटा दी गई';
 
   @override
   String get howToUse => 'EnCaisse कैसे उपयोग करें';
@@ -853,7 +904,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tourGroup3BodyPersonal =>
-      'श्रेणियों के लिए सेटल और चार्ट खोलें। यह कैश सिर्फ आपकी है — आमंत्रण छिपा है।';
+      'खर्चों को श्रेणी के अनुसार देखने के लिए Insights खोलें। यह कैश सिर्फ आपकी है।';
 
   @override
   String get tapPhotoToChange => 'फोटो बदलने के लिए टैप करें';

@@ -19,6 +19,15 @@ class DeviceRegion {
     return _pending ??= _resolve().whenComplete(() => _pending = null);
   }
 
+  static Future<String?> timeZoneId() async {
+    try {
+      return await _channel.invokeMethod<String>('getTimeZoneId');
+    } catch (e) {
+      debugPrint('DeviceRegion native timezone failed: $e');
+      return null;
+    }
+  }
+
   static Future<String?> _resolve() async {
     try {
       final native = await _channel.invokeMethod<String>('getCountryCode');

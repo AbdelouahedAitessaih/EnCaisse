@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,12 +9,16 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/image_picker_utils.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/engagement_copy.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/movement_service.dart';
 import '../../widgets/app_select_field.dart';
 import '../../widgets/branded_lottie.dart';
+import '../../widgets/home_banner_ad.dart';
 import '../../widgets/receipt_image.dart';
 
 class MovementFormScreen extends ConsumerStatefulWidget {
@@ -20,10 +26,12 @@ class MovementFormScreen extends ConsumerStatefulWidget {
     super.key,
     required this.groupId,
     this.movementId,
+    this.initialType,
   });
 
   final String groupId;
   final String? movementId;
+  final MovementType? initialType;
 
   bool get isEditing => movementId != null;
 
@@ -35,7 +43,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _amount = TextEditingController();
-  MovementType _type = MovementType.expense;
+  late MovementType _type = widget.initialType ?? MovementType.expense;
   String _category = AppConstants.categories.first;
   String? _receiptPath;
   bool _loading = false;
@@ -43,6 +51,49 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   String? _error;
   Movement? _existing;
   bool _initialized = false;
+  Map<String, dynamic>? _lastExpense;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || widget.isEditing) return;
+      final prefs = ref.read(sharedPreferencesProvider);
+      final uid = ref.read(authStateProvider).value?.uid;
+      final recent = uid == null
+          ? null
+          : prefs.getString(
+                  'recent_movement_category_${uid}_${widget.groupId}',
+                ) ??
+                prefs.getString('recent_movement_category');
+      final recentType = uid == null
+          ? null
+          : prefs.getString('recent_movement_type_${uid}_${widget.groupId}');
+      if (widget.initialType == null && recentType != null) {
+        _type = recentType == MovementType.expense.name
+            ? MovementType.expense
+            : MovementType.deposit;
+      }
+      final rawTemplate = uid == null
+          ? null
+          : prefs.getString('recent_expense_${uid}_${widget.groupId}');
+      if (rawTemplate != null) {
+        try {
+          final decoded = jsonDecode(rawTemplate);
+          if (decoded is Map<String, dynamic>) {
+            _lastExpense = decoded;
+          }
+        } catch (_) {}
+      }
+      if (recent != null && AppConstants.categories.contains(recent)) {
+        setState(() => _category = recent);
+      } else if (_lastExpense?['category'] is String &&
+          AppConstants.categories.contains(_lastExpense!['category'])) {
+        setState(() => _category = _lastExpense!['category'] as String);
+      }
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -63,10 +114,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   }
 
   Future<void> _pickReceipt() async {
-    final file = await pickGalleryImage(
-      imageQuality: 75,
-      maxWidth: 1600,
-    );
+    final file = await pickGalleryImage(imageQuality: 75, maxWidth: 1600);
     if (file != null) {
       setState(() => _receiptPath = file.path);
     }
@@ -99,14 +147,12 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
       if (receiptUrl != null &&
           !receiptUrl.startsWith('http://') &&
           !receiptUrl.startsWith('https://')) {
-        receiptUrl = await ref.read(storageServiceProvider).uploadReceipt(
-              groupId: widget.groupId,
-              localPath: receiptUrl,
-            );
+        receiptUrl = await ref
+            .read(storageServiceProvider)
+            .uploadReceipt(groupId: widget.groupId, localPath: receiptUrl);
       }
 
       if (widget.isEditing && _existing != null) {
-        final group = ref.read(groupProvider(widget.groupId)).value;
         await service.updateMovement(
           groupId: widget.groupId,
           existing: _existing!,
@@ -117,21 +163,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
           uid: user.uid,
           displayName: displayName,
           receiptUrl: receiptUrl,
-          groupCreatedBy: group?.createdBy ?? user.uid,
         );
-        await ref.read(notificationServiceProvider).notifyGroupEvent(
-              groupId: widget.groupId,
-              title: l10n.movementUpdatedNotify,
-              body: l10n.updatedMovementBy(
-                displayName,
-                _existing?.isStartingBalance == true
-                    ? l10n.startingBalance
-                    : _title.text.trim(),
-              ),
-              actorUid: user.uid,
-              actorName: displayName,
-              type: 'movement_update',
-            );
       } else {
         await service.createMovement(
           groupId: widget.groupId,
@@ -144,32 +176,39 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
           receiptUrl: receiptUrl,
         );
 
-        final group = ref.read(groupProvider(widget.groupId)).value;
-        final money = formatMoney(amount, currency: group?.currency ?? 'MAD');
-        final isDeposit = _type == MovementType.deposit;
-        await ref.read(notificationServiceProvider).notifyGroupEvent(
-              groupId: widget.groupId,
-              title: isDeposit
-                  ? l10n.depositNotifyTitle
-                  : l10n.expenseNotifyTitle,
-              body: isDeposit
-                  ? l10n.addedDepositAmount(
-                      displayName,
-                      money,
-                      _title.text.trim(),
-                    )
-                  : l10n.addedExpenseAmount(
-                      displayName,
-                      money,
-                      _title.text.trim(),
-                    ),
-              actorUid: user.uid,
-              actorName: displayName,
-              type: 'new_movement',
-            );
-
         await ref.read(reviewServiceProvider).recordSuccessfulMovement();
       }
+
+      try {
+        await ref
+            .read(sharedPreferencesProvider)
+            .setString('recent_movement_category', _category);
+        await ref
+            .read(sharedPreferencesProvider)
+            .setString(
+              'recent_movement_category_${user.uid}_${widget.groupId}',
+              _category,
+            );
+        await ref
+            .read(sharedPreferencesProvider)
+            .setString(
+              'recent_movement_type_${user.uid}_${widget.groupId}',
+              _type.name,
+            );
+        if (!widget.isEditing && _type == MovementType.expense) {
+          final uid = user.uid;
+          await ref
+              .read(sharedPreferencesProvider)
+              .setString(
+                'recent_expense_${uid}_${widget.groupId}',
+                jsonEncode({
+                  'title': _title.text.trim(),
+                  'amount': amount.toString(),
+                  'category': _category,
+                }),
+              );
+        }
+      } catch (_) {}
 
       HapticFeedback.mediumImpact();
       if (!mounted) return;
@@ -182,7 +221,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
     } catch (e) {
       final message = e is InsufficientBalanceException
           ? l10n.insufficientBalance
-          : e.toString();
+          : userFacingError(e);
       setState(() {
         _error = message;
         _loading = false;
@@ -194,8 +233,9 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
   Widget build(BuildContext context) {
     if (widget.isEditing) {
       final movements = ref.watch(movementsProvider(widget.groupId)).value;
-      final found =
-          movements?.where((m) => m.id == widget.movementId).firstOrNull;
+      final found = movements
+          ?.where((m) => m.id == widget.movementId)
+          .firstOrNull;
       if (found != null) _hydrate(found);
     }
 
@@ -276,6 +316,30 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
+                      if (_lastExpense != null &&
+                          _type == MovementType.expense) ...[
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _title.text =
+                                    _lastExpense?['title'] as String? ?? '';
+                                _amount.text =
+                                    _lastExpense?['amount'] as String? ?? '';
+                                _category =
+                                    _lastExpense?['category'] as String? ??
+                                    _category;
+                              });
+                              HapticFeedback.selectionClick();
+                            },
+                            icon: const Icon(Icons.replay),
+                            label: Text(
+                              EngagementCopy.of(context).repeatLastExpense,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                     TextFormField(
                       controller: _amount,
@@ -283,13 +347,12 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                         decimal: true,
                       ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'[0-9.,]'),
-                        ),
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
                       decoration: InputDecoration(
-                        labelText:
-                            isStarting ? l10n.startingAmount : l10n.amount,
+                        labelText: isStarting
+                            ? l10n.startingAmount
+                            : l10n.amount,
                         hintText: '0.00',
                       ),
                       validator: (v) {
@@ -346,10 +409,7 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                     ],
                     if (_error != null) ...[
                       const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: TextStyle(color: scheme.error),
-                      ),
+                      Text(_error!, style: TextStyle(color: scheme.error)),
                     ],
                     const SizedBox(height: 32),
                     ElevatedButton(
@@ -369,6 +429,10 @@ class _MovementFormScreenState extends ConsumerState<MovementFormScreen> {
                                   : l10n.addMovement,
                             ),
                     ),
+                    if (!widget.isEditing && !isStarting) ...[
+                      const SizedBox(height: 24),
+                      const HomeBannerAd(),
+                    ],
                   ],
                 ),
               ),

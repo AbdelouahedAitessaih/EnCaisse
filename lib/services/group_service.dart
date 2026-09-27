@@ -1,14 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../core/constants/app_constants.dart';
-import '../core/utils/formatters.dart';
 import '../models/models.dart';
+import 'backend_service.dart';
 
 class GroupService {
-  GroupService({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+  GroupService({FirebaseFirestore? firestore, BackendService? backend})
+      : _db = firestore ?? FirebaseFirestore.instance,
+        _backend = backend ?? BackendService();
 
   final FirebaseFirestore _db;
+  final BackendService _backend;
 
   CollectionReference<Map<String, dynamic>> get _groups =>
       _db.collection('groups');
@@ -19,33 +20,17 @@ class GroupService {
         .where(FieldPath.documentId, isEqualTo: uid)
         .snapshots()
         .asyncMap((memberSnaps) async {
-      final groups = <Group>[];
-      for (final memberDoc in memberSnaps.docs) {
+      final groupSnaps = await Future.wait(memberSnaps.docs.map((memberDoc) async {
         final groupRef = memberDoc.reference.parent.parent;
-        if (groupRef == null) continue;
-        final groupSnap = await groupRef.get();
-        if (groupSnap.exists) {
-          groups.add(Group.fromDoc(groupSnap));
-        }
-      }
+        return groupRef == null ? null : groupRef.get();
+      }));
+      final groups = groupSnaps
+          .whereType<DocumentSnapshot<Map<String, dynamic>>>()
+          .where((groupSnap) => groupSnap.exists)
+          .map(Group.fromDoc)
+          .toList();
       groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return groups;
-    });
-  }
-
-  /// Simpler membership query via users/{uid}/groupIds mirror + groups stream.
-  /// Primary path: scan groups where members/{uid} exists using collection group.
-  Stream<List<Group>> watchGroupsForUser(String uid) {
-    return _groups.snapshots().asyncMap((snap) async {
-      final result = <Group>[];
-      for (final doc in snap.docs) {
-        final member = await doc.reference.collection('members').doc(uid).get();
-        if (member.exists) {
-          result.add(Group.fromDoc(doc));
-        }
-      }
-      result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return result;
     });
   }
 
@@ -74,93 +59,15 @@ class GroupService {
     double startingAmount = 0,
     bool isPersonal = false,
   }) async {
-    final ref = _groups.doc();
-    final now = DateTime.now();
-    var inviteCode = generateInviteCode(length: AppConstants.inviteCodeLength);
-
-    // Ensure unique invite code (best-effort — list may be restricted).
-    for (var i = 0; i < 5; i++) {
-      try {
-        final existing = await _groups
-            .where('inviteCode', isEqualTo: inviteCode)
-            .limit(1)
-            .get();
-        if (existing.docs.isEmpty) break;
-      } catch (_) {
-        break;
-      }
-      inviteCode = generateInviteCode(length: AppConstants.inviteCodeLength);
-    }
-
-    final group = Group(
-      id: ref.id,
-      name: name.trim(),
-      createdBy: createdBy,
-      createdAt: now,
-      inviteCode: inviteCode,
-      currency: currency,
-      isPersonal: isPersonal,
-    );
-
-    final batch = _db.batch();
-    batch.set(ref, group.toMap());
-    batch.set(
-      ref.collection('members').doc(createdBy),
-      GroupMember(
-        uid: createdBy,
-        displayName: displayName,
-        joinedAt: now,
-        photoUrl: photoUrl,
-      ).toMap(),
-    );
-    // Membership index for efficient home list
-    batch.set(
-      _db.collection('users').doc(createdBy).collection('memberships').doc(ref.id),
-      {
-        'groupId': ref.id,
-        'joinedAt': Timestamp.fromDate(now),
-        'name': group.name,
-        'isPersonal': isPersonal,
-      },
-    );
-    await batch.commit();
-
-    // Starting balance after membership exists — rules require isGroupMember,
-    // which cannot see docs written in the same batch.
-    if (startingAmount > 0) {
-      final movementRef = ref.collection('movements').doc();
-      final auditRef = ref.collection('audit').doc();
-      final movementTime = DateTime.now();
-      final movement = Movement(
-        id: movementRef.id,
-        type: MovementType.deposit,
-        amount: startingAmount.abs(),
-        title: 'Starting balance',
-        category: 'Other',
-        createdBy: createdBy,
-        createdByName: displayName,
-        createdAt: movementTime,
-        updatedAt: movementTime,
-        updatedBy: createdBy,
-        isStartingBalance: true,
-      );
-      final audit = AuditEntry(
-        id: auditRef.id,
-        movementId: movementRef.id,
-        action: AuditAction.create,
-        performedBy: createdBy,
-        performedByName: displayName,
-        timestamp: movementTime,
-        before: null,
-        after: movement.toAuditSnapshot(),
-      );
-      final startBatch = _db.batch();
-      startBatch.set(movementRef, movement.toMap());
-      startBatch.set(auditRef, audit.toMap());
-      await startBatch.commit();
-    }
-
-    return group;
+    final result = await _backend.call('createGroup', {
+      'name': name.trim(),
+      'displayName': displayName.trim(),
+      'photoUrl': photoUrl,
+      'currency': currency,
+      'startingAmount': startingAmount,
+      'isPersonal': isPersonal,
+    });
+    return _groupFromCallable(result);
   }
 
   /// Opens or creates the user's solo personal caisse.
@@ -201,44 +108,26 @@ class GroupService {
     required String displayName,
     String? photoUrl,
   }) async {
-    final code = inviteCode.trim().toUpperCase();
-    final query = await _groups
-        .where('inviteCode', isEqualTo: code)
-        .limit(1)
-        .get();
-    if (query.docs.isEmpty) {
-      throw StateError('No group found for this invite code.');
-    }
-
-    final groupDoc = query.docs.first;
-    final memberRef = groupDoc.reference.collection('members').doc(uid);
-    final existing = await memberRef.get();
-    if (existing.exists) {
-      return Group.fromDoc(groupDoc);
-    }
-
-    final now = DateTime.now();
-    final batch = _db.batch();
-    batch.set(
-      memberRef,
-      GroupMember(
-        uid: uid,
-        displayName: displayName,
-        joinedAt: now,
-        photoUrl: photoUrl,
-      ).toMap(),
-    );
-    batch.set(
-      _db.collection('users').doc(uid).collection('memberships').doc(groupDoc.id),
-      {
-        'groupId': groupDoc.id,
-        'joinedAt': Timestamp.fromDate(now),
-        'name': groupDoc.data()['name'],
-      },
-    );
-    await batch.commit();
-    return Group.fromDoc(groupDoc);
+    final result = await _backend.call('joinGroup', {
+      'inviteCode': inviteCode.trim().toUpperCase(),
+      'displayName': displayName.trim(),
+      'photoUrl': photoUrl,
+    });
+    return _groupFromCallable(result);
   }
+
+  Group _groupFromCallable(Map<String, dynamic> data) => Group(
+        id: data['id'] as String? ?? '',
+        name: data['name'] as String? ?? '',
+        createdBy: data['createdBy'] as String? ?? '',
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          (data['createdAtMillis'] as num?)?.toInt() ?? 0,
+        ),
+        inviteCode: data['inviteCode'] as String? ?? '',
+        currency: data['currency'] as String? ?? 'MAD',
+        photoUrl: data['photoUrl'] as String?,
+        isPersonal: data['isPersonal'] as bool? ?? false,
+      );
 
   Future<void> updateGroupName({
     required String groupId,
@@ -369,79 +258,8 @@ class GroupService {
     required String groupId,
     required String creatorUid,
   }) async {
-    final groupRef = _groups.doc(groupId);
-    final groupSnap = await groupRef.get();
-    if (!groupSnap.exists) return;
-    final createdBy = groupSnap.data()?['createdBy'] as String?;
-    if (createdBy != creatorUid) {
-      throw StateError('Only the creator can delete this group');
-    }
-
-    final members = await groupRef.collection('members').get();
-    final movements = await groupRef.collection('movements').get();
-    final audits = await groupRef.collection('audit').get();
-
-    WriteBatch? batch;
-    var ops = 0;
-
-    Future<void> commitIfNeeded({bool force = false}) async {
-      if (batch == null) return;
-      if (!force && ops < 450) return;
-      await batch!.commit();
-      batch = null;
-      ops = 0;
-    }
-
-    void enqueue(void Function(WriteBatch b) action) {
-      batch ??= _db.batch();
-      action(batch!);
-      ops++;
-    }
-
-    for (final doc in movements.docs) {
-      enqueue((b) => b.delete(doc.reference));
-      await commitIfNeeded();
-    }
-    for (final doc in audits.docs) {
-      enqueue((b) => b.delete(doc.reference));
-      await commitIfNeeded();
-    }
-
-    // Remove non-creator members first, then the creator member, then the group.
-    final creatorMember = members.docs.where((d) => d.id == creatorUid);
-    final otherMembers = members.docs.where((d) => d.id != creatorUid);
-
-    for (final doc in otherMembers) {
-      enqueue((b) => b.delete(doc.reference));
-      enqueue(
-        (b) => b.delete(
-          _db
-              .collection('users')
-              .doc(doc.id)
-              .collection('memberships')
-              .doc(groupId),
-        ),
-      );
-      await commitIfNeeded();
-    }
-    for (final doc in creatorMember) {
-      enqueue((b) => b.delete(doc.reference));
-      enqueue(
-        (b) => b.delete(
-          _db
-              .collection('users')
-              .doc(doc.id)
-              .collection('memberships')
-              .doc(groupId),
-        ),
-      );
-      await commitIfNeeded();
-    }
-
-    enqueue((b) => b.delete(groupRef));
-    await commitIfNeeded(force: true);
+    await _backend.call('deleteGroup', {'groupId': groupId});
   }
-
   Stream<List<Group>> watchMemberships(String uid) {
     return _db
         .collection('users')
@@ -450,14 +268,13 @@ class GroupService {
         .orderBy('joinedAt', descending: true)
         .snapshots()
         .asyncMap((snap) async {
-      final groups = <Group>[];
-      for (final doc in snap.docs) {
-        final groupSnap = await _groups.doc(doc.id).get();
-        if (groupSnap.exists) {
-          groups.add(Group.fromDoc(groupSnap));
-        }
-      }
-      return groups;
+      final groupSnaps = await Future.wait(
+        snap.docs.map((doc) => _groups.doc(doc.id).get()),
+      );
+      return groupSnaps
+          .where((groupSnap) => groupSnap.exists)
+          .map(Group.fromDoc)
+          .toList();
     });
   }
 

@@ -22,17 +22,17 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 32),
               Text(
                 l10n.appName,
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: AppColors.primary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.displayLarge?.copyWith(color: AppColors.primary),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.tagline,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                      fontWeight: FontWeight.w400,
-                    ),
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -44,7 +44,9 @@ class WelcomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => context.push('/onboarding'),
+                  // On first launch, the router runs onboarding before this
+                  // screen. Returning users should go straight to signup.
+                  onPressed: () => context.go('/signup'),
                   child: Text(l10n.getStarted),
                 ),
               ),

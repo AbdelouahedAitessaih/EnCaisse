@@ -234,10 +234,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filterAll => '全部';
 
   @override
+  String get filters => '筛选';
+
+  @override
+  String get applyFilters => '应用';
+
+  @override
   String get filterUser => '用户';
 
   @override
   String get filterDate => '日期';
+
+  @override
+  String get filterAnyTime => '所有日期';
+
+  @override
+  String get filterThisMonth => '本月';
+
+  @override
+  String get filterLast30Days => '最近30天';
+
+  @override
+  String get filterChooseDates => '选择日期';
 
   @override
   String get clearFilters => '清除筛选';
@@ -450,7 +468,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingBody3 => '创建群组，或使用 6 位邀请码加入。';
 
   @override
-  String get welcomeSubtitle => '共享群组资金，对所有人透明。';
+  String get welcomeSubtitle => '独自或与他人一起管理资金。';
 
   @override
   String get validStartingAmount => '请输入有效的起始金额（或留空）。';
@@ -756,19 +774,52 @@ class AppLocalizationsZh extends AppLocalizations {
   String get insightsTitle => '分析';
 
   @override
-  String get insightsOpen => '结算与图表';
+  String get insightsOpen => '分析';
+
+  @override
+  String get yourCaisses => '你的账本';
+
+  @override
+  String get homeOverview => '将所有资金集中管理。';
 
   @override
   String get personalCaisse => '个人账本';
 
   @override
-  String get personalCaisseSubtitle => '独自记账 — 无需群组。';
+  String get personalCaisseSubtitle => '专属个人账本，轻松记录收支。';
 
   @override
   String get personalCaisseName => '我的账本';
 
   @override
   String get personalBadge => '个人';
+
+  @override
+  String get manageCaisse => '管理个人账本';
+
+  @override
+  String get renameCaisse => '重命名账本';
+
+  @override
+  String get changeCaissePhoto => '更改账本照片';
+
+  @override
+  String get caissePhotoUpdated => '账本照片已更新';
+
+  @override
+  String get caisseRenamed => '账本已重命名';
+
+  @override
+  String get deleteCaisse => '删除账本';
+
+  @override
+  String get deleteCaisseConfirm => '确定删除此账本吗？';
+
+  @override
+  String get deleteCaisseHint => '这将永久删除账本及其所有收支记录，且无法撤销。';
+
+  @override
+  String get caisseDeleted => '账本已删除';
 
   @override
   String get howToUse => '如何使用 EnCaisse';
@@ -822,7 +873,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tourGroup3Body => '分享邀请码。打开结算与图表查看谁欠谁以及分类支出。';
 
   @override
-  String get tourGroup3BodyPersonal => '打开结算与图表查看分类。此账本仅属于您 — 邀请已隐藏。';
+  String get tourGroup3BodyPersonal => '打开分析，按类别查看支出。此账本仅供您使用。';
 
   @override
   String get tapPhotoToChange => '点按照片以更换';

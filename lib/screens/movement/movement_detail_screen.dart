@@ -71,7 +71,6 @@ class MovementDetailScreen extends ConsumerWidget {
                 movement,
                 user?.uid,
                 profile?.displayName ?? user?.displayName ?? l10n.member,
-                group?.createdBy ?? '',
               ),
             ),
         ],
@@ -158,22 +157,6 @@ class MovementDetailScreen extends ConsumerWidget {
                           uid: user.uid,
                           displayName:
                               profile?.displayName ?? user.displayName ?? l10n.member,
-                          groupCreatedBy: group?.createdBy ?? '',
-                        );
-                    await ref.read(notificationServiceProvider).notifyGroupEvent(
-                          groupId: groupId,
-                          title: l10n.movementRestoredNotify,
-                          body: l10n.restoredMovementBy(
-                            profile?.displayName ??
-                                user.displayName ??
-                                l10n.member,
-                            movement.title,
-                          ),
-                          actorUid: user.uid,
-                          actorName: profile?.displayName ??
-                              user.displayName ??
-                              l10n.member,
-                          type: 'movement_restore',
                         );
                     HapticFeedback.lightImpact();
                     if (context.mounted) {
@@ -276,7 +259,6 @@ class MovementDetailScreen extends ConsumerWidget {
     Movement movement,
     String? uid,
     String displayName,
-    String groupCreatedBy,
   ) async {
     if (uid == null) return;
     final l10n = AppLocalizations.of(context);
@@ -313,17 +295,7 @@ class MovementDetailScreen extends ConsumerWidget {
                 existing: movement,
                 uid: uid,
                 displayName: displayName,
-                groupCreatedBy: groupCreatedBy,
               );
-
-      await ref.read(notificationServiceProvider).notifyGroupEvent(
-            groupId: groupId,
-            title: l10n.movementDeletedNotify,
-            body: l10n.deletedMovementBy(displayName, movement.title),
-            actorUid: uid,
-            actorName: displayName,
-            type: 'movement_delete',
-          );
 
       HapticFeedback.heavyImpact();
       if (!context.mounted) return;
@@ -342,16 +314,6 @@ class MovementDetailScreen extends ConsumerWidget {
                       existing: deleted,
                       uid: uid,
                       displayName: displayName,
-                      groupCreatedBy: groupCreatedBy,
-                    );
-                await ref.read(notificationServiceProvider).notifyGroupEvent(
-                      groupId: groupId,
-                      title: l10n.movementRestoredNotify,
-                      body:
-                          l10n.restoredMovementBy(displayName, movement.title),
-                      actorUid: uid,
-                      actorName: displayName,
-                      type: 'movement_restore',
                     );
               } catch (e) {
                 // SnackBarAction has no messenger here — ignore; user can restore from detail.

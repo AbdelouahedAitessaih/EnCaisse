@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../services/backend_service.dart';
 
 class JoinGroupScreen extends ConsumerStatefulWidget {
   const JoinGroupScreen({super.key});
@@ -48,27 +50,17 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> {
             photoUrl: profile?.photoUrl ?? user.photoURL,
           );
 
-      await ref.read(notificationServiceProvider).notifyGroupEvent(
-            groupId: group.id,
-            title: l10n.someoneJoined,
-            body: l10n.memberJoinedBody(
-              profile?.displayName ?? l10n.aMember,
-              group.name,
-            ),
-            actorUid: user.uid,
-            type: 'member_join',
-          );
-
       HapticFeedback.mediumImpact();
       if (mounted) {
         // Keep Home under the group so the back button works.
         context.go('/home');
         context.push('/groups/${group.id}');
-      }    } catch (e) {
+      }
+    } catch (e) {
       setState(() {
-        _error = e.toString().contains('No group')
+        _error = e is BackendCallException && e.code == 'not-found'
             ? l10n.noGroupForCode
-            : e.toString();
+            : userFacingError(e);
       });
     } finally {
       if (mounted) setState(() => _loading = false);

@@ -234,10 +234,28 @@ class AppLocalizationsJa extends AppLocalizations {
   String get filterAll => 'すべて';
 
   @override
+  String get filters => 'フィルター';
+
+  @override
+  String get applyFilters => '適用';
+
+  @override
   String get filterUser => 'ユーザー';
 
   @override
   String get filterDate => '日付';
+
+  @override
+  String get filterAnyTime => 'すべての日付';
+
+  @override
+  String get filterThisMonth => '今月';
+
+  @override
+  String get filterLast30Days => '過去30日間';
+
+  @override
+  String get filterChooseDates => '日付を選択';
 
   @override
   String get clearFilters => 'フィルターをクリア';
@@ -451,7 +469,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboardingBody3 => 'グループを作成するか、6文字の招待コードで参加します。';
 
   @override
-  String get welcomeSubtitle => 'みんなに透明な共有グループ資金。';
+  String get welcomeSubtitle => '一人でも、みんなと一緒でもお金を管理できます。';
 
   @override
   String get validStartingAmount => '有効な開始金額を入力するか、空のままにしてください。';
@@ -759,19 +777,52 @@ class AppLocalizationsJa extends AppLocalizations {
   String get insightsTitle => '分析';
 
   @override
-  String get insightsOpen => '精算とグラフ';
+  String get insightsOpen => '分析';
+
+  @override
+  String get yourCaisses => 'あなたの金庫';
+
+  @override
+  String get homeOverview => 'お金をひと目でまとめて確認。';
 
   @override
   String get personalCaisse => '個人の金庫';
 
   @override
-  String get personalCaisseSubtitle => 'グループなしで自分のお金を記録。';
+  String get personalCaisseSubtitle => '自分のお金を記録する専用スペース。';
 
   @override
   String get personalCaisseName => '自分の金庫';
 
   @override
   String get personalBadge => '個人';
+
+  @override
+  String get manageCaisse => '自分の金庫を管理';
+
+  @override
+  String get renameCaisse => '金庫の名前を変更';
+
+  @override
+  String get changeCaissePhoto => '金庫の写真を変更';
+
+  @override
+  String get caissePhotoUpdated => '金庫の写真を更新しました';
+
+  @override
+  String get caisseRenamed => '金庫の名前を変更しました';
+
+  @override
+  String get deleteCaisse => '金庫を削除';
+
+  @override
+  String get deleteCaisseConfirm => 'この金庫を削除しますか？';
+
+  @override
+  String get deleteCaisseHint => '金庫とすべての取引が完全に削除されます。この操作は取り消せません。';
+
+  @override
+  String get caisseDeleted => '金庫を削除しました';
 
   @override
   String get howToUse => 'EnCaisse の使い方';
@@ -825,7 +876,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tourGroup3Body => '招待コードを共有。精算とグラフで誰が誰に払うか、カテゴリ別支出を確認できます。';
 
   @override
-  String get tourGroup3BodyPersonal => 'カテゴリ分析は精算とグラフから。この金庫はあなた専用で、招待は非表示です。';
+  String get tourGroup3BodyPersonal => '分析からカテゴリ別の支出を確認できます。この金庫はあなた専用です。';
 
   @override
   String get tapPhotoToChange => 'タップして写真を変更';

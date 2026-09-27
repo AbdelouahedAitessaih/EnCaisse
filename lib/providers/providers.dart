@@ -7,17 +7,21 @@ import '../models/models.dart';
 import '../services/ad_service.dart';
 import '../services/app_update_service.dart';
 import '../services/auth_service.dart';
+import '../services/backend_service.dart';
 import '../services/export_service.dart';
 import '../services/group_service.dart';
 import '../services/movement_service.dart';
 import '../services/notification_service.dart';
 import '../services/review_service.dart';
+import '../services/settlement_service.dart';
 import '../services/storage_service.dart';
 import '../core/utils/settle.dart';
 final firebaseReadyProvider = Provider<bool>((ref) => false);
 
 final appUpdateServiceProvider =
     Provider<AppUpdateService>((ref) => AppUpdateService());
+
+final backendServiceProvider = Provider<BackendService>((ref) => BackendService());
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
@@ -28,6 +32,9 @@ final storageServiceProvider =
 
 final movementServiceProvider =
     Provider<MovementService>((ref) => MovementService());
+
+final settlementServiceProvider =
+    Provider<SettlementService>((ref) => SettlementService());
 
 final adServiceProvider = Provider<AdService>((ref) {
   final service = AdService();
@@ -90,12 +97,23 @@ final movementAuditProvider = StreamProvider.family<List<AuditEntry>,
       .watchAuditForMovement(args.groupId, args.movementId);
 });
 
+final settlementsProvider =
+    StreamProvider.family<List<Settlement>, String>((ref, groupId) {
+  return ref.watch(settlementServiceProvider).watchSettlements(groupId);
+});
+
 final exportServiceProvider = Provider<ExportService>((ref) => ExportService());
 
 final settleProvider = Provider.family<SettleSummary, String>((ref, groupId) {
   final movements = ref.watch(movementsProvider(groupId)).value ?? const [];
   final members = ref.watch(groupMembersProvider(groupId)).value ?? const [];
-  return computeSettle(members: members, movements: movements);
+  final settlements =
+      ref.watch(settlementsProvider(groupId)).value ?? const [];
+  return computeSettle(
+    members: members,
+    movements: movements,
+    settlements: settlements,
+  );
 });
 
 final inboxNotificationsProvider =

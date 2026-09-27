@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
+import 'authorized_image.dart';
 
 bool isRemoteImageUrl(String url) =>
-    url.startsWith('http://') || url.startsWith('https://');
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('storage://');
 
 class ReceiptImage extends StatelessWidget {
   const ReceiptImage({
@@ -25,19 +28,12 @@ class ReceiptImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = borderRadius ?? BorderRadius.circular(AppRadii.sm);
     final image = isRemoteImageUrl(url)
-        ? Image.network(
-            url,
+        ? AuthorizedImage(
+            url: url,
             height: height,
             width: double.infinity,
             fit: fit,
-            loadingBuilder: (context, child, progress) {
-              if (progress == null) return child;
-              return _ReceiptPlaceholder(
-                height: height,
-                child: const CircularProgressIndicator(strokeWidth: 2),
-              );
-            },
-            errorBuilder: (_, _, _) => _ReceiptPlaceholder(
+            errorBuilder: (context, error) => _ReceiptPlaceholder(
               height: height,
               child: const Icon(Icons.broken_image_outlined),
             ),
@@ -98,10 +94,10 @@ void showReceiptViewer(BuildContext context, String url) {
           body: Center(
             child: InteractiveViewer(
               child: isRemoteImageUrl(url)
-                  ? Image.network(
-                      url,
+                  ? AuthorizedImage(
+                      url: url,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, _, _) => const Icon(
+                      errorBuilder: (_, _) => const Icon(
                         Icons.broken_image_outlined,
                         color: Colors.white70,
                         size: 48,
