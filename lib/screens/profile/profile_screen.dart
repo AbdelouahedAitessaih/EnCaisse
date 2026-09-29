@@ -103,7 +103,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      setState(() => _error = userFacingError(e));
+      if (mounted) setState(() => _error = userFacingError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

@@ -150,7 +150,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            value: profile?.remindersEnabled ?? false,
+            value: profile?.remindersEnabled ?? true,
             title: Text(notificationCopy.reminderNotifications),
             subtitle: Text(notificationCopy.reminderNotificationsHint),
             onChanged: user == null || profile == null

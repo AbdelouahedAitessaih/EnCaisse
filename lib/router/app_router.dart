@@ -27,7 +27,6 @@ const kOnboardingCompletedKey = 'onboarding_completed';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
   final prefs = ref.watch(sharedPreferencesProvider);
 
   return GoRouter(
@@ -43,6 +42,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/onboarding';
       final verifying = loc == '/verify-email';
 
+      // Read auth state, never watch it. Watching would rebuild this GoRouter on
+      // every userChanges() emission (display name, photo URL, reload) and reset
+      // navigation back to initialLocation, bouncing the user out of the screen
+      // they are on. [_AuthRefresh] still re-runs this redirect on auth changes.
+      final authState = ref.read(authStateProvider);
       final streamUser = authState.value;
       // Live user after reload — auth stream can briefly lag.
       final user = ref.read(authServiceProvider).currentUser ?? streamUser;

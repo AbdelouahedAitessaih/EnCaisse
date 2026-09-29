@@ -11,7 +11,7 @@ class UserProfile {
     this.movementSuccessCount = 0,
     this.groupsCreatedCount = 0,
     this.activityNotificationsEnabled = true,
-    this.remindersEnabled = false,
+    this.remindersEnabled = true,
   });
 
   final String uid;
@@ -37,7 +37,7 @@ class UserProfile {
       groupsCreatedCount: (data['groupsCreatedCount'] as num?)?.toInt() ?? 0,
       activityNotificationsEnabled:
           data['activityNotificationsEnabled'] as bool? ?? true,
-      remindersEnabled: data['remindersEnabled'] as bool? ?? false,
+      remindersEnabled: data['remindersEnabled'] as bool? ?? true,
     );
   }
 

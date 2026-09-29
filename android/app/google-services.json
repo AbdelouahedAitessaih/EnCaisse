@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "559211214178-8rqpdvn3bbuff22bfssn8sc3fncr1kjk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.encaisse.encaisse",
+            "certificate_hash": "e00e101963589a93942394ce40bae334d71fce5d"
+          }
+        },
+        {
+          "client_id": "559211214178-nk8nk7t5ak3jttpb7btkpqmb859c75qm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.encaisse.encaisse",
+            "certificate_hash": "3146aa0e917a65e2b76cd471619583bf765c7b83"
+          }
+        },
+        {
           "client_id": "559211214178-rjmgid992j5spfott9qklaitoanot21d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

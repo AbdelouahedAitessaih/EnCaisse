@@ -23,7 +23,7 @@ exports.sendPushOnNotificationCreated = functions
 
     const user = userSnap.data() || {};
     const type = data.type != null ? String(data.type) : "";
-    if (type.startsWith("engagement_") && user.remindersEnabled !== true) return null;
+    if (type.startsWith("engagement_") && user.remindersEnabled === false) return null;
     if (!type.startsWith("engagement_") && !type.startsWith("settlement_") &&
         user.activityNotificationsEnabled === false) return null;
     const tokens = collectTokens(user);
@@ -592,20 +592,11 @@ exports.deleteGroup = functions.region("us-central1")
       throw new functions.https.HttpsError("permission-denied", "Only the creator can delete this group.");
     }
     const members = await groupRef.collection("members").get();
-    let batch = db.batch();
-    let writes = 0;
-    for (const member of members.docs) {
-      batch.delete(member.ref);
-      batch.delete(db.collection("users").doc(member.id)
-        .collection("memberships").doc(groupId));
-      writes += 2;
-      if (writes >= 400) { await batch.commit(); batch = db.batch(); writes = 0; }
-    }
-    if (writes > 0) await batch.commit();
-    await deleteQueryInBatches(
-      db.collectionGroup("memberships").where("groupId", "==", groupId),
-    );
 
+    // Remove the group contents before the member docs. Firestore rules require
+    // the caller's member doc to read anything under the group, so deleting it
+    // first makes the group unreadable from the client immediately — and if a
+    // later step then fails, the group is left half-deleted with no way to retry.
     const movementsRef = groupRef.collection("movements");
     while (true) {
       const movements = await movementsRef.limit(100).get();
@@ -618,11 +609,28 @@ exports.deleteGroup = functions.region("us-central1")
     }
     await deleteQueryInBatches(groupRef.collection("audit"));
     await deleteQueryInBatches(groupRef.collection("settlements"));
-    await admin.storage().bucket().deleteFiles({prefix: `groups/${groupId}/`});
+    await admin.storage().bucket().deleteFiles({prefix: `groups/${groupId}/`})
+      .catch((error) => console.error("storage cleanup failed", error));
     if (typeof group.inviteCode === "string") {
       await db.collection("inviteCodes").doc(group.inviteCode).delete().catch(() => {});
     }
     await groupRef.delete();
+
+    // Best-effort sweeps. A missing index here must never fail the delete.
+    await deleteQueryInBatches(
+      db.collectionGroup("memberships").where("groupId", "==", groupId),
+    ).catch((error) => console.error("membership sweep failed", error));
+
+    let batch = db.batch();
+    let writes = 0;
+    for (const member of members.docs) {
+      batch.delete(member.ref);
+      batch.delete(db.collection("users").doc(member.id)
+        .collection("memberships").doc(groupId));
+      writes += 2;
+      if (writes >= 400) { await batch.commit(); batch = db.batch(); writes = 0; }
+    }
+    if (writes > 0) await batch.commit();
     return {deleted: true};
   });
 
