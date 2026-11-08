@@ -423,7 +423,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
-  String get movementDeletedUndo => 'Movement deleted — Undo';
+  String get movementDeletedUndo => 'Movement deleted';
 
   @override
   String get undo => 'Undo';
@@ -756,7 +756,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartsTitle => 'Charts';
 
   @override
-  String get categoryBreakdown => 'By category';
+  String get categoryBreakdown => 'Spending by category';
 
   @override
   String get exportCsv => 'Export CSV';
@@ -919,4 +919,295 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get creatingPersonal => 'Opening your personal caisse…';
+
+  @override
+  String get categoryFood => 'Food';
+
+  @override
+  String get categoryTransport => 'Transport';
+
+  @override
+  String get categoryRent => 'Rent';
+
+  @override
+  String get categoryUtilities => 'Utilities';
+
+  @override
+  String get categoryEntertainment => 'Entertainment';
+
+  @override
+  String get categoryShopping => 'Shopping';
+
+  @override
+  String get categoryHealth => 'Health';
+
+  @override
+  String get categoryTravel => 'Travel';
+
+  @override
+  String get categorySalary => 'Salary';
+
+  @override
+  String get categoryGift => 'Gift';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get caisseDeleting => 'Deleting caisse…';
+
+  @override
+  String get groupDeleting => 'Deleting group…';
+
+  @override
+  String get balancePerCaisse =>
+      'Balances in different currencies are never added together.';
+
+  @override
+  String balanceAcrossCaisses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Total across $count caisses',
+      one: 'Total across $count caisse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountTitle => 'Delete account';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Delete your EnCaisse account and all personal data';
+
+  @override
+  String get deleteAccountConfirm => 'Delete your account?';
+
+  @override
+  String get deleteAccountWarning =>
+      'This cannot be undone. For security, sign in again before deleting.';
+
+  @override
+  String get security => 'Security';
+
+  @override
+  String get appLock => 'App lock';
+
+  @override
+  String get appLockHint =>
+      'Ask for your fingerprint, face or device PIN when opening EnCaisse';
+
+  @override
+  String get appLockUnavailable =>
+      'No fingerprint, face or screen lock is set up on this device';
+
+  @override
+  String get appLockReason => 'Unlock EnCaisse';
+
+  @override
+  String get appLockTitle => 'EnCaisse is locked';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String convertedAmount(String amount) {
+    return '= $amount in the caisse currency';
+  }
+
+  @override
+  String get enterValidRate => 'Enter a valid exchange rate';
+
+  @override
+  String exchangeRateLabel(String from, String to) {
+    return 'Exchange rate (1 $from = ? $to)';
+  }
+
+  @override
+  String get exchangeRateUnavailable =>
+      'Could not fetch the rate. Enter it manually.';
+
+  @override
+  String get formerMember => 'Former member';
+
+  @override
+  String homeWidgetMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count more caisses',
+      one: '+1 more caisse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWidgetUpdated(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get markReceived => 'Mark as received';
+
+  @override
+  String markReceivedConfirm(String name, String amount) {
+    return 'Confirm that you received $amount from $name?';
+  }
+
+  @override
+  String paidInCurrency(String amount, String rate) {
+    return 'Originally $amount · rate $rate';
+  }
+
+  @override
+  String paymentRequestText(String name, String amount, String group) {
+    return 'Hi $name, you owe me $amount in the caisse \"$group\" on EnCaisse. Thanks!';
+  }
+
+  @override
+  String get recurringBadge => 'Recurring';
+
+  @override
+  String get recurringCreatorLeft => 'Stopped: its creator left the caisse';
+
+  @override
+  String get recurringEmpty =>
+      'Choose \"Repeat\" when adding a movement to automate rent, subscriptions or allowances.';
+
+  @override
+  String recurringNext(String date) {
+    return 'Next: $date';
+  }
+
+  @override
+  String recurringSetupFailed(String details) {
+    return 'Movement saved, but the repeat could not be set up: $details';
+  }
+
+  @override
+  String get recurringSkippedBalance => 'Last run skipped: not enough balance';
+
+  @override
+  String get recurringSkippedSplit =>
+      'Last run skipped: some participants left the caisse';
+
+  @override
+  String get recurringStop => 'Stop';
+
+  @override
+  String get recurringStopConfirm =>
+      'Stop this recurring movement? Movements already created are kept.';
+
+  @override
+  String get recurringTitle => 'Recurring movements';
+
+  @override
+  String get repeatLabel => 'Repeat';
+
+  @override
+  String get repeatNever => 'Never';
+
+  @override
+  String get repeatWeekly => 'Every week';
+
+  @override
+  String get repeatMonthly => 'Every month';
+
+  @override
+  String get requestPayment => 'Request payment';
+
+  @override
+  String get searchMovements => 'Search movements';
+
+  @override
+  String shareInviteLinkText(String name, String link, String code) {
+    return 'Join my caisse \"$name\" on EnCaisse: $link\nOr enter the code $code in the app.';
+  }
+
+  @override
+  String get splitBalanced => 'Shares match the amount';
+
+  @override
+  String splitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Shared by $count',
+      one: 'For 1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitCustom => 'Custom';
+
+  @override
+  String get splitEqually => 'Equally';
+
+  @override
+  String get splitEveryone => 'Everyone';
+
+  @override
+  String get splitJustMe => 'Just me';
+
+  @override
+  String get splitMustMatch => 'Shares must add up to the amount';
+
+  @override
+  String get splitPickSomeone => 'Pick at least one person';
+
+  @override
+  String splitRemaining(String amount) {
+    return 'Left to assign: $amount';
+  }
+
+  @override
+  String get splitTitleDeposit => 'Contributed by';
+
+  @override
+  String get splitTitleExpense => 'Split between';
+
+  @override
+  String get you => 'you';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get resetPasswordTitle => 'Reset your password';
+
+  @override
+  String get resetPasswordBody =>
+      'Enter your account email and we\'ll send you a link to choose a new password.';
+
+  @override
+  String get resetPasswordSend => 'Send link';
+
+  @override
+  String resetPasswordSent(String email) {
+    return 'If an account exists for $email, a reset link is on its way. Check your inbox and spam folder.';
+  }
+
+  @override
+  String get resetPasswordTooMany =>
+      'Too many attempts. Please wait a few minutes and try again.';
+
+  @override
+  String get resetPasswordFailed =>
+      'Could not send the reset email. Check your connection and try again.';
+
+  @override
+  String get memberSettled => 'Even';
+
+  @override
+  String get addPhoto => 'Add a photo';
+
+  @override
+  String availableInCaisse(String amount) {
+    return 'Available: $amount';
+  }
 }

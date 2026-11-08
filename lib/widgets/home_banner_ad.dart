@@ -13,12 +13,17 @@ class HomeBannerAd extends ConsumerStatefulWidget {
 }
 
 class _HomeBannerAdState extends ConsumerState<HomeBannerAd> {
+  /// Store screenshots are captured with `--dart-define=HIDE_ADS=true` so no
+  /// live ad ends up in the listing.
+  static const _hidden = bool.fromEnvironment('HIDE_ADS');
+
   BannerAd? _ad;
   bool _loaded = false;
 
   @override
   void initState() {
     super.initState();
+    if (_hidden) return;
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 

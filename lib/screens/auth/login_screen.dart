@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../widgets/compact_dialog.dart';
+import '../../widgets/google_mark.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -37,12 +39,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final prefs = ref.read(sharedPreferencesProvider);
     final remember = prefs.getBool(_rememberMeKey) ?? true;
     final email = prefs.getString(_rememberedEmailKey) ?? '';
-    setState(() {
-      _rememberMe = remember;
-      if (remember && email.isNotEmpty) {
-        _email.text = email;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _rememberMe = remember;
+        if (remember && email.isNotEmpty) {
+          _email.text = email;
+        }
+      });
+    }
   }
 
   Future<void> _persistRemembered(String email) async {
@@ -69,15 +73,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref.read(authServiceProvider).signInWithEmail(
-            email: _email.text,
-            password: _password.text,
-          );
+      await ref
+          .read(authServiceProvider)
+          .signInWithEmail(email: _email.text, password: _password.text);
       await _persistRemembered(_email.text);
       TextInput.finishAutofillContext(shouldSave: true);
       if (mounted) context.go('/home');
     } catch (e) {
-      setState(() => _error = _friendlyError(e));
+      if (mounted) setState(() => _error = _friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -92,9 +95,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authServiceProvider).signInWithGoogle();
       if (mounted) context.go('/home');
     } catch (e) {
-      setState(() => _error = _friendlyError(e));
+      if (mounted) setState(() => _error = _friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final l10n = AppLocalizations.of(context);
+    final email = await showCompactDialog<String>(
+      context: context,
+      builder: (_) => _ResetPasswordDialog(initialEmail: _email.text.trim()),
+    );
+    if (email == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authServiceProvider).sendPasswordReset(email);
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.resetPasswordSent(email))),
+      );
+    } catch (e) {
+      final message = e.toString().contains('invalid-email')
+          ? l10n.validEmail
+          : e.toString().contains('too-many-requests')
+          ? l10n.resetPasswordTooMany
+          : l10n.resetPasswordFailed;
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -139,7 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.signIn)),
+      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -163,7 +190,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.username, AutofillHints.email],
+                    autofillHints: const [
+                      AutofillHints.username,
+                      AutofillHints.email,
+                    ],
                     decoration: InputDecoration(labelText: l10n.email),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return l10n.enterEmail;
@@ -181,7 +211,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.password,
                       suffixIcon: IconButton(
-                        tooltip: _obscure ? l10n.showPassword : l10n.hidePassword,
+                        tooltip: _obscure
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         icon: Icon(
                           _obscure
                               ? Icons.visibility_outlined
@@ -198,7 +230,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 8),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton(
+                      onPressed: _loading ? null : _forgotPassword,
+                      child: Text(l10n.forgotPassword),
+                    ),
+                  ),
                   CheckboxListTile(
                     value: _rememberMe,
                     contentPadding: EdgeInsets.zero,
@@ -210,7 +248,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 8),
                     Text(
                       _error!,
-                      style: const TextStyle(color: AppColors.error),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 16),
@@ -241,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
                     onPressed: _loading ? null : _google,
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    icon: const GoogleMark(),
                     label: Text(l10n.continueWithGoogle),
                   ),
                   const SizedBox(height: 24),
@@ -255,6 +295,72 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ResetPasswordDialog extends StatefulWidget {
+  const _ResetPasswordDialog({required this.initialEmail});
+
+  final String initialEmail;
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final _controller = TextEditingController(text: widget.initialEmail);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.pop(context, _controller.text.trim());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return CompactAlertDialog(
+      title: Text(l10n.resetPasswordTitle),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.resetPasswordBody),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _controller,
+              autofocus: widget.initialEmail.isEmpty,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.send,
+              autofillHints: const [AutofillHints.email],
+              decoration: InputDecoration(labelText: l10n.email),
+              onFieldSubmitted: (_) => _submit(),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.enterEmail;
+                if (!v.contains('@')) return l10n.validEmail;
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.resetPasswordSend)),
+      ],
     );
   }
 }

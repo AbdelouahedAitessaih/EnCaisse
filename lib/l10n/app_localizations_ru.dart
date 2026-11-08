@@ -428,7 +428,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get delete => 'Удалить';
 
   @override
-  String get movementDeletedUndo => 'Операция удалена — Отменить';
+  String get movementDeletedUndo => 'Операция удалена';
 
   @override
   String get undo => 'Отменить';
@@ -761,7 +761,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chartsTitle => 'Графики';
 
   @override
-  String get categoryBreakdown => 'По категориям';
+  String get categoryBreakdown => 'Расходы по категориям';
 
   @override
   String get exportCsv => 'Экспорт CSV';
@@ -924,4 +924,300 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get creatingPersonal => 'Открываем вашу личную кассу…';
+
+  @override
+  String get categoryFood => 'Еда';
+
+  @override
+  String get categoryTransport => 'Транспорт';
+
+  @override
+  String get categoryRent => 'Аренда';
+
+  @override
+  String get categoryUtilities => 'Коммунальные';
+
+  @override
+  String get categoryEntertainment => 'Развлечения';
+
+  @override
+  String get categoryShopping => 'Покупки';
+
+  @override
+  String get categoryHealth => 'Здоровье';
+
+  @override
+  String get categoryTravel => 'Путешествия';
+
+  @override
+  String get categorySalary => 'Зарплата';
+
+  @override
+  String get categoryGift => 'Подарок';
+
+  @override
+  String get categoryOther => 'Другое';
+
+  @override
+  String get retry => 'Повторить';
+
+  @override
+  String get caisseDeleting => 'Удаление кассы…';
+
+  @override
+  String get groupDeleting => 'Удаление группы…';
+
+  @override
+  String get balancePerCaisse =>
+      'Балансы в разных валютах никогда не складываются.';
+
+  @override
+  String balanceAcrossCaisses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Итого по $count кассе',
+      many: 'Итого по $count кассам',
+      few: 'Итого по $count кассам',
+      one: 'Итого по $count кассе',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountTitle => 'Удалить аккаунт';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Удалите свой аккаунт EnCaisse и все персональные данные';
+
+  @override
+  String get deleteAccountConfirm => 'Удалить ваш аккаунт?';
+
+  @override
+  String get deleteAccountWarning =>
+      'Это действие нельзя отменить. Для безопасности войдите в аккаунт повторно перед удалением.';
+
+  @override
+  String get security => 'Безопасность';
+
+  @override
+  String get appLock => 'Блокировка приложения';
+
+  @override
+  String get appLockHint =>
+      'Запрашивать отпечаток, лицо или PIN устройства при открытии EnCaisse';
+
+  @override
+  String get appLockUnavailable =>
+      'На этом устройстве не настроены отпечаток, лицо или блокировка экрана';
+
+  @override
+  String get appLockReason => 'Разблокировать EnCaisse';
+
+  @override
+  String get appLockTitle => 'EnCaisse заблокирован';
+
+  @override
+  String get appLockUnlock => 'Разблокировать';
+
+  @override
+  String convertedAmount(String amount) {
+    return '= $amount в валюте кассы';
+  }
+
+  @override
+  String get enterValidRate => 'Введите корректный курс';
+
+  @override
+  String exchangeRateLabel(String from, String to) {
+    return 'Курс (1 $from = ? $to)';
+  }
+
+  @override
+  String get exchangeRateUnavailable =>
+      'Не удалось получить курс. Введите его вручную.';
+
+  @override
+  String get formerMember => 'Бывший участник';
+
+  @override
+  String homeWidgetMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+ ещё $count кассы',
+      many: '+ ещё $count касс',
+      few: '+ ещё $count кассы',
+      one: '+ ещё 1 касса',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWidgetUpdated(String time) {
+    return 'Обновлено $time';
+  }
+
+  @override
+  String get markReceived => 'Отметить как полученное';
+
+  @override
+  String markReceivedConfirm(String name, String amount) {
+    return 'Подтвердить, что вы получили $amount от $name?';
+  }
+
+  @override
+  String paidInCurrency(String amount, String rate) {
+    return 'Исходно $amount · курс $rate';
+  }
+
+  @override
+  String paymentRequestText(String name, String amount, String group) {
+    return 'Привет, $name! Ты должен мне $amount в кассе «$group» в EnCaisse. Спасибо!';
+  }
+
+  @override
+  String get recurringBadge => 'Регулярно';
+
+  @override
+  String get recurringCreatorLeft => 'Остановлено: автор покинул кассу';
+
+  @override
+  String get recurringEmpty =>
+      'Выберите «Повторять» при добавлении операции, чтобы автоматизировать аренду, подписки или карманные деньги.';
+
+  @override
+  String recurringNext(String date) {
+    return 'Следующая: $date';
+  }
+
+  @override
+  String recurringSetupFailed(String details) {
+    return 'Операция сохранена, но повтор настроить не удалось: $details';
+  }
+
+  @override
+  String get recurringSkippedBalance =>
+      'Последний запуск пропущен: недостаточно средств';
+
+  @override
+  String get recurringSkippedSplit =>
+      'Последний запуск пропущен: некоторые участники покинули кассу';
+
+  @override
+  String get recurringStop => 'Остановить';
+
+  @override
+  String get recurringStopConfirm =>
+      'Остановить эту регулярную операцию? Уже созданные операции сохранятся.';
+
+  @override
+  String get recurringTitle => 'Регулярные операции';
+
+  @override
+  String get repeatLabel => 'Повторять';
+
+  @override
+  String get repeatNever => 'Никогда';
+
+  @override
+  String get repeatWeekly => 'Каждую неделю';
+
+  @override
+  String get repeatMonthly => 'Каждый месяц';
+
+  @override
+  String get requestPayment => 'Запросить оплату';
+
+  @override
+  String get searchMovements => 'Поиск операций';
+
+  @override
+  String shareInviteLinkText(String name, String link, String code) {
+    return 'Присоединяйся к моей кассе «$name» в EnCaisse: $link\nИли введи код $code в приложении.';
+  }
+
+  @override
+  String get splitBalanced => 'Доли совпадают с суммой';
+
+  @override
+  String splitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Делится на $count',
+      one: 'Для 1 человека',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitCustom => 'Вручную';
+
+  @override
+  String get splitEqually => 'Поровну';
+
+  @override
+  String get splitEveryone => 'Все';
+
+  @override
+  String get splitJustMe => 'Только я';
+
+  @override
+  String get splitMustMatch => 'Сумма долей должна равняться сумме операции';
+
+  @override
+  String get splitPickSomeone => 'Выберите хотя бы одного человека';
+
+  @override
+  String splitRemaining(String amount) {
+    return 'Осталось распределить: $amount';
+  }
+
+  @override
+  String get splitTitleDeposit => 'Внесли';
+
+  @override
+  String get splitTitleExpense => 'Разделено между';
+
+  @override
+  String get you => 'вы';
+
+  @override
+  String get forgotPassword => 'Забыли пароль?';
+
+  @override
+  String get resetPasswordTitle => 'Сброс пароля';
+
+  @override
+  String get resetPasswordBody =>
+      'Введите email аккаунта, и мы пришлём ссылку для выбора нового пароля.';
+
+  @override
+  String get resetPasswordSend => 'Отправить ссылку';
+
+  @override
+  String resetPasswordSent(String email) {
+    return 'Если для $email есть аккаунт, ссылка для сброса уже в пути. Проверьте входящие и спам.';
+  }
+
+  @override
+  String get resetPasswordTooMany =>
+      'Слишком много попыток. Подождите несколько минут и повторите.';
+
+  @override
+  String get resetPasswordFailed =>
+      'Не удалось отправить письмо. Проверьте подключение и повторите.';
+
+  @override
+  String get memberSettled => 'В расчёте';
+
+  @override
+  String get addPhoto => 'Добавить фото';
+
+  @override
+  String availableInCaisse(String amount) {
+    return 'Доступно: $amount';
+  }
 }

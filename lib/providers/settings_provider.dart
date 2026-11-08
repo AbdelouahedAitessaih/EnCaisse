@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _kThemeMode = 'settings_theme_mode';
 const _kLocale = 'settings_locale';
+const _kAppLock = 'settings_app_lock';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('sharedPreferencesProvider must be overridden');
@@ -16,6 +17,7 @@ class AppSettings {
   const AppSettings({
     required this.themeMode,
     this.locale,
+    this.appLockEnabled = false,
   });
 
   final ThemeMode themeMode;
@@ -23,14 +25,19 @@ class AppSettings {
   /// `null` = follow the phone language (not forced to English).
   final Locale? locale;
 
+  /// Ask for the phone's biometrics / PIN when the app is opened.
+  final bool appLockEnabled;
+
   AppSettings copyWith({
     ThemeMode? themeMode,
     Locale? locale,
     bool clearLocale = false,
+    bool? appLockEnabled,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
       locale: clearLocale ? null : (locale ?? this.locale),
+      appLockEnabled: appLockEnabled ?? this.appLockEnabled,
     );
   }
 }
@@ -44,7 +51,13 @@ class SettingsNotifier extends Notifier<AppSettings> {
     return AppSettings(
       themeMode: _themeFromStorage(prefs.getString(_kThemeMode)),
       locale: _localeFromStorage(prefs.getString(_kLocale)),
+      appLockEnabled: prefs.getBool(_kAppLock) ?? false,
     );
+  }
+
+  Future<void> setAppLockEnabled(bool enabled) async {
+    await _prefs.setBool(_kAppLock, enabled);
+    state = state.copyWith(appLockEnabled: enabled);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -100,8 +113,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 }
 
-final settingsProvider =
-    NotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
+  SettingsNotifier.new,
+);
 
 const supportedLocales = <Locale>[
   Locale('en'),
@@ -117,8 +131,7 @@ const supportedLocales = <Locale>[
 
 /// Resolves the phone language to the closest supported app locale.
 Locale resolveDeviceLocale([List<Locale>? deviceLocales]) {
-  final locales =
-      deviceLocales ?? PlatformDispatcher.instance.locales;
+  final locales = deviceLocales ?? PlatformDispatcher.instance.locales;
   for (final device in locales) {
     for (final supported in supportedLocales) {
       if (supported.languageCode == device.languageCode) {

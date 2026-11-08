@@ -33,7 +33,8 @@ class UserProfile {
       photoUrl: data['photoUrl'] as String?,
       createdAt: _toDate(data['createdAt']) ?? DateTime.now(),
       fcmToken: data['fcmToken'] as String?,
-      movementSuccessCount: (data['movementSuccessCount'] as num?)?.toInt() ?? 0,
+      movementSuccessCount:
+          (data['movementSuccessCount'] as num?)?.toInt() ?? 0,
       groupsCreatedCount: (data['groupsCreatedCount'] as num?)?.toInt() ?? 0,
       activityNotificationsEnabled:
           data['activityNotificationsEnabled'] as bool? ?? true,
@@ -42,16 +43,16 @@ class UserProfile {
   }
 
   Map<String, dynamic> toMap() => {
-        'displayName': displayName,
-        'email': email,
-        'photoUrl': photoUrl,
-        'createdAt': Timestamp.fromDate(createdAt),
-        'fcmToken': fcmToken,
-        'movementSuccessCount': movementSuccessCount,
-        'groupsCreatedCount': groupsCreatedCount,
-        'activityNotificationsEnabled': activityNotificationsEnabled,
-        'remindersEnabled': remindersEnabled,
-      };
+    'displayName': displayName,
+    'email': email,
+    'photoUrl': photoUrl,
+    'createdAt': Timestamp.fromDate(createdAt),
+    'fcmToken': fcmToken,
+    'movementSuccessCount': movementSuccessCount,
+    'groupsCreatedCount': groupsCreatedCount,
+    'activityNotificationsEnabled': activityNotificationsEnabled,
+    'remindersEnabled': remindersEnabled,
+  };
 
   UserProfile copyWith({
     String? displayName,
@@ -71,8 +72,7 @@ class UserProfile {
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
       createdAt: createdAt,
       fcmToken: fcmToken ?? this.fcmToken,
-      movementSuccessCount:
-          movementSuccessCount ?? this.movementSuccessCount,
+      movementSuccessCount: movementSuccessCount ?? this.movementSuccessCount,
       groupsCreatedCount: groupsCreatedCount ?? this.groupsCreatedCount,
       activityNotificationsEnabled:
           activityNotificationsEnabled ?? this.activityNotificationsEnabled,
@@ -100,6 +100,7 @@ class Group {
   final String inviteCode;
   final String currency;
   final String? photoUrl;
+
   /// Solo caisse for personal tracking (no invite / shared settle needed).
   final bool isPersonal;
 
@@ -118,14 +119,14 @@ class Group {
   }
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'createdBy': createdBy,
-        'createdAt': Timestamp.fromDate(createdAt),
-        'inviteCode': inviteCode,
-        'currency': currency,
-        'isPersonal': isPersonal,
-        if (photoUrl != null) 'photoUrl': photoUrl,
-      };
+    'name': name,
+    'createdBy': createdBy,
+    'createdAt': Timestamp.fromDate(createdAt),
+    'inviteCode': inviteCode,
+    'currency': currency,
+    'isPersonal': isPersonal,
+    if (photoUrl != null) 'photoUrl': photoUrl,
+  };
 }
 
 class GroupMember {
@@ -155,11 +156,11 @@ class GroupMember {
   }
 
   Map<String, dynamic> toMap() => {
-        'displayName': displayName,
-        'joinedAt': Timestamp.fromDate(joinedAt),
-        'photoUrl': photoUrl,
-        'notificationsMuted': notificationsMuted,
-      };
+    'displayName': displayName,
+    'joinedAt': Timestamp.fromDate(joinedAt),
+    'photoUrl': photoUrl,
+    'notificationsMuted': notificationsMuted,
+  };
 }
 
 enum MovementType { deposit, expense }
@@ -188,6 +189,11 @@ class Movement {
     this.deleted = false,
     this.deletedAt,
     this.isStartingBalance = false,
+    this.split,
+    this.originalCurrency,
+    this.originalAmount,
+    this.exchangeRate,
+    this.recurringId,
   });
 
   final String id;
@@ -203,11 +209,34 @@ class Movement {
   final String? receiptUrl;
   final bool deleted;
   final DateTime? deletedAt;
+
   /// Starting caisse balance — only the group creator may edit or delete.
   final bool isStartingBalance;
 
-  bool get hasReceipt =>
-      receiptUrl != null && receiptUrl!.trim().isNotEmpty;
+  /// Member uid → share of [amount] in the group currency. Null means the
+  /// whole amount belongs to [createdBy], which is how every movement recorded
+  /// before splits existed is read.
+  final Map<String, double>? split;
+
+  /// Set when the movement was entered in another currency; [amount] is then
+  /// the converted value in the group currency.
+  final String? originalCurrency;
+  final double? originalAmount;
+  final double? exchangeRate;
+
+  /// Recurring rule that generated this movement, if any.
+  final String? recurringId;
+
+  bool get hasReceipt => receiptUrl != null && receiptUrl!.trim().isNotEmpty;
+
+  bool get hasSplit => split != null && split!.isNotEmpty;
+
+  bool get isForeignCurrency =>
+      originalCurrency != null && originalAmount != null;
+
+  /// Share of [amount] owned by each member, falling back to [createdBy].
+  Map<String, double> get allocation =>
+      hasSplit ? split! : {createdBy: amount.abs()};
 
   double get signedAmount =>
       type == MovementType.expense ? -amount.abs() : amount.abs();
@@ -234,36 +263,115 @@ class Movement {
       deleted: data['deleted'] as bool? ?? false,
       deletedAt: _toDate(data['deletedAt']),
       isStartingBalance: data['isStartingBalance'] as bool? ?? false,
+      split: _toSplit(data['split']),
+      originalCurrency: _nonEmpty(data['originalCurrency'] as String?),
+      originalAmount: (data['originalAmount'] as num?)?.toDouble(),
+      exchangeRate: (data['exchangeRate'] as num?)?.toDouble(),
+      recurringId: _nonEmpty(data['recurringId'] as String?),
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'type': type.value,
-        'amount': amount,
-        'title': title,
-        'category': category,
-        'createdBy': createdBy,
-        'createdByName': createdByName,
-        'createdAt': Timestamp.fromDate(createdAt),
-        'updatedAt': Timestamp.fromDate(updatedAt),
-        'updatedBy': updatedBy,
-        'receiptUrl': receiptUrl,
-        'deleted': deleted,
-        'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
-        'isStartingBalance': isStartingBalance,
-      };
+    'type': type.value,
+    'amount': amount,
+    'title': title,
+    'category': category,
+    'createdBy': createdBy,
+    'createdByName': createdByName,
+    'createdAt': Timestamp.fromDate(createdAt),
+    'updatedAt': Timestamp.fromDate(updatedAt),
+    'updatedBy': updatedBy,
+    'receiptUrl': receiptUrl,
+    'deleted': deleted,
+    'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
+    'isStartingBalance': isStartingBalance,
+    'split': split,
+    'originalCurrency': originalCurrency,
+    'originalAmount': originalAmount,
+    'exchangeRate': exchangeRate,
+    'recurringId': recurringId,
+  };
 
   Map<String, dynamic> toAuditSnapshot() => {
-        'type': type.value,
-        'amount': amount,
-        'title': title,
-        'category': category,
-        'createdBy': createdBy,
-        'createdByName': createdByName,
-        'receiptUrl': receiptUrl,
-        'deleted': deleted,
-        'isStartingBalance': isStartingBalance,
-      };
+    'type': type.value,
+    'amount': amount,
+    'title': title,
+    'category': category,
+    'createdBy': createdBy,
+    'createdByName': createdByName,
+    'receiptUrl': receiptUrl,
+    'deleted': deleted,
+    'isStartingBalance': isStartingBalance,
+    'split': split,
+    'originalCurrency': originalCurrency,
+    'originalAmount': originalAmount,
+  };
+}
+
+enum RecurrenceFrequency { weekly, monthly }
+
+extension RecurrenceFrequencyX on RecurrenceFrequency {
+  String get value => name;
+
+  static RecurrenceFrequency fromString(String? raw) => raw == 'weekly'
+      ? RecurrenceFrequency.weekly
+      : RecurrenceFrequency.monthly;
+}
+
+/// Template the backend replays on schedule to create a movement.
+class RecurringMovement {
+  const RecurringMovement({
+    required this.id,
+    required this.type,
+    required this.amount,
+    required this.title,
+    required this.category,
+    required this.frequency,
+    required this.nextRunAt,
+    required this.createdBy,
+    required this.createdByName,
+    this.split,
+    this.active = true,
+    this.lastError,
+  });
+
+  final String id;
+  final MovementType type;
+  final double amount;
+  final String title;
+  final String category;
+  final RecurrenceFrequency frequency;
+  final DateTime nextRunAt;
+  final String createdBy;
+  final String createdByName;
+  final Map<String, double>? split;
+  final bool active;
+
+  /// Why the last scheduled run did not create a movement (e.g. the caisse
+  /// did not hold enough money). Cleared on the next successful run.
+  final String? lastError;
+
+  bool get hasSplit => split != null && split!.isNotEmpty;
+
+  factory RecurringMovement.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data() ?? {};
+    return RecurringMovement(
+      id: doc.id,
+      type: MovementTypeX.fromString(data['type'] as String?),
+      amount: (data['amount'] as num?)?.toDouble() ?? 0,
+      title: data['title'] as String? ?? '',
+      category: data['category'] as String? ?? 'Other',
+      frequency: RecurrenceFrequencyX.fromString(data['frequency'] as String?),
+      nextRunAt: _toDate(data['nextRunAt']) ?? DateTime.now(),
+      createdBy: data['createdBy'] as String? ?? '',
+      createdByName: data['createdByName'] as String? ?? '',
+      split: _toSplit(data['split']),
+      active: data['active'] as bool? ?? true,
+      lastError: _nonEmpty(data['lastError'] as String?),
+    );
+  }
 }
 
 enum AuditAction { create, update, delete }
@@ -319,14 +427,14 @@ class AuditEntry {
   }
 
   Map<String, dynamic> toMap() => {
-        'movementId': movementId,
-        'action': action.value,
-        'performedBy': performedBy,
-        'performedByName': performedByName,
-        'timestamp': Timestamp.fromDate(timestamp),
-        'before': before,
-        'after': after,
-      };
+    'movementId': movementId,
+    'action': action.value,
+    'performedBy': performedBy,
+    'performedByName': performedByName,
+    'timestamp': Timestamp.fromDate(timestamp),
+    'before': before,
+    'after': after,
+  };
 }
 
 enum SettlementStatus { pending, confirmed, cancelled }
@@ -385,6 +493,9 @@ class BalanceSummary {
   final double total;
   final double deposits;
   final double expenses;
+
+  /// Money spent per category. Deposits are left out so a category that has
+  /// both never nets itself to zero.
   final Map<String, double> byCategory;
 
   static BalanceSummary fromMovements(List<Movement> movements) {
@@ -396,12 +507,9 @@ class BalanceSummary {
       if (m.deleted) continue;
       if (m.type == MovementType.deposit) {
         deposits += m.amount.abs();
-        byCategory[m.category] =
-            (byCategory[m.category] ?? 0) + m.amount.abs();
       } else {
         expenses += m.amount.abs();
-        byCategory[m.category] =
-            (byCategory[m.category] ?? 0) - m.amount.abs();
+        byCategory[m.category] = (byCategory[m.category] ?? 0) + m.amount.abs();
       }
     }
 
@@ -437,9 +545,7 @@ class AppNotification {
   final DateTime createdAt;
   final bool read;
 
-  factory AppNotification.fromDoc(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+  factory AppNotification.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
     return AppNotification(
       id: doc.id,
@@ -460,6 +566,19 @@ DateTime? _toDate(dynamic value) {
   if (value is Timestamp) return value.toDate();
   if (value is DateTime) return value;
   return null;
+}
+
+Map<String, double>? _toSplit(dynamic value) {
+  if (value is! Map) return null;
+  final result = <String, double>{};
+  for (final entry in value.entries) {
+    final key = entry.key;
+    final share = entry.value;
+    if (key is String && key.isNotEmpty && share is num && share > 0) {
+      result[key] = share.toDouble();
+    }
+  }
+  return result.isEmpty ? null : result;
 }
 
 String? _nonEmpty(String? value) {

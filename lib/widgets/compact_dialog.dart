@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Compact confirmation dialog with a fixed max width (no Flexible gap).
 class CompactAlertDialog extends StatelessWidget {
-  const CompactAlertDialog({
-    super.key,
-    this.title,
-    this.content,
-    this.actions,
-  });
+  const CompactAlertDialog({super.key, this.title, this.content, this.actions});
 
   final Widget? title;
   final Widget? content;
@@ -23,8 +18,6 @@ class CompactAlertDialog extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 280, maxWidth: 340),
         child: Material(
           color: scheme.surface,
-          elevation: 8,
-          shadowColor: Colors.black54,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -54,10 +47,7 @@ class CompactAlertDialog extends StatelessWidget {
                   const SizedBox(height: 8),
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
-                    child: OverflowBar(
-                      spacing: 8,
-                      children: actions!,
-                    ),
+                    child: OverflowBar(spacing: 8, children: actions!),
                   ),
                 ],
               ],

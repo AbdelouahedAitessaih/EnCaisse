@@ -26,13 +26,14 @@ class OfflineBanner extends ConsumerWidget {
           left: 0,
           right: 0,
           child: Material(
-            elevation: 2,
             color: AppColors.accent.withValues(alpha: 0.95),
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     const Icon(Icons.wifi_off, color: Colors.white, size: 18),
@@ -40,8 +41,10 @@ class OfflineBanner extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         l10n.offlineBanner,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],

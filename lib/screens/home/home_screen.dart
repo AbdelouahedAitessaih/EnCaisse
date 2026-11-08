@@ -3,19 +3,24 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/constants/currencies.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/models.dart';
 import '../../providers/providers.dart';
-import '../../widgets/authorized_image.dart';
-import '../../providers/settings_provider.dart';
 import '../../services/device_region.dart';
+import '../../widgets/app_components.dart';
+import '../../widgets/authorized_image.dart';
 import '../../widgets/branded_lottie.dart';
 import '../../widgets/encaisse_refresh.dart';
 import '../../widgets/feature_tour.dart';
-import '../../widgets/home_banner_ad.dart';
 import '../../widgets/group_balance_preview.dart';
+import '../../widgets/home_banner_ad.dart';
+import '../../providers/settings_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -78,15 +83,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final groupsAsync = ref.watch(userGroupsProvider);
+    final pendingDeletes = ref.watch(pendingGroupDeletionsProvider);
+    final groupsAsync = ref
+        .watch(userGroupsProvider)
+        .whenData(
+          (groups) => pendingDeletes.isEmpty
+              ? groups
+              : groups.where((g) => !pendingDeletes.contains(g.id)).toList(),
+        );
     final profile = ref.watch(currentUserProfileProvider).value;
     final scheme = Theme.of(context).colorScheme;
+    final unread = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appName),
+        // A brand wordmark, not a localized title: it reads the same in every
+        // language and direction.
+        title: Text(
+          AppConstants.appName,
+          textDirection: TextDirection.ltr,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: scheme.primary,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.6,
+          ),
+        ),
         actions: [
-          IconButton(
+          AppIconButton(
+            icon: Icons.help_outline,
             tooltip: l10n.howToUse,
             onPressed: () async {
               final prefs = ref.read(sharedPreferencesProvider);
@@ -94,41 +118,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               if (!context.mounted) return;
               await FeatureTour.showHomeTourIfNeeded(context, prefs);
             },
-            icon: const Icon(Icons.help_outline),
           ),
-          IconButton(
+          AppIconButton(
+            icon: unread > 0
+                ? Icons.notifications
+                : Icons.notifications_outlined,
             tooltip: l10n.notifications,
+            color: unread > 0 ? scheme.primary : scheme.onSurfaceVariant,
             onPressed: () => context.push('/notifications'),
-            icon: Badge(
-              isLabelVisible: (ref.watch(unreadNotificationsCountProvider)) > 0,
-              label: Text('${ref.watch(unreadNotificationsCountProvider)}'),
-              child: const Icon(Icons.notifications_outlined),
-            ),
           ),
-          IconButton(
+          AppIconButton(
+            icon: Icons.settings_outlined,
             tooltip: l10n.settings,
             onPressed: () => context.push('/settings'),
-            icon: const Icon(Icons.settings_outlined),
           ),
-          IconButton(
-            tooltip: l10n.signOut,
-            onPressed: () async {
-              final uid = ref.read(authStateProvider).value?.uid;
-              if (uid != null) {
-                await ref
-                    .read(notificationServiceProvider)
-                    .clearTokenOnSignOut(uid);
-              }
-              await ref.read(authServiceProvider).signOut();
-              if (context.mounted) context.go('/welcome');
-            },
-            icon: const Icon(Icons.logout),
-          ),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: Column(
         children: [
           if (_openingPersonal) const LinearProgressIndicator(minHeight: 2),
+          if (groupsAsync.hasValue)
+            _HomeWidgetSync(groups: groupsAsync.requireValue),
           Expanded(
             child: EncaisseRefreshIndicator(
               onRefresh: () async {
@@ -136,327 +147,168 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 await ref.read(userGroupsProvider.future);
               },
               child: groupsAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
                     const SizedBox(height: 80),
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Text(
-                        '${l10n.couldNotLoadGroups}\n$e',
+                        l10n.couldNotLoadGroups,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppColors.error),
+                        style: TextStyle(color: scheme.error),
                       ),
                     ),
                   ],
                 ),
                 data: (groups) {
+                  final personalGroups = groups
+                      .where((g) => g.isPersonal)
+                      .toList();
+                  final shared = groups.where((g) => !g.isPersonal).toList();
+                  final personal = personalGroups.isEmpty
+                      ? null
+                      : personalGroups.first;
+
                   if (groups.isEmpty) {
                     return LayoutBuilder(
-                      builder: (context, constraints) {
-                        return ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 88),
-                          children: [
-                            SizedBox(
-                              height: constraints.maxHeight,
-                              child: EmptyState(
-                                title: l10n.noGroupsYet,
-                                subtitle: l10n.noGroupsSubtitle,
-                                asset: 'assets/lottie/empty_group.json',
-                                action: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ElevatedButton.icon(
-                                      onPressed: _openingPersonal
-                                          ? null
-                                          : _openPersonalCaisse,
-                                      icon: const Icon(Icons.person_outline),
-                                      label: Text(l10n.personalCaisse),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    ElevatedButton(
-                                      onPressed: () =>
-                                          context.push('/groups/create'),
-                                      child: Text(l10n.createAGroup),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    OutlinedButton(
-                                      onPressed: () =>
-                                          context.push('/groups/join'),
-                                      child: Text(l10n.joinWithCode),
-                                    ),
-                                  ],
-                                ),
+                      builder: (context, constraints) => ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight,
+                            child: EmptyState(
+                              title: l10n.noGroupsYet,
+                              subtitle: l10n.noGroupsSubtitle,
+                              asset: 'assets/lottie/empty_group.json',
+                              action: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _openingPersonal
+                                        ? null
+                                        : _openPersonalCaisse,
+                                    icon: const Icon(Icons.person_outline),
+                                    label: Text(l10n.personalCaisse),
+                                  ),
+                                  const SizedBox(height: AppSpacing.smd),
+                                  OutlinedButton(
+                                    onPressed: () =>
+                                        context.push('/groups/create'),
+                                    child: Text(l10n.createAGroup),
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  TextButton(
+                                    onPressed: () =>
+                                        context.push('/groups/join'),
+                                    child: Text(l10n.joinWithCode),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        );
-                      },
+                          ),
+                        ],
+                      ),
                     );
                   }
 
-                  return ListView.separated(
+                  return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    itemCount: groups.length + 2,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        final hello = profile != null
-                            ? l10n.helloName(
-                                profile.displayName.split(' ').first,
-                              )
-                            : l10n.hello;
-                        final largeText =
-                            MediaQuery.textScalerOf(context).scale(16) >= 20;
-                        final homeActionWidth = largeText
-                            ? MediaQuery.sizeOf(context).width - 32
-                            : (MediaQuery.sizeOf(context).width - 40) / 2;
-                        return Column(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                    children: [
+                      const SizedBox(height: AppSpacing.xs),
+                      AppPage(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              hello,
+                              profile != null
+                                  ? l10n.helloName(
+                                      profile.displayName.split(' ').first,
+                                    )
+                                  : l10n.hello,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
-                            const SizedBox(height: 16),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.primary,
-                                    Color(0xFF0B5948),
-                                  ],
-                                  begin: AlignmentDirectional.topStart,
-                                  end: AlignmentDirectional.bottomEnd,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l10n.yourCaisses,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge
-                                              ?.copyWith(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          l10n.homeOverview,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: Colors.white.withValues(
-                                                  alpha: 0.86,
-                                                ),
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: Colors.white.withValues(
-                                      alpha: 0.16,
-                                    ),
-                                    child: Text(
-                                      '${groups.length}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            const SizedBox(height: AppSpacing.md),
+                            ElevatedButton.icon(
+                              onPressed: () => context.push('/groups/create'),
+                              icon: const Icon(Icons.group_add_outlined),
+                              label: Text(l10n.createAGroup),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: AppSpacing.xs),
                             SizedBox(
                               width: double.infinity,
                               child: Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
+                                alignment: WrapAlignment.spaceEvenly,
                                 children: [
-                                  SizedBox(
-                                    width: homeActionWidth,
-                                    child: OutlinedButton.icon(
-                                      onPressed: () =>
-                                          context.push('/groups/create'),
+                                  if (personal == null)
+                                    TextButton.icon(
+                                      onPressed: _openingPersonal
+                                          ? null
+                                          : _openPersonalCaisse,
                                       icon: const Icon(
-                                        Icons.group_add_outlined,
+                                        Icons.person_outline,
+                                        size: 18,
                                       ),
-                                      label: Text(l10n.createAGroup),
+                                      label: Text(l10n.personalCaisse),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: homeActionWidth,
-                                    child: OutlinedButton.icon(
-                                      onPressed: () =>
-                                          context.push('/groups/join'),
-                                      icon: const Icon(Icons.vpn_key_outlined),
-                                      label: Text(l10n.joinGroup),
+                                  TextButton.icon(
+                                    onPressed: () =>
+                                        context.push('/groups/join'),
+                                    icon: const Icon(
+                                      Icons.vpn_key_outlined,
+                                      size: 18,
                                     ),
+                                    label: Text(l10n.joinWithCode),
                                   ),
                                 ],
                               ),
                             ),
                           ],
-                        );
-                      }
-                      if (index == groups.length + 1) {
-                        return const Padding(
-                          padding: EdgeInsets.only(top: 8),
-                          child: HomeBannerAd(),
-                        );
-                      }
-                      final group = groups[index - 1];
-                      final largeText =
-                          MediaQuery.textScalerOf(context).scale(16) >= 20;
-                      return Material(
-                        color: scheme.surface,
-                        child: InkWell(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            context.push('/groups/${group.id}');
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: scheme.outline),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryLight.withValues(
-                                      alpha:
-                                          Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? 0.2
-                                          : 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: group.photoUrl != null
-                                      ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          child: AuthorizedImage(
-                                            url: group.photoUrl!,
-                                            width: 48,
-                                            height: 48,
-                                          ),
-                                        )
-                                      : Text(
-                                          group.name.isNotEmpty
-                                              ? group.name[0].toUpperCase()
-                                              : 'E',
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 20,
-                                          ),
-                                        ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (largeText) ...[
-                                        Text(
-                                          group.name,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleLarge,
-                                        ),
-                                        if (group.isPersonal)
-                                          Align(
-                                            alignment: AlignmentDirectional
-                                                .centerStart,
-                                            child: Chip(
-                                              label: Text(l10n.personalBadge),
-                                            ),
-                                          ),
-                                      ] else
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                group.name,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.titleLarge,
-                                              ),
-                                            ),
-                                            if (group.isPersonal)
-                                              Chip(
-                                                label: Text(l10n.personalBadge),
-                                                visualDensity:
-                                                    VisualDensity.compact,
-                                                padding: EdgeInsets.zero,
-                                              ),
-                                          ],
-                                        ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        group.isPersonal
-                                            ? '${l10n.personalCaisse} · ${group.currency}'
-                                            : '${l10n.inviteCode} ${group.inviteCode} · ${group.currency}',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      GroupBalancePreview(group: group),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.color,
-                                ),
-                              ],
-                            ),
+                        ),
+                      ),
+                      if (shared.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AppPage(
+                          child: AppSectionHeader(
+                            title: l10n.yourCaisses,
+                            trailing: AppPill(label: '${shared.length}'),
                           ),
                         ),
-                      );
-                    },
+                        if (shared.length > 1) _BalanceSummary(groups: shared),
+                        AppPage(
+                          child: Column(
+                            children: [
+                              for (final group in shared) ...[
+                                _GroupCard(group: group),
+                                const SizedBox(height: AppSpacing.smd),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (personal != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AppPage(
+                          child: AppSectionHeader(title: l10n.personalCaisse),
+                        ),
+                        AppPage(
+                          child: Column(
+                            children: [
+                              _GroupCard(group: personal),
+                              const SizedBox(height: AppSpacing.smd),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.gutter,
+                        ),
+                        child: HomeBannerAd(),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -464,59 +316,224 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showActions(context, l10n),
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+/// Summary of the shared caisses, deliberately subordinate to the per-caisse
+/// balance printed on every card below it.
+///
+/// Balances held in different currencies are never added together: when the
+/// caisses do not share one currency there is no total at all, only a note
+/// saying why.
+class _BalanceSummary extends ConsumerWidget {
+  const _BalanceSummary({required this.groups});
+
+  final List<Group> groups;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tones = context.semantic;
+
+    final codes = groups.map((g) => g.currency).toSet();
+    final currency = codes.length == 1 ? codes.first : null;
+
+    if (currency == null) {
+      return AppPage(
+        child: Text(
+          l10n.balancePerCaisse,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+
+    var deposits = 0.0;
+    var expenses = 0.0;
+    for (final group in groups) {
+      final balance = ref.watch(balanceProvider(group.id));
+      deposits += balance.deposits;
+      expenses += balance.expenses;
+    }
+    final net = deposits - expenses;
+
+    return AppPage(
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.balanceAcrossCaisses(groups.length),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            formatMoney(net, currency: currency),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: theme.textTheme.titleMedium?.asMoneyInline(
+              color: net < 0 ? tones.negativeInk : tones.positiveInk,
+            ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  void _showActions(BuildContext context, AppLocalizations l10n) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+/// Mirrors the caisse list onto the home-screen widget. Renders nothing.
+class _HomeWidgetSync extends ConsumerWidget {
+  const _HomeWidgetSync({required this.groups});
+
+  static const _maxLines = 4;
+
+  final List<Group> groups;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final ordered = [
+      ...groups.where((g) => !g.isPersonal),
+      ...groups.where((g) => g.isPersonal),
+    ];
+    final lines = <String>[
+      for (final group in ordered.take(_maxLines))
+        '${group.name}  ${formatMoney(ref.watch(balanceProvider(group.id)).total, currency: group.currency)}',
+    ];
+    if (ordered.length > _maxLines) {
+      lines.add(l10n.homeWidgetMore(ordered.length - _maxLines));
+    }
+    final body = lines.isEmpty ? l10n.noGroupsYet : lines.join('\n');
+    final updated = l10n.homeWidgetUpdated(
+      MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.now()),
+    );
+    final service = ref.read(homeWidgetServiceProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      service.publish(
+        title: AppConstants.appName,
+        body: body,
+        updated: updated,
+      );
+    });
+    return const SizedBox.shrink();
+  }
+}
+
+class _GroupCard extends ConsumerWidget {
+  const _GroupCard({required this.group});
+
+  final Group group;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final tones = context.semantic;
+    final members = group.isPersonal
+        ? null
+        : ref.watch(groupMembersProvider(group.id)).value?.length;
+    final balance = ref.watch(balanceProvider(group.id)).total;
+
+    return AppSurface(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        context.push('/groups/${group.id}');
+      },
+      padding: const EdgeInsets.all(AppSpacing.smd),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: AppSizes.avatarMd,
+            height: AppSizes.avatarMd,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: tones.positiveSurface,
+              borderRadius: BorderRadius.circular(AppRadii.field),
+            ),
+            child: group.photoUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadii.field),
+                    child: AuthorizedImage(
+                      url: group.photoUrl!,
+                      width: AppSizes.avatarMd,
+                      height: AppSizes.avatarMd,
+                    ),
+                  )
+                : Text(
+                    group.name.isNotEmpty ? group.name[0].toUpperCase() : 'E',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: tones.positiveInk,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: AppSpacing.smd),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  leading: const Icon(
-                    Icons.person_outline,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(l10n.personalCaisse),
-                  subtitle: Text(l10n.personalCaisseSubtitle),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _openPersonalCaisse();
-                  },
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        group.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    if (group.isPersonal) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      AppPill(
+                        label: AppLocalizations.of(context).personalBadge,
+                        color: tones.positiveInk,
+                        background: tones.positiveSurface,
+                      ),
+                    ],
+                  ],
                 ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.group_add,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(l10n.createAGroup),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/groups/create');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.vpn_key, color: AppColors.accent),
-                  title: Text(l10n.joinWithInviteCode),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    context.push('/groups/join');
-                  },
-                ),
+                const SizedBox(height: AppSpacing.xxs),
+                GroupBalancePreview(group: group),
               ],
             ),
           ),
-        );
-      },
+          const SizedBox(width: AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                formatMoney(balance, currency: group.currency),
+                maxLines: 1,
+                style: theme.textTheme.titleSmall?.asMoneyInline(
+                  color: balance < 0 ? tones.negativeInk : null,
+                ),
+              ),
+              if (members != null) ...[
+                const SizedBox(height: AppSpacing.xxs),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.group_outlined,
+                      size: 13,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpacing.xxs + 1),
+                    Text('$members', style: theme.textTheme.labelSmall),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

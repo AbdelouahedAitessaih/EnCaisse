@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../widgets/branded_lottie.dart';
@@ -26,9 +27,7 @@ class NotificationsScreen extends ConsumerWidget {
             onPressed: () async {
               final uid = ref.read(authStateProvider).value?.uid;
               if (uid == null) return;
-              await ref
-                  .read(notificationServiceProvider)
-                  .markAllRead(uid);
+              await ref.read(notificationServiceProvider).markAllRead(uid);
             },
             child: Text(l10n.markAllRead),
           ),
@@ -49,7 +48,7 @@ class NotificationsScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  l10n.errorWithDetails('$e'),
+                  l10n.errorWithDetails(userFacingError(e)),
                   textAlign: TextAlign.center,
                 ),
               ),

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="balance_widget_surface">#0E1512</color>
+    <color name="balance_widget_ink">#E6EEEA</color>
+    <color name="balance_widget_muted">#9AA8A1</color>
+</resources>

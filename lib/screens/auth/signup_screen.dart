@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../widgets/google_mark.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -42,7 +43,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       _error = null;
     });
     try {
-      await ref.read(authServiceProvider).signUpWithEmail(
+      await ref
+          .read(authServiceProvider)
+          .signUpWithEmail(
             email: _email.text,
             password: _password.text,
             displayName: _name.text,
@@ -53,7 +56,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       TextInput.finishAutofillContext(shouldSave: true);
       if (mounted) context.go('/home');
     } catch (e) {
-      setState(() => _error = _friendlyError(e));
+      if (mounted) setState(() => _error = _friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -68,7 +71,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       await ref.read(authServiceProvider).signInWithGoogle();
       if (mounted) context.go('/home');
     } catch (e) {
-      setState(() => _error = _friendlyError(e));
+      if (mounted) setState(() => _error = _friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -116,7 +119,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.createAccount)),
+      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -176,8 +179,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.password,
                       suffixIcon: IconButton(
-                        tooltip:
-                            _obscure ? l10n.showPassword : l10n.hidePassword,
+                        tooltip: _obscure
+                            ? l10n.showPassword
+                            : l10n.hidePassword,
                         icon: Icon(
                           _obscure
                               ? Icons.visibility_outlined
@@ -196,7 +200,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 16),
-                    Text(_error!, style: const TextStyle(color: AppColors.error)),
+                    Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -226,7 +235,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
                     onPressed: _loading ? null : _google,
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    icon: const GoogleMark(),
                     label: Text(l10n.continueWithGoogle),
                   ),
                   const SizedBox(height: 24),

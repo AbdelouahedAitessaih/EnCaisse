@@ -414,7 +414,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get delete => '削除';
 
   @override
-  String get movementDeletedUndo => '取引を削除しました — 元に戻す';
+  String get movementDeletedUndo => '取引を削除しました';
 
   @override
   String get undo => '元に戻す';
@@ -734,7 +734,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get chartsTitle => 'グラフ';
 
   @override
-  String get categoryBreakdown => 'カテゴリ別';
+  String get categoryBreakdown => 'カテゴリ別の支出';
 
   @override
   String get exportCsv => 'CSVを書き出す';
@@ -886,4 +886,284 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get creatingPersonal => '個人の金庫を開いています…';
+
+  @override
+  String get categoryFood => '食費';
+
+  @override
+  String get categoryTransport => '交通費';
+
+  @override
+  String get categoryRent => '家賃';
+
+  @override
+  String get categoryUtilities => '光熱費';
+
+  @override
+  String get categoryEntertainment => 'エンタメ';
+
+  @override
+  String get categoryShopping => '買い物';
+
+  @override
+  String get categoryHealth => '医療';
+
+  @override
+  String get categoryTravel => '旅行';
+
+  @override
+  String get categorySalary => '給与';
+
+  @override
+  String get categoryGift => '贈り物';
+
+  @override
+  String get categoryOther => 'その他';
+
+  @override
+  String get retry => '再試行';
+
+  @override
+  String get caisseDeleting => '金庫を削除しています…';
+
+  @override
+  String get groupDeleting => 'グループを削除しています…';
+
+  @override
+  String get balancePerCaisse => '異なる通貨の残高を合計することはありません。';
+
+  @override
+  String balanceAcrossCaisses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '合計 $count 個の金庫',
+      one: '合計 $count 個の金庫',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountTitle => 'アカウントを削除';
+
+  @override
+  String get deleteAccountSubtitle => 'EnCaisse アカウントとすべての個人データを削除';
+
+  @override
+  String get deleteAccountConfirm => 'アカウントを削除しますか？';
+
+  @override
+  String get deleteAccountWarning =>
+      'この操作は取り消せません。セキュリティのため、削除前に再度サインインしてください。';
+
+  @override
+  String get security => 'セキュリティ';
+
+  @override
+  String get appLock => 'アプリロック';
+
+  @override
+  String get appLockHint => 'EnCaisse を開くときに指紋・顔・端末の PIN を要求';
+
+  @override
+  String get appLockUnavailable => 'この端末には指紋・顔認証・画面ロックが設定されていません';
+
+  @override
+  String get appLockReason => 'EnCaisse のロックを解除';
+
+  @override
+  String get appLockTitle => 'EnCaisse はロックされています';
+
+  @override
+  String get appLockUnlock => 'ロック解除';
+
+  @override
+  String convertedAmount(String amount) {
+    return '= 金庫の通貨で $amount';
+  }
+
+  @override
+  String get enterValidRate => '有効な為替レートを入力してください';
+
+  @override
+  String exchangeRateLabel(String from, String to) {
+    return '為替レート（1 $from = ? $to）';
+  }
+
+  @override
+  String get exchangeRateUnavailable => 'レートを取得できませんでした。手動で入力してください。';
+
+  @override
+  String get formerMember => '元メンバー';
+
+  @override
+  String homeWidgetMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ほか $count 件の金庫',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWidgetUpdated(String time) {
+    return '$time に更新';
+  }
+
+  @override
+  String get markReceived => '受け取り済みにする';
+
+  @override
+  String markReceivedConfirm(String name, String amount) {
+    return '$name から $amount を受け取ったことを確認しますか？';
+  }
+
+  @override
+  String paidInCurrency(String amount, String rate) {
+    return '元の金額 $amount · レート $rate';
+  }
+
+  @override
+  String paymentRequestText(String name, String amount, String group) {
+    return '$name さん、EnCaisse の金庫「$group」で $amount の支払いをお願いします。ありがとう！';
+  }
+
+  @override
+  String get recurringBadge => '定期';
+
+  @override
+  String get recurringCreatorLeft => '停止：作成者が金庫を退出しました';
+
+  @override
+  String get recurringEmpty => '取引を追加するときに「繰り返し」を選ぶと、家賃やサブスク、お小遣いを自動化できます。';
+
+  @override
+  String recurringNext(String date) {
+    return '次回：$date';
+  }
+
+  @override
+  String recurringSetupFailed(String details) {
+    return '取引は保存されましたが、繰り返しを設定できませんでした：$details';
+  }
+
+  @override
+  String get recurringSkippedBalance => '前回の実行をスキップ：残高不足';
+
+  @override
+  String get recurringSkippedSplit => '前回の実行をスキップ：一部の参加者が金庫を退出しました';
+
+  @override
+  String get recurringStop => '停止';
+
+  @override
+  String get recurringStopConfirm => 'この定期取引を停止しますか？作成済みの取引は残ります。';
+
+  @override
+  String get recurringTitle => '定期取引';
+
+  @override
+  String get repeatLabel => '繰り返し';
+
+  @override
+  String get repeatNever => 'しない';
+
+  @override
+  String get repeatWeekly => '毎週';
+
+  @override
+  String get repeatMonthly => '毎月';
+
+  @override
+  String get requestPayment => '支払いを依頼';
+
+  @override
+  String get searchMovements => '取引を検索';
+
+  @override
+  String shareInviteLinkText(String name, String link, String code) {
+    return 'EnCaisse の金庫「$name」に参加しよう：$link\nまたはアプリでコード $code を入力してください。';
+  }
+
+  @override
+  String get splitBalanced => '配分が金額と一致しています';
+
+  @override
+  String splitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 人で分担',
+      one: '1 人分',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitCustom => 'カスタム';
+
+  @override
+  String get splitEqually => '均等';
+
+  @override
+  String get splitEveryone => '全員';
+
+  @override
+  String get splitJustMe => '自分のみ';
+
+  @override
+  String get splitMustMatch => '配分の合計を金額と一致させてください';
+
+  @override
+  String get splitPickSomeone => '少なくとも 1 人を選んでください';
+
+  @override
+  String splitRemaining(String amount) {
+    return '未配分：$amount';
+  }
+
+  @override
+  String get splitTitleDeposit => '拠出者';
+
+  @override
+  String get splitTitleExpense => '分担するメンバー';
+
+  @override
+  String get you => 'あなた';
+
+  @override
+  String get forgotPassword => 'パスワードをお忘れですか？';
+
+  @override
+  String get resetPasswordTitle => 'パスワードの再設定';
+
+  @override
+  String get resetPasswordBody =>
+      'アカウントのメールアドレスを入力すると、新しいパスワードを設定するリンクをお送りします。';
+
+  @override
+  String get resetPasswordSend => 'リンクを送信';
+
+  @override
+  String resetPasswordSent(String email) {
+    return '$email のアカウントが存在する場合、再設定リンクを送信しました。受信トレイと迷惑メールをご確認ください。';
+  }
+
+  @override
+  String get resetPasswordTooMany => '試行回数が多すぎます。数分待ってから再度お試しください。';
+
+  @override
+  String get resetPasswordFailed => 'メールを送信できませんでした。接続を確認して再度お試しください。';
+
+  @override
+  String get memberSettled => '精算済み';
+
+  @override
+  String get addPhoto => '写真を追加';
+
+  @override
+  String availableInCaisse(String amount) {
+    return '利用可能: $amount';
+  }
 }

@@ -49,6 +49,8 @@
 	<string>EnCaisse needs photo access to attach optional receipts to movements.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>EnCaisse needs camera access to capture optional receipt photos.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>EnCaisse uses Face ID to unlock the app when App lock is on.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>EnCaisse uses this identifier to show relevant ads via AdMob.</string>
 	<!-- AdMob iOS app ID (same publisher as Android until dedicated iOS AdMob app). -->
@@ -67,6 +69,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.559211214178-09l4spju2rcvns8762du5cua352fc1b2</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.encaisse.encaisse.invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>encaisse</string>
 			</array>
 		</dict>
 	</array>

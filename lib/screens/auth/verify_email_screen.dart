@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 
@@ -19,18 +20,18 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
   Future<void> _resend() async {
     final l10n = AppLocalizations.of(context);
-    setState(() => _busy = true);
+    if (mounted) setState(() => _busy = true);
     try {
       await ref.read(authServiceProvider).sendEmailVerification();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.verificationEmailSent)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.verificationEmailSent)));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     } finally {
@@ -40,10 +41,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
 
   Future<void> _check() async {
     final l10n = AppLocalizations.of(context);
-    setState(() => _busy = true);
+    if (mounted) setState(() => _busy = true);
     try {
-      final ok =
-          await ref.read(authServiceProvider).reloadAndCheckEmailVerified();
+      final ok = await ref
+          .read(authServiceProvider)
+          .reloadAndCheckEmailVerified();
       if (!mounted) return;
       if (ok) {
         // Let userChanges + GoRouter refresh pick up emailVerified before navigate.
@@ -51,14 +53,14 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         if (!mounted) return;
         context.go('/home');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.emailNotVerifiedYet)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.emailNotVerifiedYet)));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails('$e'))),
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
         );
       }
     } finally {
@@ -91,8 +93,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.mark_email_unread_outlined,
-                size: 72, color: AppColors.primary),
+            const Icon(
+              Icons.mark_email_unread_outlined,
+              size: 72,
+              color: AppColors.primary,
+            ),
             const SizedBox(height: 24),
             Text(
               l10n.verifyEmailBody(email),

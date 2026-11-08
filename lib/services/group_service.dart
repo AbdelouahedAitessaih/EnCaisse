@@ -5,8 +5,8 @@ import 'backend_service.dart';
 
 class GroupService {
   GroupService({FirebaseFirestore? firestore, BackendService? backend})
-      : _db = firestore ?? FirebaseFirestore.instance,
-        _backend = backend ?? BackendService();
+    : _db = firestore ?? FirebaseFirestore.instance,
+      _backend = backend ?? BackendService();
 
   final FirebaseFirestore _db;
   final BackendService _backend;
@@ -20,25 +20,36 @@ class GroupService {
         .where(FieldPath.documentId, isEqualTo: uid)
         .snapshots()
         .asyncMap((memberSnaps) async {
-      final groupSnaps = await Future.wait(memberSnaps.docs.map((memberDoc) async {
-        final groupRef = memberDoc.reference.parent.parent;
-        return groupRef == null ? null : groupRef.get();
-      }));
-      final groups = groupSnaps
-          .whereType<DocumentSnapshot<Map<String, dynamic>>>()
-          .where((groupSnap) => groupSnap.exists)
-          .map(Group.fromDoc)
-          .toList();
-      groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return groups;
-    });
+          final groupSnaps = await Future.wait(
+            memberSnaps.docs.map((memberDoc) async {
+              final groupRef = memberDoc.reference.parent.parent;
+              return groupRef?.get();
+            }),
+          );
+          final groups = groupSnaps
+              .whereType<DocumentSnapshot<Map<String, dynamic>>>()
+              .where((groupSnap) => groupSnap.exists)
+              .map(Group.fromDoc)
+              .toList();
+          groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return groups;
+        });
   }
 
   Stream<Group?> watchGroup(String groupId) {
-    return _groups.doc(groupId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return Group.fromDoc(doc);
-    });
+    return _groups
+        .doc(groupId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return null;
+          return Group.fromDoc(doc);
+        })
+        .handleError((e) {
+          if (e is FirebaseException && e.code == 'permission-denied') {
+            return null;
+          }
+          throw e;
+        });
   }
 
   Stream<List<GroupMember>> watchMembers(String groupId) {
@@ -47,7 +58,13 @@ class GroupService {
         .collection('members')
         .orderBy('joinedAt')
         .snapshots()
-        .map((snap) => snap.docs.map(GroupMember.fromDoc).toList());
+        .map((snap) => snap.docs.map(GroupMember.fromDoc).toList())
+        .handleError((e) {
+          if (e is FirebaseException && e.code == 'permission-denied') {
+            return <GroupMember>[];
+          }
+          throw e;
+        });
   }
 
   Future<Group> createGroup({
@@ -117,17 +134,17 @@ class GroupService {
   }
 
   Group _groupFromCallable(Map<String, dynamic> data) => Group(
-        id: data['id'] as String? ?? '',
-        name: data['name'] as String? ?? '',
-        createdBy: data['createdBy'] as String? ?? '',
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          (data['createdAtMillis'] as num?)?.toInt() ?? 0,
-        ),
-        inviteCode: data['inviteCode'] as String? ?? '',
-        currency: data['currency'] as String? ?? 'MAD',
-        photoUrl: data['photoUrl'] as String?,
-        isPersonal: data['isPersonal'] as bool? ?? false,
-      );
+    id: data['id'] as String? ?? '',
+    name: data['name'] as String? ?? '',
+    createdBy: data['createdBy'] as String? ?? '',
+    createdAt: DateTime.fromMillisecondsSinceEpoch(
+      (data['createdAtMillis'] as num?)?.toInt() ?? 0,
+    ),
+    inviteCode: data['inviteCode'] as String? ?? '',
+    currency: data['currency'] as String? ?? 'MAD',
+    photoUrl: data['photoUrl'] as String?,
+    isPersonal: data['isPersonal'] as bool? ?? false,
+  );
 
   Future<void> updateGroupName({
     required String groupId,
@@ -221,10 +238,7 @@ class GroupService {
       batch ??= _db.batch();
       batch!.set(
         _groups.doc(membership.id).collection('members').doc(uid),
-        {
-          'displayName': displayName,
-          'photoUrl': photoUrl,
-        },
+        {'displayName': displayName, 'photoUrl': photoUrl},
         SetOptions(merge: true),
       );
       ops++;
@@ -254,12 +268,33 @@ class GroupService {
     await batch.commit();
   }
 
-  Future<void> deleteGroup({
-    required String groupId,
-    required String creatorUid,
-  }) async {
-    await _backend.call('deleteGroup', {'groupId': groupId});
+  /// Deleting a group sweeps every movement, audit entry, settlement and
+  /// storage object server-side, so it gets a much longer budget than a normal
+  /// write instead of inheriting the short interactive-call timeout.
+  ///
+  /// No creator id is accepted: ownership is proven by the caller's ID token
+  /// and checked against the group document by the function, so passing a uid
+  /// here would only look like it was being verified when it is ignored.
+  Future<void> deleteGroup({required String groupId}) async {
+    await _backend.call('deleteGroup', {
+      'groupId': groupId,
+    }, timeout: const Duration(seconds: 120));
   }
+
+  /// Server read, so a just-deleted group is not reported from the cache.
+  /// Members lose read access once a group is gone, which counts as deleted.
+  Future<bool> groupExists(String groupId) async {
+    try {
+      final snap = await _groups
+          .doc(groupId)
+          .get(const GetOptions(source: Source.server));
+      return snap.exists;
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied' || e.code == 'not-found') return false;
+      rethrow;
+    }
+  }
+
   Stream<List<Group>> watchMemberships(String uid) {
     return _db
         .collection('users')
@@ -268,14 +303,14 @@ class GroupService {
         .orderBy('joinedAt', descending: true)
         .snapshots()
         .asyncMap((snap) async {
-      final groupSnaps = await Future.wait(
-        snap.docs.map((doc) => _groups.doc(doc.id).get()),
-      );
-      return groupSnaps
-          .where((groupSnap) => groupSnap.exists)
-          .map(Group.fromDoc)
-          .toList();
-    });
+          final groupSnaps = await Future.wait(
+            snap.docs.map((doc) => _groups.doc(doc.id).get()),
+          );
+          return groupSnaps
+              .where((groupSnap) => groupSnap.exists)
+              .map(Group.fromDoc)
+              .toList();
+        });
   }
 
   Future<void> setNotificationsMuted({
@@ -283,16 +318,17 @@ class GroupService {
     required String uid,
     required bool muted,
   }) {
-    return _groups
-        .doc(groupId)
-        .collection('members')
-        .doc(uid)
-        .set({'notificationsMuted': muted}, SetOptions(merge: true));
+    return _groups.doc(groupId).collection('members').doc(uid).set({
+      'notificationsMuted': muted,
+    }, SetOptions(merge: true));
   }
 
   Future<bool> isMember(String groupId, String uid) async {
-    final snap =
-        await _groups.doc(groupId).collection('members').doc(uid).get();
+    final snap = await _groups
+        .doc(groupId)
+        .collection('members')
+        .doc(uid)
+        .get();
     return snap.exists;
   }
 }

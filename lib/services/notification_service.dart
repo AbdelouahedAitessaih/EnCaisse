@@ -21,12 +21,15 @@ class NotificationService {
     FirebaseMessaging? messaging,
     FirebaseFirestore? firestore,
     FlutterLocalNotificationsPlugin? local,
-  })  : _messaging = messaging ?? FirebaseMessaging.instance,
-        _db = firestore ?? FirebaseFirestore.instance,
-        _local = local ?? FlutterLocalNotificationsPlugin();
+  }) : _messagingField = messaging,
+       _firestoreField = firestore,
+       _local = local ?? FlutterLocalNotificationsPlugin();
 
-  final FirebaseMessaging _messaging;
-  final FirebaseFirestore _db;
+  FirebaseMessaging get _messaging =>
+      _messagingField ??= FirebaseMessaging.instance;
+  FirebaseFirestore get _db => _firestoreField ??= FirebaseFirestore.instance;
+  FirebaseMessaging? _messagingField;
+  FirebaseFirestore? _firestoreField;
   final FlutterLocalNotificationsPlugin _local;
 
   static const eventChannelId = 'encaisse_events';
@@ -71,21 +74,24 @@ class NotificationService {
     if (!kIsWeb && Platform.isAndroid) {
       await _local
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
     }
 
     await _foregroundSub?.cancel();
-    _foregroundSub =
-        FirebaseMessaging.onMessage.listen(_showForegroundMessage);
+    _foregroundSub = FirebaseMessaging.onMessage.listen(_showForegroundMessage);
     await _openedSub?.cancel();
-    _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpen);
+    _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(
+      _handleMessageOpen,
+    );
 
     if (uid != null) {
       await _saveToken(uid);
       await _tokenRefreshSub?.cancel();
-      _tokenRefreshSub =
-          _messaging.onTokenRefresh.listen((token) => _persistToken(uid, token));
+      _tokenRefreshSub = _messaging.onTokenRefresh.listen(
+        (token) => _persistToken(uid, token),
+      );
     }
 
     final initial = await _messaging.getInitialMessage();
@@ -128,8 +134,10 @@ class NotificationService {
 
   Future<void> _createChannels() async {
     if (kIsWeb || !Platform.isAndroid) return;
-    final android = _local.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _local
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.createNotificationChannel(
       const AndroidNotificationChannel(
         eventChannelId,
@@ -141,22 +149,34 @@ class NotificationService {
   }
 
   Future<void> _saveToken(String uid) async {
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _persistToken(uid, token);
+    try {
+      final token = await _messaging.getToken();
+      if (token != null) {
+        await _persistToken(uid, token);
+      }
+    } on FirebaseException catch (e) {
+      debugPrint('FCM getToken failed: ${e.code} - ${e.message}');
+    } catch (e) {
+      debugPrint('FCM getToken error: $e');
     }
   }
 
   Future<void> _persistToken(String uid, String token) async {
-    final ref = _db.collection('users').doc(uid);
-    final snap = await ref.get();
-    // Do not create a stub user doc — that races profile creation.
-    if (!snap.exists) return;
-    await ref.set({
-      'fcmToken': token,
-      'fcmTokens': FieldValue.arrayUnion([token]),
-      'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      final ref = _db.collection('users').doc(uid);
+      final snap = await ref.get();
+      // Do not create a stub user doc — that races profile creation.
+      if (!snap.exists) return;
+      await ref.set({
+        'fcmToken': token,
+        'fcmTokens': FieldValue.arrayUnion([token]),
+        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (e) {
+      debugPrint('FCM persistToken failed: ${e.code} - ${e.message}');
+    } catch (e) {
+      debugPrint('FCM persistToken error: $e');
+    }
   }
 
   Future<void> setNotificationPreferences({
@@ -178,12 +198,18 @@ class NotificationService {
       return;
     }
     final zoneId = await DeviceRegion.timeZoneId();
-    await _db.collection('users').doc(uid).set({
-      'lastActiveAt': FieldValue.serverTimestamp(),
-      if (zoneId != null && zoneId.isNotEmpty) 'timeZone': zoneId,
-    }, SetOptions(merge: true));
-    _lastActivityWriteUid = uid;
-    _lastActivityWriteAt = now;
+    // Best-effort engagement telemetry. It must never surface as an unhandled
+    // async error or block the action the user actually took.
+    try {
+      await _db.collection('users').doc(uid).set({
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        if (zoneId != null && zoneId.isNotEmpty) 'timeZone': zoneId,
+      }, SetOptions(merge: true));
+      _lastActivityWriteUid = uid;
+      _lastActivityWriteAt = now;
+    } on FirebaseException catch (e) {
+      debugPrint('recordAppActivity(${e.code}) skipped');
+    }
   }
 
   Future<void> recordGroupViewed({
@@ -195,21 +221,22 @@ class NotificationService {
         .doc(uid)
         .collection('memberships')
         .doc(groupId)
-        .set({'lastViewedAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+        .set({
+          'lastViewedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
   }
 
   Future<void> _showForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
-    final title = notification?.title ??
-        message.data['title'] as String? ??
-        'EnCaisse';
-    final body =
-        notification?.body ?? message.data['body'] as String? ?? '';
+    final title =
+        notification?.title ?? message.data['title'] as String? ?? 'EnCaisse';
+    final body = notification?.body ?? message.data['body'] as String? ?? '';
     if (body.isEmpty && notification == null) return;
     await _showLocalEvent(
       title: title,
       body: body,
-      id: message.messageId?.hashCode ??
+      id:
+          message.messageId?.hashCode ??
           Object.hash(title, body, DateTime.now().millisecondsSinceEpoch),
     );
   }
@@ -300,8 +327,10 @@ class NotificationService {
         updates['fcmTokens'] = FieldValue.arrayRemove([token]);
       }
       await ref.set(updates, SetOptions(merge: true));
+    } on FirebaseException catch (e) {
+      debugPrint('clearTokenOnSignOut failed: ${e.code} - ${e.message}');
     } catch (e) {
-      debugPrint('clearTokenOnSignOut: $e');
+      debugPrint('clearTokenOnSignOut error: $e');
     }
   }
 }

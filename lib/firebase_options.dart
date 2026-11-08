@@ -9,9 +9,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'Web is not configured for EnCaisse. Use Android or iOS.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -40,5 +38,14 @@ class DefaultFirebaseOptions {
     projectId: 'encaisse-3c7fb',
     storageBucket: 'encaisse-3c7fb.firebasestorage.app',
     iosBundleId: 'com.encaisse.encaisse',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDc3DcjdOEjSNiKp9w5oEJJzQVtxMql88o',
+    appId: '1:559211214178:web:placeholder',
+    messagingSenderId: '559211214178',
+    projectId: 'encaisse-3c7fb',
+    authDomain: 'encaisse-3c7fb.firebaseapp.com',
+    storageBucket: 'encaisse-3c7fb.firebasestorage.app',
   );
 }

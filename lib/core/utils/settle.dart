@@ -41,10 +41,7 @@ class SettleTransfer {
 }
 
 class SettleSummary {
-  const SettleSummary({
-    required this.memberNets,
-    required this.transfers,
-  });
+  const SettleSummary({required this.memberNets, required this.transfers});
 
   final List<MemberNet> memberNets;
   final List<SettleTransfer> transfers;
@@ -71,16 +68,11 @@ SettleSummary computeSettle({
 
   for (final mov in movements) {
     if (mov.deleted) continue;
-    if (!depositsBy.containsKey(mov.createdBy)) {
-      depositsBy[mov.createdBy] = 0;
-      expensesBy[mov.createdBy] = 0;
-    }
-    if (mov.type == MovementType.deposit) {
-      depositsBy[mov.createdBy] =
-          (depositsBy[mov.createdBy] ?? 0) + mov.amount.abs();
-    } else {
-      expensesBy[mov.createdBy] =
-          (expensesBy[mov.createdBy] ?? 0) + mov.amount.abs();
+    final bucket = mov.type == MovementType.deposit ? depositsBy : expensesBy;
+    for (final share in mov.allocation.entries) {
+      depositsBy.putIfAbsent(share.key, () => 0);
+      expensesBy.putIfAbsent(share.key, () => 0);
+      bucket[share.key] = bucket[share.key]! + share.value.abs();
     }
   }
 
@@ -92,9 +84,7 @@ SettleSummary computeSettle({
         (expensesBy[payment.toUid] ?? 0) + payment.amount.abs();
   }
 
-  final names = <String, String>{
-    for (final m in members) m.uid: m.displayName,
-  };
+  final names = <String, String>{for (final m in members) m.uid: m.displayName};
   for (final mov in movements) {
     if (mov.deleted) continue;
     names.putIfAbsent(
@@ -132,28 +122,35 @@ SettleSummary computeSettle({
 
   final n = nets.length;
   final fairShare = n == 0 ? 0.0 : totalNet / n;
-  final withDelta = nets
-      .map(
-        (m) => MemberNet(
-          uid: m.uid,
-          displayName: m.displayName,
-          deposits: m.deposits,
-          expenses: m.expenses,
-          net: m.net,
-          delta: m.net - fairShare,
-        ),
-      )
-      .toList()
-    ..sort((a, b) => b.delta.compareTo(a.delta));
+  final withDelta =
+      nets
+          .map(
+            (m) => MemberNet(
+              uid: m.uid,
+              displayName: m.displayName,
+              deposits: m.deposits,
+              expenses: m.expenses,
+              net: m.net,
+              delta: m.net - fairShare,
+            ),
+          )
+          .toList()
+        ..sort((a, b) => b.delta.compareTo(a.delta));
 
-  final creditors = withDelta
-      .where((m) => m.delta > 0.009)
-      .map((m) => MapEntry(m, m.delta))
-      .toList();
-  final debtors = withDelta
-      .where((m) => m.delta < -0.009)
-      .map((m) => MapEntry(m, -m.delta))
-      .toList();
+  // Largest debt against largest credit first: each step clears at least one
+  // side, so the list stays at most n−1 transfers and usually far fewer.
+  final creditors =
+      withDelta
+          .where((m) => m.delta > 0.009)
+          .map((m) => MapEntry(m, m.delta))
+          .toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+  final debtors =
+      withDelta
+          .where((m) => m.delta < -0.009)
+          .map((m) => MapEntry(m, -m.delta))
+          .toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
 
   final transfers = <SettleTransfer>[];
   var i = 0;

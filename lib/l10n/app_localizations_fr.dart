@@ -428,7 +428,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get delete => 'Supprimer';
 
   @override
-  String get movementDeletedUndo => 'Mouvement supprimé — Annuler';
+  String get movementDeletedUndo => 'Mouvement supprimé';
 
   @override
   String get undo => 'Annuler';
@@ -764,7 +764,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chartsTitle => 'Graphiques';
 
   @override
-  String get categoryBreakdown => 'Par catégorie';
+  String get categoryBreakdown => 'Dépenses par catégorie';
 
   @override
   String get exportCsv => 'Exporter CSV';
@@ -927,4 +927,296 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get creatingPersonal => 'Ouverture de votre caisse personnelle…';
+
+  @override
+  String get categoryFood => 'Nourriture';
+
+  @override
+  String get categoryTransport => 'Transport';
+
+  @override
+  String get categoryRent => 'Loyer';
+
+  @override
+  String get categoryUtilities => 'Services publics';
+
+  @override
+  String get categoryEntertainment => 'Divertissement';
+
+  @override
+  String get categoryShopping => 'Achats';
+
+  @override
+  String get categoryHealth => 'Santé';
+
+  @override
+  String get categoryTravel => 'Voyage';
+
+  @override
+  String get categorySalary => 'Salaire';
+
+  @override
+  String get categoryGift => 'Cadeau';
+
+  @override
+  String get categoryOther => 'Autre';
+
+  @override
+  String get retry => 'Réessayer';
+
+  @override
+  String get caisseDeleting => 'Suppression de la caisse…';
+
+  @override
+  String get groupDeleting => 'Suppression du groupe…';
+
+  @override
+  String get balancePerCaisse =>
+      'Les soldes en devises différentes ne sont jamais additionnés.';
+
+  @override
+  String balanceAcrossCaisses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Total sur $count caisses',
+      one: 'Total sur $count caisse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountTitle => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Supprimez votre compte EnCaisse et toutes vos données personnelles';
+
+  @override
+  String get deleteAccountConfirm => 'Supprimer votre compte ?';
+
+  @override
+  String get deleteAccountWarning =>
+      'Cette action est irréversible. Pour des raisons de sécurité, reconnectez-vous avant de supprimer.';
+
+  @override
+  String get security => 'Sécurité';
+
+  @override
+  String get appLock => 'Verrouillage de l\'app';
+
+  @override
+  String get appLockHint =>
+      'Demander l\'empreinte, le visage ou le code de l\'appareil à l\'ouverture d\'EnCaisse';
+
+  @override
+  String get appLockUnavailable =>
+      'Aucune empreinte, reconnaissance faciale ni verrouillage d\'écran n\'est configuré sur cet appareil';
+
+  @override
+  String get appLockReason => 'Déverrouiller EnCaisse';
+
+  @override
+  String get appLockTitle => 'EnCaisse est verrouillé';
+
+  @override
+  String get appLockUnlock => 'Déverrouiller';
+
+  @override
+  String convertedAmount(String amount) {
+    return '= $amount dans la devise de la caisse';
+  }
+
+  @override
+  String get enterValidRate => 'Saisissez un taux de change valide';
+
+  @override
+  String exchangeRateLabel(String from, String to) {
+    return 'Taux de change (1 $from = ? $to)';
+  }
+
+  @override
+  String get exchangeRateUnavailable =>
+      'Taux indisponible. Saisissez-le manuellement.';
+
+  @override
+  String get formerMember => 'Ancien membre';
+
+  @override
+  String homeWidgetMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count autres caisses',
+      one: '+1 autre caisse',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWidgetUpdated(String time) {
+    return 'Mis à jour à $time';
+  }
+
+  @override
+  String get markReceived => 'Marquer comme reçu';
+
+  @override
+  String markReceivedConfirm(String name, String amount) {
+    return 'Confirmer que vous avez reçu $amount de $name ?';
+  }
+
+  @override
+  String paidInCurrency(String amount, String rate) {
+    return 'À l\'origine $amount · taux $rate';
+  }
+
+  @override
+  String paymentRequestText(String name, String amount, String group) {
+    return 'Bonjour $name, tu me dois $amount dans la caisse « $group » sur EnCaisse. Merci !';
+  }
+
+  @override
+  String get recurringBadge => 'Récurrent';
+
+  @override
+  String get recurringCreatorLeft => 'Arrêté : son créateur a quitté la caisse';
+
+  @override
+  String get recurringEmpty =>
+      'Choisissez « Répéter » en ajoutant un mouvement pour automatiser loyer, abonnements ou argent de poche.';
+
+  @override
+  String recurringNext(String date) {
+    return 'Prochain : $date';
+  }
+
+  @override
+  String recurringSetupFailed(String details) {
+    return 'Mouvement enregistré, mais la répétition n\'a pas pu être créée : $details';
+  }
+
+  @override
+  String get recurringSkippedBalance =>
+      'Dernière exécution ignorée : solde insuffisant';
+
+  @override
+  String get recurringSkippedSplit =>
+      'Dernière exécution ignorée : des participants ont quitté la caisse';
+
+  @override
+  String get recurringStop => 'Arrêter';
+
+  @override
+  String get recurringStopConfirm =>
+      'Arrêter ce mouvement récurrent ? Les mouvements déjà créés sont conservés.';
+
+  @override
+  String get recurringTitle => 'Mouvements récurrents';
+
+  @override
+  String get repeatLabel => 'Répéter';
+
+  @override
+  String get repeatNever => 'Jamais';
+
+  @override
+  String get repeatWeekly => 'Chaque semaine';
+
+  @override
+  String get repeatMonthly => 'Chaque mois';
+
+  @override
+  String get requestPayment => 'Demander le paiement';
+
+  @override
+  String get searchMovements => 'Rechercher des mouvements';
+
+  @override
+  String shareInviteLinkText(String name, String link, String code) {
+    return 'Rejoins ma caisse « $name » sur EnCaisse : $link\nOu saisis le code $code dans l\'app.';
+  }
+
+  @override
+  String get splitBalanced => 'Les parts correspondent au montant';
+
+  @override
+  String splitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Partagé par $count',
+      one: 'Pour 1 personne',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitCustom => 'Personnalisé';
+
+  @override
+  String get splitEqually => 'À parts égales';
+
+  @override
+  String get splitEveryone => 'Tout le monde';
+
+  @override
+  String get splitJustMe => 'Moi seul';
+
+  @override
+  String get splitMustMatch => 'La somme des parts doit égaler le montant';
+
+  @override
+  String get splitPickSomeone => 'Choisissez au moins une personne';
+
+  @override
+  String splitRemaining(String amount) {
+    return 'Reste à répartir : $amount';
+  }
+
+  @override
+  String get splitTitleDeposit => 'Versé par';
+
+  @override
+  String get splitTitleExpense => 'Réparti entre';
+
+  @override
+  String get you => 'vous';
+
+  @override
+  String get forgotPassword => 'Mot de passe oublié ?';
+
+  @override
+  String get resetPasswordTitle => 'Réinitialiser le mot de passe';
+
+  @override
+  String get resetPasswordBody =>
+      'Saisissez l\'e-mail de votre compte et nous vous enverrons un lien pour choisir un nouveau mot de passe.';
+
+  @override
+  String get resetPasswordSend => 'Envoyer le lien';
+
+  @override
+  String resetPasswordSent(String email) {
+    return 'Si un compte existe pour $email, un lien de réinitialisation arrive. Vérifiez votre boîte de réception et vos spams.';
+  }
+
+  @override
+  String get resetPasswordTooMany =>
+      'Trop de tentatives. Patientez quelques minutes puis réessayez.';
+
+  @override
+  String get resetPasswordFailed =>
+      'Impossible d\'envoyer l\'e-mail. Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get memberSettled => 'À jour';
+
+  @override
+  String get addPhoto => 'Ajouter une photo';
+
+  @override
+  String availableInCaisse(String amount) {
+    return 'Disponible : $amount';
+  }
 }

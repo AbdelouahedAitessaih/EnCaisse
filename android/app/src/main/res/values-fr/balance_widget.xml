@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="balance_widget_description">Les soldes de vos caisses en un coup d\'œil</string>
+    <string name="balance_widget_empty">Ouvrez EnCaisse pour charger vos soldes</string>
+</resources>

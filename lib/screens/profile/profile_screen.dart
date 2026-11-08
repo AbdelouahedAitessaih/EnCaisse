@@ -48,11 +48,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final file = await pickGalleryImage(
-      imageQuality: 80,
-      maxWidth: 1024,
-    );
-    if (file != null) {
+    final file = await pickGalleryImage(imageQuality: 80, maxWidth: 1024);
+    if (file != null && mounted) {
       setState(() => _localPhotoPath = file.path);
     }
   }
@@ -74,19 +71,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       var photoUrl = _remotePhotoUrl;
       if (_localPhotoPath != null) {
-        photoUrl = await ref.read(storageServiceProvider).uploadUserAvatar(
-              uid: user.uid,
-              localPath: _localPhotoPath!,
-            );
+        photoUrl = await ref
+            .read(storageServiceProvider)
+            .uploadUserAvatar(uid: user.uid, localPath: _localPhotoPath!);
       }
 
       final displayName = _name.text.trim();
-      await ref.read(authServiceProvider).updateProfile(
+      await ref
+          .read(authServiceProvider)
+          .updateProfile(
             uid: user.uid,
             displayName: displayName,
             photoUrl: photoUrl,
           );
-      await ref.read(groupServiceProvider).syncMemberProfile(
+      await ref
+          .read(groupServiceProvider)
+          .syncMemberProfile(
             uid: user.uid,
             displayName: displayName,
             photoUrl: photoUrl,
@@ -97,9 +97,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _remotePhotoUrl = photoUrl;
           _localPhotoPath = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileUpdated)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.profileUpdated)));
         Navigator.pop(context);
       }
     } catch (e) {
@@ -118,8 +118,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final resolvedName = (profile?.displayName.trim().isNotEmpty == true)
         ? profile!.displayName
         : (user?.displayName?.trim().isNotEmpty == true
-            ? user!.displayName!
-            : (user?.email?.split('@').first ?? ''));
+              ? user!.displayName!
+              : (user?.email?.split('@').first ?? ''));
     final resolvedEmail = (profile?.email.trim().isNotEmpty == true)
         ? profile!.email
         : (user?.email ?? '');
@@ -132,23 +132,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final preview = _localPhotoPath != null
         ? FileImage(File(_localPhotoPath!))
         : (_remotePhotoUrl != null && _remotePhotoUrl!.isNotEmpty
-            ? (_remotePhotoUrl!.startsWith('storage://') ||
-                    _remotePhotoUrl!.contains('firebasestorage.googleapis.com')
-                ? null
-                : NetworkImage(_remotePhotoUrl!))
-            : (resolvedPhoto != null && resolvedPhoto.isNotEmpty
-                ? (resolvedPhoto.startsWith('storage://') ||
-                        resolvedPhoto.contains('firebasestorage.googleapis.com')
+              ? (_remotePhotoUrl!.startsWith('storage://') ||
+                        _remotePhotoUrl!.contains(
+                          'firebasestorage.googleapis.com',
+                        )
                     ? null
-                    : NetworkImage(resolvedPhoto))
-                : null));
-    final privatePhoto = _localPhotoPath == null &&
+                    : NetworkImage(_remotePhotoUrl!))
+              : (resolvedPhoto != null && resolvedPhoto.isNotEmpty
+                    ? (resolvedPhoto.startsWith('storage://') ||
+                              resolvedPhoto.contains(
+                                'firebasestorage.googleapis.com',
+                              )
+                          ? null
+                          : NetworkImage(resolvedPhoto))
+                    : null));
+    final privatePhoto =
+        _localPhotoPath == null &&
         ((_remotePhotoUrl?.startsWith('storage://') ?? false) ||
-            (_remotePhotoUrl?.contains('firebasestorage.googleapis.com') ?? false) ||
+            (_remotePhotoUrl?.contains('firebasestorage.googleapis.com') ??
+                false) ||
             (_remotePhotoUrl == null &&
                 (resolvedPhoto?.startsWith('storage://') ?? false)) ||
             (_remotePhotoUrl == null &&
-                (resolvedPhoto?.contains('firebasestorage.googleapis.com') ?? false)));
+                (resolvedPhoto?.contains('firebasestorage.googleapis.com') ??
+                    false)));
 
     final initial = resolvedName.isNotEmpty
         ? resolvedName[0].toUpperCase()
@@ -199,8 +206,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: IconButton(
                             tooltip: l10n.changePhoto,
                             onPressed: _loading ? null : _pickPhoto,
-                            icon: const Icon(Icons.camera_alt_outlined,
-                                color: Colors.white, size: 20),
+                            icon: const Icon(
+                              Icons.camera_alt_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),
@@ -227,7 +237,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),
-                  Text(_error!, style: const TextStyle(color: AppColors.error)),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 32),
                 ElevatedButton(

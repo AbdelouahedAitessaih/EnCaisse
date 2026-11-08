@@ -6,3 +6,9 @@ gradle-wrapper.jar
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
+
+# Release signing material must never be tracked.
+/key.properties
+/*.jks
+/*.keystore
+/*.pem

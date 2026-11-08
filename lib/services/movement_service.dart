@@ -11,14 +11,33 @@ class InsufficientBalanceException implements Exception {
   String toString() => 'insufficient_balance';
 }
 
+/// What was actually paid when a movement was typed in another currency.
+class ForeignAmount {
+  const ForeignAmount({
+    required this.currency,
+    required this.amount,
+    required this.rate,
+  });
+
+  final String currency;
+  final double amount;
+
+  /// Group-currency units per one unit of [currency].
+  final double rate;
+
+  Map<String, dynamic> toPayload() => {
+    'currency': currency,
+    'amount': amount,
+    'rate': rate,
+  };
+}
+
 /// Reads live data from Firestore; all ledger writes go through trusted
 /// callable functions, which apply balance checks and audit records atomically.
 class MovementService {
-  MovementService({
-    FirebaseFirestore? firestore,
-    BackendService? backend,
-  })  : _db = firestore ?? FirebaseFirestore.instance,
-        _backend = backend ?? BackendService();
+  MovementService({FirebaseFirestore? firestore, BackendService? backend})
+    : _db = firestore ?? FirebaseFirestore.instance,
+      _backend = backend ?? BackendService();
 
   final FirebaseFirestore _db;
   final BackendService _backend;
@@ -51,7 +70,13 @@ class MovementService {
     return _movements(groupId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(Movement.fromDoc).toList());
+        .map((snap) => snap.docs.map(Movement.fromDoc).toList())
+        .handleError((e) {
+          if (e is FirebaseException && e.code == 'permission-denied') {
+            return <Movement>[];
+          }
+          throw e;
+        });
   }
 
   Stream<List<AuditEntry>> watchAuditForMovement(
@@ -62,10 +87,16 @@ class MovementService {
         .where('movementId', isEqualTo: movementId)
         .snapshots()
         .map((snap) {
-      final entries = snap.docs.map(AuditEntry.fromDoc).toList()
-        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      return entries;
-    });
+          final entries = snap.docs.map(AuditEntry.fromDoc).toList()
+            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          return entries;
+        })
+        .handleError((e) {
+          if (e is FirebaseException && e.code == 'permission-denied') {
+            return <AuditEntry>[];
+          }
+          throw e;
+        });
   }
 
   Future<Movement> createMovement({
@@ -77,6 +108,8 @@ class MovementService {
     required String uid,
     required String displayName,
     String? receiptUrl,
+    Map<String, double>? split,
+    ForeignAmount? original,
   }) async {
     final movementId = _movements(groupId).doc().id;
     final result = await _call('createMovement', {
@@ -88,6 +121,8 @@ class MovementService {
       'category': category,
       'displayName': displayName,
       'receiptUrl': receiptUrl,
+      'split': split,
+      'original': original?.toPayload(),
     });
     final now = _serverTime(result);
     return Movement(
@@ -102,6 +137,10 @@ class MovementService {
       updatedAt: now,
       updatedBy: uid,
       receiptUrl: receiptUrl,
+      split: split,
+      originalCurrency: original?.currency,
+      originalAmount: original?.amount,
+      exchangeRate: original?.rate,
     );
   }
 
@@ -115,9 +154,13 @@ class MovementService {
     required String uid,
     required String displayName,
     String? receiptUrl,
+    Map<String, double>? split,
+    ForeignAmount? original,
   }) async {
-    final effectiveType =
-        existing.isStartingBalance ? MovementType.deposit : type;
+    final effectiveType = existing.isStartingBalance
+        ? MovementType.deposit
+        : type;
+    final plain = existing.isStartingBalance;
     await _call('updateMovement', {
       'groupId': groupId,
       'movementId': existing.id,
@@ -127,6 +170,8 @@ class MovementService {
       'category': existing.isStartingBalance ? 'Other' : category,
       'displayName': displayName,
       if (!existing.isStartingBalance) 'receiptUrl': receiptUrl,
+      'split': plain ? null : split,
+      'original': plain ? null : original?.toPayload(),
     });
     return Movement(
       id: existing.id,
@@ -139,12 +184,68 @@ class MovementService {
       createdAt: existing.createdAt,
       updatedAt: DateTime.now(),
       updatedBy: uid,
-      receiptUrl:
-          existing.isStartingBalance ? existing.receiptUrl : receiptUrl ?? existing.receiptUrl,
+      receiptUrl: existing.isStartingBalance
+          ? existing.receiptUrl
+          : receiptUrl ?? existing.receiptUrl,
       deleted: existing.deleted,
       deletedAt: existing.deletedAt,
       isStartingBalance: existing.isStartingBalance,
+      split: plain ? null : split,
+      originalCurrency: plain ? null : original?.currency,
+      originalAmount: plain ? null : original?.amount,
+      exchangeRate: plain ? null : original?.rate,
+      recurringId: existing.recurringId,
     );
+  }
+
+  Stream<List<RecurringMovement>> watchRecurring(String groupId) {
+    return _db
+        .collection('groups')
+        .doc(groupId)
+        .collection('recurring')
+        .orderBy('nextRunAt')
+        .snapshots()
+        .map((snap) => snap.docs.map(RecurringMovement.fromDoc).toList());
+  }
+
+  Future<void> createRecurring({
+    required String groupId,
+    required MovementType type,
+    required double amount,
+    required String title,
+    required String category,
+    required String displayName,
+    required RecurrenceFrequency frequency,
+    required DateTime firstRunAt,
+    Map<String, double>? split,
+  }) async {
+    await _backend.call('createRecurring', {
+      'groupId': groupId,
+      'recurringId': _db
+          .collection('groups')
+          .doc(groupId)
+          .collection('recurring')
+          .doc()
+          .id,
+      'type': type.value,
+      'amount': amount.abs(),
+      'title': title.trim(),
+      'category': category,
+      'displayName': displayName,
+      'split': split,
+      'frequency': frequency.value,
+      'firstRunAtMillis': firstRunAt.millisecondsSinceEpoch,
+    });
+  }
+
+  Future<void> deleteRecurring({
+    required String groupId,
+    required String recurringId,
+  }) async {
+    await _backend.call('deleteRecurring', {
+      'groupId': groupId,
+      'recurringId': recurringId,
+    });
   }
 
   Future<Movement> softDeleteMovement({

@@ -4,19 +4,13 @@ import '../core/theme/app_colors.dart';
 
 /// Moroccan zellige-inspired geometric motif — flat teal/coral, no shadows.
 class ZelligePattern extends StatelessWidget {
-  const ZelligePattern({
-    super.key,
-    this.size = 200,
-  });
+  const ZelligePattern({super.key, this.size = 200});
 
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size.square(size),
-      painter: _ZelligePainter(),
-    );
+    return CustomPaint(size: Size.square(size), painter: _ZelligePainter());
   }
 }
 
@@ -67,7 +61,11 @@ class _ZelligePainter extends CustomPainter {
     // Center square
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(cx, cy), width: r * 0.35, height: r * 0.35),
+        Rect.fromCenter(
+          center: Offset(cx, cy),
+          width: r * 0.35,
+          height: r * 0.35,
+        ),
         const Radius.circular(4),
       ),
       teal,

@@ -35,57 +35,12 @@ class AppSelectField<T> extends StatelessWidget {
     return null;
   }
 
-  Future<T?> _openSheet(BuildContext context) {
-    return showModalBottomSheet<T>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (ctx) {
-        final maxHeight = MediaQuery.sizeOf(ctx).height * 0.45;
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                  child: Text(
-                    label,
-                    style: Theme.of(ctx).textTheme.titleMedium,
-                  ),
-                ),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: options.length,
-                    itemBuilder: (context, index) {
-                      final option = options[index];
-                      final selected = option.value == value;
-                      return ListTile(
-                        title: Text(
-                          option.label,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: selected
-                            ? Icon(
-                                Icons.check,
-                                color: Theme.of(context).colorScheme.primary,
-                              )
-                            : null,
-                        onTap: () => Navigator.pop(ctx, option.value),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Future<T?> _openSheet(BuildContext context) => showAppSelectSheet<T>(
+    context: context,
+    label: label,
+    options: options,
+    value: value,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -116,14 +71,76 @@ class AppSelectField<T> extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: _selectedLabel == null
-                        ? scheme.onSurfaceVariant
-                        : scheme.onSurface,
-                  ),
+                color: _selectedLabel == null
+                    ? scheme.onSurfaceVariant
+                    : scheme.onSurface,
+              ),
             ),
           ),
         );
       },
     );
   }
+}
+
+/// The bottom-sheet picker behind [AppSelectField], for controls that are not
+/// a full form field (e.g. a currency button inside another field).
+Future<T?> showAppSelectSheet<T>({
+  required BuildContext context,
+  required String label,
+  required List<AppSelectOption<T>> options,
+  T? value,
+}) {
+  // Otherwise closing the sheet hands focus back to the last text field and
+  // the keyboard pops up over the form.
+  FocusManager.instance.primaryFocus?.unfocus();
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (ctx) {
+      final maxHeight = MediaQuery.sizeOf(ctx).height * 0.45;
+      return SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Text(label, style: Theme.of(ctx).textTheme.titleMedium),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  itemBuilder: (context, index) {
+                    final option = options[index];
+                    final selected = option.value == value;
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                      ),
+                      title: Text(
+                        option.label,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: selected
+                          ? Icon(
+                              Icons.check,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          : null,
+                      onTap: () => Navigator.pop(ctx, option.value),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

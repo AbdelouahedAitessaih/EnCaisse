@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="balance_widget_name">EnCaisse</string>
+    <string name="balance_widget_description">Balances of your caisses at a glance</string>
+    <string name="balance_widget_empty">Open EnCaisse to load your balances</string>
+    <color name="balance_widget_surface">#FAFAF8</color>
+    <color name="balance_widget_ink">#14201B</color>
+    <color name="balance_widget_muted">#5C6B64</color>
+</resources>

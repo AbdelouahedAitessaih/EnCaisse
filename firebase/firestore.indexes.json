@@ -24,6 +24,14 @@
         { "fieldPath": "deleted", "order": "ASCENDING" },
         { "fieldPath": "deletedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "recurring",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "nextRunAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

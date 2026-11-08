@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/settings_provider.dart';
 import '../../router/app_router.dart';
@@ -70,30 +69,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 onPageChanged: (i) => setState(() => _page = i),
                 itemBuilder: (context, index) {
                   final page = pages[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        BrandedLottie(asset: page.asset, height: 200),
-                        const SizedBox(height: 32),
-                        Text(
-                          page.title,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                          textAlign: TextAlign.center,
+                  return LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          page.body,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.color,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            BrandedLottie(
+                              asset: page.asset,
+                              height: (constraints.maxHeight * 0.45).clamp(
+                                96.0,
+                                200.0,
                               ),
-                          textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              page.title,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              page.body,
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
@@ -108,7 +120,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   width: _page == i ? 24 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _page == i ? AppColors.primary : AppColors.border,
+                    color: _page == i
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outlineVariant,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 );

@@ -60,7 +60,8 @@ Path: **Grow users → Store presence → Main store listing**
 2. Upload graphics from `docs/play-store/`:
    - `icon-512.png`
    - `feature-graphic.png`
-   - at least **two** of `phone-1-home.png`, `phone-2-group.png`, `phone-3-movement.png`
+   - the six phone screenshots in `screenshots/en-US/` (and `screenshots/fr-FR/`
+     for the French listing), in file order
 3. Set **Application type** / category: **Finance**
 4. Contact email: your support email  
 5. Save → mark listing tasks complete

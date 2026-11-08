@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/zellige_pattern.dart';
@@ -21,7 +22,8 @@ class WelcomeScreen extends StatelessWidget {
               const ZelligePattern(size: 160),
               const SizedBox(height: 32),
               Text(
-                l10n.appName,
+                AppConstants.appName,
+                textDirection: TextDirection.ltr,
                 style: Theme.of(
                   context,
                 ).textTheme.displayLarge?.copyWith(color: AppColors.primary),

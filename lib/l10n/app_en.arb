@@ -1,4 +1,4 @@
-{
+﻿{
   "@@locale": "en",
   "appName": "EnCaisse",
   "tagline": "EnCaisse, ensemble.",
@@ -31,7 +31,9 @@
   "helloName": "Hello, {name}",
   "@helloName": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "noGroupsYet": "No groups yet",
@@ -70,7 +72,9 @@
   "askForCode": "Ask a member for the {length}-character code.",
   "@askForCode": {
     "placeholders": {
-      "length": { "type": "int" }
+      "length": {
+        "type": "int"
+      }
     }
   },
   "inviteCode": "Invite code",
@@ -78,7 +82,9 @@
   "enterCodeLength": "Enter a {length}-character code",
   "@enterCodeLength": {
     "placeholders": {
-      "length": { "type": "int" }
+      "length": {
+        "type": "int"
+      }
     }
   },
   "noGroupForCode": "No group found for this invite code.",
@@ -106,20 +112,28 @@
   "inviteCodeCopied": "Invite code {code} copied",
   "@inviteCodeCopied": {
     "placeholders": {
-      "code": { "type": "String" }
+      "code": {
+        "type": "String"
+      }
     }
   },
   "shareInviteText": "Join my EnCaisse group \"{name}\" with code {code}. EnCaisse, ensemble.",
   "@shareInviteText": {
     "placeholders": {
-      "name": { "type": "String" },
-      "code": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
     }
   },
   "joinOnEncaisse": "Join {name} on EnCaisse",
   "@joinOnEncaisse": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "notificationsMuted": "Notifications muted for this group",
@@ -162,7 +176,7 @@
   "softDeleteHint": "This soft-deletes the movement for 24 hours. You can undo from the snackbar or this screen.",
   "cancel": "Cancel",
   "delete": "Delete",
-  "movementDeletedUndo": "Movement deleted — Undo",
+  "movementDeletedUndo": "Movement deleted",
   "undo": "Undo",
   "movementRestored": "Movement restored",
   "softDeletedCanUndo": "Soft-deleted — you can still undo within 24 hours.",
@@ -191,7 +205,9 @@
   "removeMemberConfirm": "Remove {name} from this group?",
   "@removeMemberConfirm": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "memberRemoved": "Member removed",
@@ -232,22 +248,30 @@
   "memberJoinedBody": "{name} joined {group}",
   "@memberJoinedBody": {
     "placeholders": {
-      "name": { "type": "String" },
-      "group": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
     }
   },
   "joinAGroup": "Join a group",
   "errorWithDetails": "Error: {error}",
   "@errorWithDetails": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "enterValidAmountGtZero": "Enter a valid amount greater than zero.",
   "couldNotLoadAudit": "Could not load audit: {error}",
   "@couldNotLoadAudit": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "newMovementNotify": "New movement",
@@ -259,52 +283,84 @@
   "addedDeposit": "{name} added a deposit: {title}",
   "@addedDeposit": {
     "placeholders": {
-      "name": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "addedExpense": "{name} added an expense: {title}",
   "@addedExpense": {
     "placeholders": {
-      "name": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "addedDepositAmount": "{name} added a deposit of {amount}: {title}",
   "@addedDepositAmount": {
     "placeholders": {
-      "name": { "type": "String" },
-      "amount": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "addedExpenseAmount": "{name} added an expense of {amount}: {title}",
   "@addedExpenseAmount": {
     "placeholders": {
-      "name": { "type": "String" },
-      "amount": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "updatedMovementBy": "{name} updated: {title}",
   "@updatedMovementBy": {
     "placeholders": {
-      "name": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "deletedMovementBy": "{name} deleted: {title}",
   "@deletedMovementBy": {
     "placeholders": {
-      "name": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "restoredMovementBy": "{name} restored: {title}",
   "@restoredMovementBy": {
     "placeholders": {
-      "name": { "type": "String" },
-      "title": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "deletedMarker": "deleted",
@@ -315,7 +371,9 @@
   "verifyEmailBody": "We sent a verification link to {email}. Open it, then tap Continue.",
   "@verifyEmailBody": {
     "placeholders": {
-      "email": { "type": "String" }
+      "email": {
+        "type": "String"
+      }
     }
   },
   "resendVerification": "Resend email",
@@ -329,13 +387,17 @@
   "settleOwes": "{from} owes {to}",
   "@settleOwes": {
     "placeholders": {
-      "from": { "type": "String" },
-      "to": { "type": "String" }
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "memberNet": "Net",
   "chartsTitle": "Charts",
-  "categoryBreakdown": "By category",
+  "categoryBreakdown": "Spending by category",
   "exportCsv": "Export CSV",
   "exportPdf": "Export PDF",
   "exportShared": "Export ready to share",
@@ -385,5 +447,208 @@
   "tourGroup3BodyPersonal": "Open Insights to see spending by category. This caisse is just for you.",
   "tapPhotoToChange": "Tap photo to change",
   "tapPhotoToView": "Tap to view",
-  "creatingPersonal": "Opening your personal caisse…"
+  "creatingPersonal": "Opening your personal caisse…",
+  "categoryFood": "Food",
+  "categoryTransport": "Transport",
+  "categoryRent": "Rent",
+  "categoryUtilities": "Utilities",
+  "categoryEntertainment": "Entertainment",
+  "categoryShopping": "Shopping",
+  "categoryHealth": "Health",
+  "categoryTravel": "Travel",
+  "categorySalary": "Salary",
+  "categoryGift": "Gift",
+  "categoryOther": "Other",
+  "retry": "Retry",
+  "caisseDeleting": "Deleting caisse…",
+  "groupDeleting": "Deleting group…",
+  "balancePerCaisse": "Balances in different currencies are never added together.",
+  "balanceAcrossCaisses": "{count, plural, =1 {Total across {count} caisse} other {Total across {count} caisses}}",
+  "deleteAccountTitle": "Delete account",
+  "deleteAccountSubtitle": "Delete your EnCaisse account and all personal data",
+  "deleteAccountConfirm": "Delete your account?",
+  "deleteAccountWarning": "This cannot be undone. For security, sign in again before deleting.",
+  "@balanceAcrossCaisses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "security": "Security",
+  "appLock": "App lock",
+  "appLockHint": "Ask for your fingerprint, face or device PIN when opening EnCaisse",
+  "appLockUnavailable": "No fingerprint, face or screen lock is set up on this device",
+  "appLockReason": "Unlock EnCaisse",
+  "appLockTitle": "EnCaisse is locked",
+  "appLockUnlock": "Unlock",
+  "convertedAmount": "= {amount} in the caisse currency",
+  "@convertedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "enterValidRate": "Enter a valid exchange rate",
+  "exchangeRateLabel": "Exchange rate (1 {from} = ? {to})",
+  "@exchangeRateLabel": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "exchangeRateUnavailable": "Could not fetch the rate. Enter it manually.",
+  "formerMember": "Former member",
+  "homeWidgetMore": "{count, plural, =1{+1 more caisse} other{+{count} more caisses}}",
+  "@homeWidgetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWidgetUpdated": "Updated {time}",
+  "@homeWidgetUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "markReceived": "Mark as received",
+  "markReceivedConfirm": "Confirm that you received {amount} from {name}?",
+  "@markReceivedConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paidInCurrency": "Originally {amount} · rate {rate}",
+  "@paidInCurrency": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentRequestText": "Hi {name}, you owe me {amount} in the caisse \"{group}\" on EnCaisse. Thanks!",
+  "@paymentRequestText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "recurringBadge": "Recurring",
+  "recurringCreatorLeft": "Stopped: its creator left the caisse",
+  "recurringEmpty": "Choose \"Repeat\" when adding a movement to automate rent, subscriptions or allowances.",
+  "recurringNext": "Next: {date}",
+  "@recurringNext": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recurringSetupFailed": "Movement saved, but the repeat could not be set up: {details}",
+  "@recurringSetupFailed": {
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "recurringSkippedBalance": "Last run skipped: not enough balance",
+  "recurringSkippedSplit": "Last run skipped: some participants left the caisse",
+  "recurringStop": "Stop",
+  "recurringStopConfirm": "Stop this recurring movement? Movements already created are kept.",
+  "recurringTitle": "Recurring movements",
+  "repeatLabel": "Repeat",
+  "repeatNever": "Never",
+  "repeatWeekly": "Every week",
+  "repeatMonthly": "Every month",
+  "requestPayment": "Request payment",
+  "searchMovements": "Search movements",
+  "shareInviteLinkText": "Join my caisse \"{name}\" on EnCaisse: {link}\nOr enter the code {code} in the app.",
+  "@shareInviteLinkText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "splitBalanced": "Shares match the amount",
+  "splitCount": "{count, plural, =1{For 1 person} other{Shared by {count}}}",
+  "@splitCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "splitCustom": "Custom",
+  "splitEqually": "Equally",
+  "splitEveryone": "Everyone",
+  "splitJustMe": "Just me",
+  "splitMustMatch": "Shares must add up to the amount",
+  "splitPickSomeone": "Pick at least one person",
+  "splitRemaining": "Left to assign: {amount}",
+  "@splitRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "splitTitleDeposit": "Contributed by",
+  "splitTitleExpense": "Split between",
+  "you": "you",
+  "forgotPassword": "Forgot password?",
+  "resetPasswordTitle": "Reset your password",
+  "resetPasswordBody": "Enter your account email and we'll send you a link to choose a new password.",
+  "resetPasswordSend": "Send link",
+  "resetPasswordSent": "If an account exists for {email}, a reset link is on its way. Check your inbox and spam folder.",
+  "resetPasswordTooMany": "Too many attempts. Please wait a few minutes and try again.",
+  "resetPasswordFailed": "Could not send the reset email. Check your connection and try again.",
+  "@resetPasswordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "memberSettled": "Even",
+  "addPhoto": "Add a photo",
+  "availableInCaisse": "Available: {amount}",
+  "@availableInCaisse": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

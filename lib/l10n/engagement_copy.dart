@@ -12,7 +12,8 @@ class EngagementCopy {
       'confirm': 'Confirm received',
       'pending': 'Waiting for recipient confirmation',
       'confirmed': 'Payment confirmed',
-      'explain': 'Record a real payment. The recipient confirms it before balances change.',
+      'explain':
+          'Record a real payment. The recipient confirms it before balances change.',
       'history': 'Recent repayments',
       'fromTo': '{from} paid {to}',
       'recorded': 'Payment recorded. Waiting for confirmation.',
@@ -25,21 +26,28 @@ class EngagementCopy {
       'cancel': 'Cancel payment',
       'cancelled': 'Payment cancelled',
       'activityNotifications': 'Group activity',
-      'activityNotificationsHint': 'Get alerts when members add activity or join.',
+      'activityNotificationsHint':
+          'Get alerts when members add activity or join.',
       'reminderNotifications': 'Helpful reminders',
-      'reminderNotificationsHint': 'At most once a week, only when there is something to check.',
+      'reminderNotificationsHint':
+          'At most once a week, only when there is something to check.',
+      'recent': 'Recent',
+      'repeat': 'Repeat last expense',
     };
     const translations = <String, Map<String, String>>{
       'fr': {
         'activityNotifications': 'Activité des groupes',
-        'activityNotificationsHint': 'Recevez une alerte quand un membre ajoute une activité ou rejoint le groupe.',
+        'activityNotificationsHint':
+            'Recevez une alerte quand un membre ajoute une activité ou rejoint le groupe.',
         'reminderNotifications': 'Rappels utiles',
-        'reminderNotificationsHint': 'Au maximum une fois par semaine, uniquement si une action est à faire.',
+        'reminderNotificationsHint':
+            'Au maximum une fois par semaine, uniquement si une action est à faire.',
         'record': 'J’ai payé',
         'confirm': 'Confirmer la réception',
         'pending': 'En attente de confirmation',
         'confirmed': 'Paiement confirmé',
-        'explain': 'Enregistrez un paiement réel. Le bénéficiaire le confirme avant la mise à jour des soldes.',
+        'explain':
+            'Enregistrez un paiement réel. Le bénéficiaire le confirme avant la mise à jour des soldes.',
         'history': 'Remboursements récents',
         'fromTo': '{from} a payé {to}',
         'recorded': 'Paiement enregistré. En attente de confirmation.',
@@ -51,17 +59,22 @@ class EngagementCopy {
         'receives': 'doit recevoir',
         'cancel': 'Annuler le paiement',
         'cancelled': 'Paiement annulé',
+        'recent': 'Récemment',
+        'repeat': 'Répéter la dernière dépense',
       },
       'es': {
         'activityNotifications': 'Actividad del grupo',
-        'activityNotificationsHint': 'Recibe avisos cuando alguien añade movimientos o se une.',
+        'activityNotificationsHint':
+            'Recibe avisos cuando alguien añade movimientos o se une.',
         'reminderNotifications': 'Recordatorios útiles',
-        'reminderNotificationsHint': 'Como máximo una vez por semana, solo si hay algo que revisar.',
+        'reminderNotificationsHint':
+            'Como máximo una vez por semana, solo si hay algo que revisar.',
         'record': 'Ya pagué',
         'confirm': 'Confirmar recepción',
         'pending': 'Esperando confirmación',
         'confirmed': 'Pago confirmado',
-        'explain': 'Registra un pago real. El destinatario lo confirma antes de actualizar los saldos.',
+        'explain':
+            'Registra un pago real. El destinatario lo confirma antes de actualizar los saldos.',
         'history': 'Pagos recientes',
         'fromTo': '{from} pagó a {to}',
         'recorded': 'Pago registrado. Esperando confirmación.',
@@ -73,17 +86,22 @@ class EngagementCopy {
         'receives': 'recibe',
         'cancel': 'Cancelar pago',
         'cancelled': 'Pago cancelado',
+        'recent': 'Recientemente',
+        'repeat': 'Repetir último gasto',
       },
       'pt': {
         'activityNotifications': 'Atividade do grupo',
-        'activityNotificationsHint': 'Receba alertas quando alguém adicionar movimentos ou entrar no grupo.',
+        'activityNotificationsHint':
+            'Receba alertas quando alguém adicionar movimentos ou entrar no grupo.',
         'reminderNotifications': 'Lembretes úteis',
-        'reminderNotificationsHint': 'No máximo uma vez por semana, apenas quando houver algo para ver.',
+        'reminderNotificationsHint':
+            'No máximo uma vez por semana, apenas quando houver algo para ver.',
         'record': 'Já paguei',
         'confirm': 'Confirmar recebimento',
         'pending': 'Aguardando confirmação',
         'confirmed': 'Pagamento confirmado',
-        'explain': 'Registe um pagamento real. O destinatário confirma antes de atualizar os saldos.',
+        'explain':
+            'Registe um pagamento real. O destinatário confirma antes de atualizar os saldos.',
         'history': 'Pagamentos recentes',
         'fromTo': '{from} pagou {to}',
         'recorded': 'Pagamento registado. Aguardando confirmação.',
@@ -95,12 +113,16 @@ class EngagementCopy {
         'receives': 'tem a receber',
         'cancel': 'Cancelar pagamento',
         'cancelled': 'Pagamento cancelado',
+        'recent': 'Recentemente',
+        'repeat': 'Repetir última despesa',
       },
       'ar': {
         'activityNotifications': 'نشاط المجموعة',
-        'activityNotificationsHint': 'تلقي تنبيهات عند إضافة حركة أو انضمام عضو.',
+        'activityNotificationsHint':
+            'تلقي تنبيهات عند إضافة حركة أو انضمام عضو.',
         'reminderNotifications': 'تذكيرات مفيدة',
-        'reminderNotificationsHint': 'مرة واحدة أسبوعياً كحد أقصى، عند وجود نشاط يستحق المراجعة.',
+        'reminderNotificationsHint':
+            'مرة واحدة أسبوعياً كحد أقصى، عند وجود نشاط يستحق المراجعة.',
         'record': 'لقد دفعت',
         'confirm': 'تأكيد الاستلام',
         'pending': 'بانتظار تأكيد المستلم',
@@ -117,6 +139,8 @@ class EngagementCopy {
         'receives': 'له',
         'cancel': 'إلغاء الدفعة',
         'cancelled': 'تم إلغاء الدفعة',
+        'recent': 'الأخير',
+        'repeat': 'كرر آخر نفقة',
       },
       'zh': {
         'activityNotifications': '群组动态',
@@ -139,17 +163,22 @@ class EngagementCopy {
         'receives': '应收',
         'cancel': '取消付款',
         'cancelled': '付款已取消',
+        'recent': '最近',
+        'repeat': '重复上次支出',
       },
       'hi': {
         'activityNotifications': 'समूह गतिविधि',
-        'activityNotificationsHint': 'कोई सदस्य गतिविधि जोड़े या समूह में शामिल हो तो सूचना पाएँ।',
+        'activityNotificationsHint':
+            'कोई सदस्य गतिविधि जोड़े या समूह में शामिल हो तो सूचना पाएँ।',
         'reminderNotifications': 'उपयोगी रिमाइंडर',
-        'reminderNotificationsHint': 'सप्ताह में अधिकतम एक बार, केवल तब जब देखने के लिए नई गतिविधि हो।',
+        'reminderNotificationsHint':
+            'सप्ताह में अधिकतम एक बार, केवल तब जब देखने के लिए नई गतिविधि हो।',
         'record': 'मैंने भुगतान किया',
         'confirm': 'प्राप्ति की पुष्टि करें',
         'pending': 'प्राप्तकर्ता की पुष्टि बाकी है',
         'confirmed': 'भुगतान की पुष्टि हुई',
-        'explain': 'वास्तविक भुगतान दर्ज करें। शेष राशि बदलने से पहले प्राप्तकर्ता इसकी पुष्टि करता है।',
+        'explain':
+            'वास्तविक भुगतान दर्ज करें। शेष राशि बदलने से पहले प्राप्तकर्ता इसकी पुष्टि करता है।',
         'history': 'हाल के भुगतान',
         'fromTo': '{from} ने {to} को भुगतान किया',
         'recorded': 'भुगतान दर्ज हुआ। पुष्टि बाकी है।',
@@ -161,17 +190,22 @@ class EngagementCopy {
         'receives': 'मिलना है',
         'cancel': 'भुगतान रद्द करें',
         'cancelled': 'भुगतान रद्द हुआ',
+        'recent': 'हालिया',
+        'repeat': 'आखिरी खर्च दोहराएँ',
       },
       'ru': {
         'activityNotifications': 'Активность группы',
-        'activityNotificationsHint': 'Получайте уведомления о новых операциях и участниках.',
+        'activityNotificationsHint':
+            'Получайте уведомления о новых операциях и участниках.',
         'reminderNotifications': 'Полезные напоминания',
-        'reminderNotificationsHint': 'Не чаще раза в неделю и только при наличии новых событий.',
+        'reminderNotificationsHint':
+            'Не чаще раза в неделю и только при наличии новых событий.',
         'record': 'Я заплатил(а)',
         'confirm': 'Подтвердить получение',
         'pending': 'Ожидает подтверждения получателя',
         'confirmed': 'Платёж подтверждён',
-        'explain': 'Запишите реальный платёж. Получатель подтверждает его до обновления баланса.',
+        'explain':
+            'Запишите реальный платёж. Получатель подтверждает его до обновления баланса.',
         'history': 'Последние платежи',
         'fromTo': '{from} заплатил(а) {to}',
         'recorded': 'Платёж записан. Ожидается подтверждение.',
@@ -183,6 +217,8 @@ class EngagementCopy {
         'receives': 'должны',
         'cancel': 'Отменить платёж',
         'cancelled': 'Платёж отменён',
+        'recent': 'Недавние',
+        'repeat': 'Повторить последний расход',
       },
       'ja': {
         'activityNotifications': 'グループのアクティビティ',
@@ -205,6 +241,8 @@ class EngagementCopy {
         'receives': '受け取る',
         'cancel': '支払いを取り消す',
         'cancelled': '支払いを取り消しました',
+        'recent': '最近',
+        'repeat': '最後の支出を繰り返す',
       },
     };
     return EngagementCopy._(translations[code] ?? english);
@@ -227,15 +265,16 @@ class EngagementCopy {
   String get paymentCancelled => _values['cancelled']!;
   String get activityNotifications =>
       _values['activityNotifications'] ?? 'Group activity';
-  String get activityNotificationsHint => _values['activityNotificationsHint'] ??
+  String get activityNotificationsHint =>
+      _values['activityNotificationsHint'] ??
       'Get alerts when members add activity or join.';
   String get reminderNotifications =>
       _values['reminderNotifications'] ?? 'Helpful reminders';
-  String get reminderNotificationsHint => _values['reminderNotificationsHint'] ??
+  String get reminderNotificationsHint =>
+      _values['reminderNotificationsHint'] ??
       'At most once a week, only when there is something to check.';
   String get recent => _values['recent'] ?? 'Recent';
-  String get repeatLastExpense =>
-      _values['repeat'] ?? 'Repeat last expense';
+  String get repeatLastExpense => _values['repeat'] ?? 'Repeat last expense';
 
   String paymentLine(String from, String to) =>
       _values['fromTo']!.replaceAll('{from}', from).replaceAll('{to}', to);

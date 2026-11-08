@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode splash / NormalTheme window background — must match Flutter
+         dark scaffold color (0xFF0E1512) so there is no visible flash when the
+         engine takes over. -->
+    <color name="launch_background">#0E1512</color>
+</resources>

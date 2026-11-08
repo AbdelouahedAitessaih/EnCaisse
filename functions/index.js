@@ -1,7 +1,16 @@
 const functions = require("firebase-functions/v1");
-const admin = require("firebase-admin");
+const {initializeApp} = require("firebase-admin/app");
+const {getAuth} = require("firebase-admin/auth");
+const {
+  getFirestore,
+  FieldPath,
+  FieldValue,
+  Timestamp,
+} = require("firebase-admin/firestore");
+const {getMessaging} = require("firebase-admin/messaging");
+const {getStorage} = require("firebase-admin/storage");
 
-admin.initializeApp();
+initializeApp();
 
 /**
  * When a doc is written to users/{uid}/notifications/{id}, send an FCM push
@@ -15,7 +24,7 @@ exports.sendPushOnNotificationCreated = functions
     const data = snap.data();
     if (!data) return null;
 
-    const userSnap = await admin.firestore().collection("users").doc(uid).get();
+    const userSnap = await getFirestore().collection("users").doc(uid).get();
     if (!userSnap.exists) {
       console.warn("No user doc for push", uid);
       return null;
@@ -36,7 +45,7 @@ exports.sendPushOnNotificationCreated = functions
     const body = String(data.body || "");
     const groupId = data.groupId != null ? String(data.groupId) : "";
 
-    const response = await admin.messaging().sendEachForMulticast({
+    const response = await getMessaging().sendEachForMulticast({
       tokens,
       notification: {title, body},
       data: {
@@ -103,7 +112,7 @@ async function clearBadTokens(uid, user, badTokens) {
     updates.fcmTokens = user.fcmTokens.filter((t) => !badTokens.includes(t));
   }
   if (Object.keys(updates).length === 0) return;
-  await admin.firestore().collection("users").doc(uid).set(updates, {merge: true});
+  await getFirestore().collection("users").doc(uid).set(updates, {merge: true});
 }
 
 /**
@@ -121,11 +130,10 @@ exports.purgeExpiredSoftDeletes = functions
   });
 
 async function purgeExpiredMovements() {
-  const cutoff = admin.firestore.Timestamp.fromDate(
+  const cutoff = Timestamp.fromDate(
     new Date(Date.now() - 24 * 60 * 60 * 1000),
   );
-  const snap = await admin
-    .firestore()
+  const snap = await getFirestore()
     .collectionGroup("movements")
     .where("deleted", "==", true)
     .where("deletedAt", "<", cutoff)
@@ -137,14 +145,14 @@ async function purgeExpiredMovements() {
     return 0;
   }
 
-  let batch = admin.firestore().batch();
+  let batch = getFirestore().batch();
   let ops = 0;
   for (const doc of snap.docs) {
     const data = doc.data() || {};
     const receiptUrl = data.receiptUrl;
     if (typeof receiptUrl === "string" && receiptUrl.length > 0) {
       try {
-        await admin.storage().bucket().file(storagePathFromUrl(receiptUrl)).delete();
+        await getStorage().bucket().file(storagePathFromUrl(receiptUrl)).delete();
       } catch (e) {
         console.warn("Receipt delete skipped", doc.ref.path, e.message);
       }
@@ -160,7 +168,7 @@ async function purgeExpiredMovements() {
     ops++;
     if (ops >= 400) {
       await batch.commit();
-      batch = admin.firestore().batch();
+      batch = getFirestore().batch();
       ops = 0;
     }
   }
@@ -196,7 +204,7 @@ function receiptReference(value, groupId) {
 }
 
 const crypto = require("crypto");
-const db = admin.firestore();
+const db = getFirestore();
 const supportedCurrencies = new Set([
   "USD", "GBP", "EUR", "CHF", "CAD", "MAD", "AED", "SAR", "EGP",
   "TND", "DZD", "MXN", "ARS", "COP", "CLP", "BRL", "CNY", "HKD",
@@ -258,7 +266,90 @@ function movementSnapshot(data) {
     receiptUrl: data.receiptUrl || null,
     deleted: data.deleted === true,
     isStartingBalance: data.isStartingBalance === true,
+    split: data.split || null,
+    originalCurrency: data.originalCurrency || null,
+    originalAmount: data.originalAmount || null,
   };
+}
+
+const MAX_SPLIT_MEMBERS = 50;
+
+function minorFactor(currency) {
+  return 10 ** (zeroDecimalCurrencies.has(currency) ? 0 : 2);
+}
+
+/**
+ * Validates a member uid → share map. Shares are checked in minor units so the
+ * parts always add up to exactly the movement amount, and every participant
+ * must currently be a member, which is why this has to run inside the
+ * transaction before any write.
+ */
+async function parseSplit(transaction, groupRef, raw, amountMinor, currency) {
+  if (raw == null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new functions.https.HttpsError("invalid-argument", "Split is invalid.");
+  }
+  const entries = Object.entries(raw);
+  if (entries.length === 0 || entries.length > MAX_SPLIT_MEMBERS) {
+    throw new functions.https.HttpsError("invalid-argument", "Split is invalid.");
+  }
+  const factor = minorFactor(currency);
+  const split = {};
+  let total = 0;
+  for (const [uid, value] of entries) {
+    if (!SAFE_ID_RE.test(uid)) {
+      throw new functions.https.HttpsError("invalid-argument", "Split is invalid.");
+    }
+    const minor = amountInMinorUnits(value, currency);
+    total += minor;
+    split[uid] = minor / factor;
+  }
+  if (total !== amountMinor) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Split shares must add up to the amount.",
+    );
+  }
+  const members = await transaction.getAll(
+    ...entries.map(([uid]) => groupRef.collection("members").doc(uid)),
+  );
+  if (members.some((snap) => !snap.exists)) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "The split includes someone who is not in this group.",
+    );
+  }
+  return split;
+}
+
+/**
+ * A movement typed in another currency keeps what was actually paid next to
+ * the converted group-currency amount. The conversion is re-checked here so a
+ * client cannot store a rate that disagrees with the amount it charged.
+ */
+function parseOriginal(raw, amountMinor, currency) {
+  if (raw == null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new functions.https.HttpsError("invalid-argument", "Original amount is invalid.");
+  }
+  const code = inputString(raw.currency, "Original currency", 3);
+  if (!supportedCurrencies.has(code) || code === currency) {
+    throw new functions.https.HttpsError("invalid-argument", "Original currency is invalid.");
+  }
+  const originalMinor = amountInMinorUnits(raw.amount, code);
+  const rate = Number(raw.rate);
+  if (!Number.isFinite(rate) || rate <= 0 || rate > 1e7) {
+    throw new functions.https.HttpsError("invalid-argument", "Exchange rate is invalid.");
+  }
+  const originalAmount = originalMinor / minorFactor(code);
+  const expectedMinor = Math.round(originalAmount * rate * minorFactor(currency));
+  if (Math.abs(expectedMinor - amountMinor) > 1) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Converted amount does not match the exchange rate.",
+    );
+  }
+  return {originalCurrency: code, originalAmount, exchangeRate: rate};
 }
 
 async function balanceMinorInTransaction(transaction, groupRef, groupData) {
@@ -295,6 +386,59 @@ function newInviteCode() {
   return [...bytes].map((byte) => inviteAlphabet[byte % inviteAlphabet.length]).join("");
 }
 
+// Exactly the alphabet newInviteCode() can emit. A lookup by document id is a
+// free existence oracle, so anything outside this shape is refused before any
+// read happens instead of being used as a probe.
+const INVITE_CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/;
+const MAX_MEMBERS_PER_GROUP = 200;
+const JOIN_WINDOW_MS = 60 * 60 * 1000;
+const MAX_JOIN_ATTEMPTS = 10;
+const CREATE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const MAX_GROUPS_PER_DAY = 20;
+const SAFE_ID_RE = /^[A-Za-z0-9_-]{1,128}$/;
+
+function safeId(value, field) {
+  if (typeof value !== "string" || !SAFE_ID_RE.test(value)) {
+    throw new functions.https.HttpsError("invalid-argument", `${field} is invalid.`);
+  }
+  return value;
+}
+
+// Validating before the reference is built turns a malformed id into a clean
+// invalid-argument instead of an unhandled SDK path error, which surfaced as
+// an opaque internal to the client.
+function groupRefFrom(groupId) {
+  return db.collection("groups").doc(safeId(groupId, "Group"));
+}
+
+/**
+ * Fixed-window counter charged in its own transaction, so a call that later
+ * fails (a wrong invite code, a missing group) still costs the caller an
+ * attempt. The read and the write share the transaction, so concurrent calls
+ * cannot all observe the same count and slip past the limit.
+ */
+async function consumeRateLimit(ref, windowMs, max, message) {
+  const now = Timestamp.now();
+  await db.runTransaction(async (transaction) => {
+    const snap = await transaction.get(ref);
+    const current = snap.data() || {};
+    const startMs = current.windowStart ? current.windowStart.toMillis() : 0;
+    const inWindow = startMs > 0 && now.toMillis() - startMs < windowMs;
+    const count = (inWindow ? current.count : 0) + 1;
+    if (count > max) {
+      throw new functions.https.HttpsError("resource-exhausted", message);
+    }
+    transaction.set(ref, {
+      count,
+      windowStart: inWindow
+        ? current.windowStart
+        : FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, {merge: true});
+  });
+}
+
+
 exports.createGroup = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
   const name = inputString(data.name, "Group name", 60);
@@ -312,11 +456,15 @@ exports.createGroup = functions.region("us-central1").https.onCall(async (data, 
     ? 0
     : amountInMinorUnits(rawStartingAmount, currency);
   const isPersonal = data.isPersonal === true;
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   const groupRef = db.collection("groups").doc();
   const userRef = db.collection("users").doc(uid);
-  const movementRef = startingMinor > 0 ? groupRef.collection("movements").doc() : null;
+const movementRef = startingMinor > 0 ? groupRef.collection("movements").doc() : null;
   const auditRef = startingMinor > 0 ? groupRef.collection("audit").doc() : null;
+  // Each group mints an invite code, a membership index and a member doc, and
+  // createGroup is self-service, so an unthrottled caller could create groups
+  // without limit. One daily quota per account bounds it.
+  const createQuotaRef = db.collection("rateLimits").doc(`create_${uid}`);
 
   for (let attempt = 0; attempt < 8; attempt++) {
     const inviteCode = newInviteCode();
@@ -327,11 +475,29 @@ exports.createGroup = functions.region("us-central1").https.onCall(async (data, 
 
     try {
       await db.runTransaction(async (transaction) => {
-        const [inviteSnap, userSnap] = await Promise.all([
+const [inviteSnap, userSnap, quotaSnap] = await Promise.all([
           transaction.get(inviteRef),
           transaction.get(userRef),
+          transaction.get(createQuotaRef),
         ]);
         if (inviteSnap.exists) throw new Error("invite-code-collision");
+        const quota = quotaSnap.data() || {};
+        const quotaStartMs = quota.windowStart ? quota.windowStart.toMillis() : 0;
+        const quotaInWindow = quotaStartMs > 0 &&
+          now.toMillis() - quotaStartMs < CREATE_WINDOW_MS;
+        const createdToday = (quotaInWindow ? quota.count : 0) + 1;
+        if (createdToday > MAX_GROUPS_PER_DAY) {
+          throw new functions.https.HttpsError(
+            "resource-exhausted", "Group creation limit reached. Try again tomorrow.",
+          );
+        }
+        transaction.set(createQuotaRef, {
+          count: createdToday,
+          windowStart: quotaInWindow
+            ? quota.windowStart
+            : FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        }, {merge: true});
         const userData = userSnap.data() || {};
         const finalName = displayName || userData.displayName || "Member";
         const groupData = {
@@ -341,6 +507,7 @@ exports.createGroup = functions.region("us-central1").https.onCall(async (data, 
           inviteCode,
           currency,
           isPersonal,
+          memberCount: 1,
           balanceMinorUnits: startingMinor,
           ...(photoUrl ? {photoUrl} : {}),
         };
@@ -402,12 +569,29 @@ exports.createGroup = functions.region("us-central1").https.onCall(async (data, 
 
 exports.joinGroup = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const inviteCode = inputString(data.inviteCode, "Invite code", 12).toUpperCase();
-  const displayName = inputString(data.displayName, "Display name", 80) || "Member";
+  const inviteCode = inputString(data.inviteCode, "Invite code", 32).toUpperCase();
+  if (!INVITE_CODE_RE.test(inviteCode)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invite code is invalid.");
+  }
+  const displayName = inputString(data.displayName, "Display name", 80, false) || "Member";
   const photoUrl = inputString(data.photoUrl, "Photo URL", 2048, false);
+
+  // Charged before the code is resolved so guessing is rate limited even when
+  // every guess misses. A leaked code is one of 32^6; without this an attacker
+  // with any self-registered account can enumerate the space at line speed.
+  await consumeRateLimit(
+    db.collection("rateLimits").doc(`join_${uid}`),
+    JOIN_WINDOW_MS,
+    MAX_JOIN_ATTEMPTS,
+    "Too many invite code attempts. Try again later.",
+  );
+
   const inviteSnap = await db.collection("inviteCodes").doc(inviteCode).get();
   let groupId = inviteSnap.data()?.groupId;
   if (!groupId) {
+    // Codes issued before the inviteCodes mirror existed are only reachable
+    // through the group document, so this fallback stays. The rate limit above
+    // is what bounds how often it can be paid for.
     const legacy = await db.collection("groups")
       .where("inviteCode", "==", inviteCode).limit(1).get();
     groupId = legacy.docs[0]?.id;
@@ -416,9 +600,19 @@ exports.joinGroup = functions.region("us-central1").https.onCall(async (data, co
     throw new functions.https.HttpsError("not-found", "No group found for this invite code.");
   }
 
-  const groupRef = db.collection("groups").doc(groupId);
+  const groupRef = groupRefFrom(groupId);
   const memberRef = groupRef.collection("members").doc(uid);
   const userRef = db.collection("users").doc(uid);
+
+  // A group has no hard capacity in the schema, and every join fans out one
+  // notification per existing member, so an uncapped group is a billing
+  // amplifier as well as a product problem. One capped read answers it.
+  const members = await groupRef.collection("members")
+    .limit(MAX_MEMBERS_PER_GROUP + 1).get();
+  if (members.docs.length > MAX_MEMBERS_PER_GROUP) {
+    throw new functions.https.HttpsError("resource-exhausted", "This group is full.");
+  }
+
   let groupData;
   await db.runTransaction(async (transaction) => {
     const [groupSnap, memberSnap] = await Promise.all([
@@ -429,21 +623,34 @@ exports.joinGroup = functions.region("us-central1").https.onCall(async (data, co
       throw new functions.https.HttpsError("not-found", "Group no longer exists.");
     }
     groupData = groupSnap.data();
+    // The share button is hidden for personal caisses in the client, but that
+    // is a courtesy and not a control: a code that leaks through a screenshot
+    // or a guess must not hand over someone's private ledger.
+    if (groupData.isPersonal === true) {
+      throw new functions.https.HttpsError(
+        "failed-precondition", "This is a personal caisse and cannot be joined.",
+      );
+    }
+    const now = Timestamp.now();
     if (!memberSnap.exists) {
-      const now = admin.firestore.Timestamp.now();
       transaction.create(memberRef, {
         displayName,
         joinedAt: now,
         photoUrl,
         notificationsMuted: false,
       });
-      transaction.set(userRef.collection("memberships").doc(groupId), {
-        groupId,
-        joinedAt: now,
-        name: groupData.name,
-        isPersonal: groupData.isPersonal === true,
-      });
+      transaction.set(groupRef, {
+        memberCount: FieldValue.increment(1),
+      }, {merge: true});
     }
+    // Written on every call, not just the first join, so a member who left and
+    // came back does not keep a stale joinedAt on their own index entry.
+    transaction.set(userRef.collection("memberships").doc(groupId), {
+      groupId,
+      joinedAt: memberSnap.exists ? memberSnap.data().joinedAt : now,
+      name: groupData.name,
+      isPersonal: false,
+    });
   });
 
   return callableGroup(groupId, groupData);
@@ -460,105 +667,138 @@ exports.sendEngagementReminders = functions.region("us-central1")
   .pubsub.schedule("every 60 minutes")
   .timeZone("Etc/UTC")
   .onRun(async () => {
-    const users = await db.collection("users")
-      .where("remindersEnabled", "==", true).get();
+    // Opted-in users are paged instead of loaded in one shot: a single
+    // unbounded .get() scales with the whole user base and will exhaust this
+    // 256MB instance once the collection is large. Paging by document id keeps
+    // the same filter and visits each opted-in user exactly once.
+    //
+    // Re-processing is safe, so if the budget is reached the next hourly run
+    // simply starts over: the per-user cooldown, the local-hour gate and the
+    // deterministic notification ids all prevent duplicate reminders.
+    const PAGE_SIZE = 200;
+    const MAX_DOCS_PER_RUN = 2000;
+
     const now = new Date();
-    const nowTs = admin.firestore.Timestamp.fromDate(now);
+    const nowTs = Timestamp.fromDate(now);
     const inactivityCutoff = now.getTime() - 3 * 24 * 60 * 60 * 1000;
     const cooldown = 7 * 24 * 60 * 60 * 1000;
     let sent = 0;
+    let scanned = 0;
+    let cursor = null;
+    let exhausted = false;
 
-    for (const userDoc of users.docs) {
-      const user = userDoc.data() || {};
-      const zone = typeof user.timeZone === "string" ? user.timeZone : "Etc/UTC";
-      let localHour;
-      try {
-        localHour = Number(new Intl.DateTimeFormat("en-GB", {
-          timeZone: zone,
-          hour: "2-digit",
-          hourCycle: "h23",
-        }).format(now));
-      } catch (_error) {
-        localHour = Number(new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Etc/UTC",
-          hour: "2-digit",
-          hourCycle: "h23",
-        }).format(now));
+    while (!exhausted && scanned < MAX_DOCS_PER_RUN) {
+      let query = db.collection("users")
+        .where("remindersEnabled", "==", true)
+        .orderBy(FieldPath.documentId())
+        .limit(Math.min(PAGE_SIZE, MAX_DOCS_PER_RUN - scanned));
+      if (cursor) {
+        query = query.startAfter(cursor);
       }
-      if (localHour !== 18) continue;
 
-      const lastActive = user.lastActiveAt?.toMillis?.() || 0;
-      if (lastActive && lastActive > inactivityCutoff) continue;
-      const memberships = await userDoc.ref.collection("memberships").get();
+      const page = await query.get();
+      if (page.empty) {
+        exhausted = true;
+        break;
+      }
+      cursor = page.docs[page.docs.length - 1].id;
 
-      if (memberships.empty) {
-        const createdAt = user.createdAt?.toMillis?.() || 0;
-        const accountIsOldEnough = createdAt &&
-          now.getTime() - createdAt >= 3 * 24 * 60 * 60 * 1000;
-        if (accountIsOldEnough && !user.onboardingReminderSentAt) {
-          const reminderRef = userDoc.ref.collection("notifications")
-            .doc("engagement_no_group");
-          try {
-            await reminderRef.create({
-              title: "Your caisse is ready to start",
-              body: "Create a personal caisse or join a group to keep shared expenses together.",
-              type: "engagement_no_group",
-              groupId: "",
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
-              read: false,
-            });
-          } catch (error) {
-            if (error.code !== 6 && error.code !== "already-exists") throw error;
+      for (const userDoc of page.docs) {
+        scanned++;
+        const user = userDoc.data() || {};
+        const zone = typeof user.timeZone === "string" ? user.timeZone : "Etc/UTC";
+        let localHour;
+        try {
+          localHour = Number(new Intl.DateTimeFormat("en-GB", {
+            timeZone: zone,
+            hour: "2-digit",
+            hourCycle: "h23",
+          }).format(now));
+        } catch (_error) {
+          localHour = Number(new Intl.DateTimeFormat("en-GB", {
+            timeZone: "Etc/UTC",
+            hour: "2-digit",
+            hourCycle: "h23",
+          }).format(now));
+        }
+        if (localHour !== 18) continue;
+
+        const lastActive = user.lastActiveAt?.toMillis?.() || 0;
+        if (lastActive && lastActive > inactivityCutoff) continue;
+        const memberships = await userDoc.ref.collection("memberships").get();
+
+        if (memberships.empty) {
+          const createdAt = user.createdAt?.toMillis?.() || 0;
+          const accountIsOldEnough = createdAt &&
+            now.getTime() - createdAt >= 3 * 24 * 60 * 60 * 1000;
+          if (accountIsOldEnough && !user.onboardingReminderSentAt) {
+            const reminderRef = userDoc.ref.collection("notifications")
+              .doc("engagement_no_group");
+            try {
+              await reminderRef.create({
+                title: "Your caisse is ready to start",
+                body: "Create a personal caisse or join a group to keep shared expenses together.",
+                type: "engagement_no_group",
+                groupId: "",
+                createdAt: FieldValue.serverTimestamp(),
+                read: false,
+              });
+            } catch (error) {
+              if (error.code !== 6 && error.code !== "already-exists") throw error;
+            }
+            await userDoc.ref.update({onboardingReminderSentAt: nowTs});
+            sent++;
           }
-          await userDoc.ref.update({onboardingReminderSentAt: nowTs});
-          sent++;
+          continue;
         }
-        continue;
-      }
 
-      const lastReminder = user.lastEngagementReminderAt?.toMillis?.() || 0;
-      if (now.getTime() - lastReminder < cooldown) continue;
-      let reminder = null;
-      for (const membership of memberships.docs) {
-        const groupId = membership.id;
-        const groupRef = db.collection("groups").doc(groupId);
-        const memberSnap = await groupRef.collection("members").doc(userDoc.id).get();
-        if (!memberSnap.exists || memberSnap.data().notificationsMuted === true) continue;
-        const groupSnap = await groupRef.get();
-        if (!groupSnap.exists) continue;
-        const lastViewed = membership.data().lastViewedAt?.toMillis?.() ||
-          membership.data().joinedAt?.toMillis?.() || 0;
-        const recentMovements = await groupRef.collection("movements")
-          .orderBy("createdAt", "desc").limit(8).get();
-        const unseen = recentMovements.docs.find((movement) => {
-          const data = movement.data();
-          return data.deleted !== true && data.createdBy !== userDoc.id &&
-            data.createdAt?.toMillis?.() > lastViewed;
-        });
-        if (unseen) {
-          reminder = {groupId, groupName: groupSnap.data().name || "your group"};
-          break;
+        const lastReminder = user.lastEngagementReminderAt?.toMillis?.() || 0;
+        if (now.getTime() - lastReminder < cooldown) continue;
+        let reminder = null;
+        for (const membership of memberships.docs) {
+          const groupId = membership.id;
+          const groupRef = db.collection("groups").doc(groupId);
+          const memberSnap = await groupRef.collection("members").doc(userDoc.id).get();
+          if (!memberSnap.exists || memberSnap.data().notificationsMuted === true) continue;
+          const groupSnap = await groupRef.get();
+          if (!groupSnap.exists) continue;
+          const lastViewed = membership.data().lastViewedAt?.toMillis?.() ||
+            membership.data().joinedAt?.toMillis?.() || 0;
+          const recentMovements = await groupRef.collection("movements")
+            .orderBy("createdAt", "desc").limit(8).get();
+          const unseen = recentMovements.docs.find((movement) => {
+            const data = movement.data();
+            return data.deleted !== true && data.createdBy !== userDoc.id &&
+              data.createdAt?.toMillis?.() > lastViewed;
+          });
+          if (unseen) {
+            reminder = {groupId, groupName: groupSnap.data().name || "your group"};
+            break;
+          }
         }
-      }
-      if (!reminder) continue;
-      const day = now.toISOString().slice(0, 10);
-      try {
-        await userDoc.ref.collection("notifications")
-          .doc(`engagement_activity_${reminder.groupId}_${day}`).create({
-            groupId: reminder.groupId,
-            title: "Your group has new activity",
+        if (!reminder) continue;
+        const day = now.toISOString().slice(0, 10);
+        try {
+          await userDoc.ref.collection("notifications")
+            .doc(`engagement_activity_${reminder.groupId}_${day}`).create({
+              groupId: reminder.groupId,
+              title: "Your group has new activity",
             body: `There is new activity in ${reminder.groupName}. Open the group to catch up.`,
             type: "engagement_activity",
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
             read: false,
           });
       } catch (error) {
         if (error.code !== 6 && error.code !== "already-exists") throw error;
       }
-      await userDoc.ref.update({lastEngagementReminderAt: nowTs});
+await userDoc.ref.update({lastEngagementReminderAt: nowTs});
       sent++;
+      }
     }
-    console.log(`Sent ${sent} opt-in engagement reminders`);
+    console.log(
+      `Sent ${sent} opt-in engagement reminders ` +
+      `(scanned ${scanned} users${exhausted ? "" : ", budget reached"})`,
+    );
     return sent;
   });
 
@@ -597,19 +837,13 @@ exports.deleteGroup = functions.region("us-central1")
     // the caller's member doc to read anything under the group, so deleting it
     // first makes the group unreadable from the client immediately — and if a
     // later step then fails, the group is left half-deleted with no way to retry.
-    const movementsRef = groupRef.collection("movements");
-    while (true) {
-      const movements = await movementsRef.limit(100).get();
-      if (movements.empty) break;
-      for (const movement of movements.docs) {
-        await deleteQueryInBatches(groupRef.collection("audit")
-          .where("movementId", "==", movement.id));
-        await movement.ref.delete();
-      }
-    }
+    // Deletions are done in batches with parallelism for speed: movements and
+    // audit entries are deleted in batches without per-document round trips.
+    await deleteQueryInBatches(groupRef.collection("movements"));
     await deleteQueryInBatches(groupRef.collection("audit"));
     await deleteQueryInBatches(groupRef.collection("settlements"));
-    await admin.storage().bucket().deleteFiles({prefix: `groups/${groupId}/`})
+    await deleteQueryInBatches(groupRef.collection("recurring"));
+    await getStorage().bucket().deleteFiles({prefix: `groups/${groupId}/`})
       .catch((error) => console.error("storage cleanup failed", error));
     if (typeof group.inviteCode === "string") {
       await db.collection("inviteCodes").doc(group.inviteCode).delete().catch(() => {});
@@ -621,6 +855,7 @@ exports.deleteGroup = functions.region("us-central1")
       db.collectionGroup("memberships").where("groupId", "==", groupId),
     ).catch((error) => console.error("membership sweep failed", error));
 
+    // Delete member docs and membership refs in batches.
     let batch = db.batch();
     let writes = 0;
     for (const member of members.docs) {
@@ -631,6 +866,21 @@ exports.deleteGroup = functions.region("us-central1")
       if (writes >= 400) { await batch.commit(); batch = db.batch(); writes = 0; }
     }
     if (writes > 0) await batch.commit();
+
+    // Clean up notifications referencing this group from each member's inbox.
+    // Best-effort: a missing index should never fail the delete.
+    await Promise.all(members.docs.map(async (memberDoc) => {
+      try {
+        await deleteQueryInBatches(
+          db.collection("users").doc(memberDoc.id)
+            .collection("notifications")
+            .where("groupId", "==", groupId),
+        );
+      } catch (error) {
+        console.error(`notification cleanup failed for ${memberDoc.id}`, error);
+      }
+    })).catch((error) => console.error("group notification sweep failed", error));
+
     return {deleted: true};
   });
 
@@ -668,18 +918,14 @@ function resultTime(timestamp) {
 
 exports.createMovement = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const groupId = data.groupId;
-  const movementId = inputString(data.movementId, "Movement ID", 128);
-  if (!/^[A-Za-z0-9_-]+$/.test(movementId)) {
-    throw new functions.https.HttpsError("invalid-argument", "Movement ID is invalid.");
-  }
-  const groupRef = db.collection("groups").doc(groupId);
+const groupRef = groupRefFrom(data.groupId);
+  const movementId = safeId(data.movementId, "Movement ID");
   const movementRef = groupRef.collection("movements").doc(movementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   let created = false;
   await db.runTransaction(async (transaction) => {
     created = false;
-    const {groupData, memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {groupData, memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     const existing = await transaction.get(movementRef);
     if (existing.exists) {
       if (existing.data().createdBy !== uid) {
@@ -694,11 +940,15 @@ exports.createMovement = functions.region("us-central1").https.onCall(async (dat
     if (balance + delta < 0) {
       throw new functions.https.HttpsError("failed-precondition", "Insufficient balance.");
     }
-    const displayName = inputString(data.displayName, "Display name", 80) ||
+    const displayName = inputString(data.displayName, "Display name", 80, false) ||
       memberData.displayName || "Member";
     const title = inputString(data.title, "Title", 120);
     const category = inputString(data.category, "Category", 60);
     const digits = zeroDecimalCurrencies.has(currency) ? 0 : 2;
+    const split = groupData.isPersonal === true
+      ? null
+      : await parseSplit(transaction, groupRef, data.split, amount, currency);
+    const original = parseOriginal(data.original, amount, currency);
     const movement = {
       type: data.type,
       amount: amount / (10 ** digits),
@@ -710,10 +960,15 @@ exports.createMovement = functions.region("us-central1").https.onCall(async (dat
       updatedAt: now,
       updatedBy: uid,
       updatedByName: displayName,
-      receiptUrl: receiptReference(data.receiptUrl, groupId),
+      receiptUrl: receiptReference(data.receiptUrl, groupRef.id),
       deleted: false,
       deletedAt: null,
       isStartingBalance: false,
+      split,
+      originalCurrency: original ? original.originalCurrency : null,
+      originalAmount: original ? original.originalAmount : null,
+      exchangeRate: original ? original.exchangeRate : null,
+      recurringId: null,
     };
     transaction.create(movementRef, movement);
     transaction.set(groupRef, {balanceMinorUnits: balance + delta}, {merge: true});
@@ -725,12 +980,12 @@ exports.createMovement = functions.region("us-central1").https.onCall(async (dat
 
 exports.updateMovement = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const {groupId, movementId} = data;
-  const groupRef = db.collection("groups").doc(groupId);
+  const groupRef = groupRefFrom(data.groupId);
+  const movementId = safeId(data.movementId, "Movement ID");
   const movementRef = groupRef.collection("movements").doc(movementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   await db.runTransaction(async (transaction) => {
-    const {groupData, memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {groupData, memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     const movementSnap = await transaction.get(movementRef);
     if (!movementSnap.exists) throw new functions.https.HttpsError("not-found", "Movement not found.");
     const existing = movementSnap.data();
@@ -746,9 +1001,14 @@ exports.updateMovement = functions.region("us-central1").https.onCall(async (dat
     if (balance + nextDelta - oldDelta < 0) {
       throw new functions.https.HttpsError("failed-precondition", "Insufficient balance.");
     }
-    const displayName = inputString(data.displayName, "Display name", 80) ||
+    const displayName = inputString(data.displayName, "Display name", 80, false) ||
       memberData.displayName || "Member";
     const digits = zeroDecimalCurrencies.has(currency) ? 0 : 2;
+    const plain = existing.isStartingBalance === true;
+    const split = plain || groupData.isPersonal === true
+      ? null
+      : await parseSplit(transaction, groupRef, data.split, amountMinor, currency);
+    const original = plain ? null : parseOriginal(data.original, amountMinor, currency);
     const updated = {
       ...existing,
       type,
@@ -758,8 +1018,12 @@ exports.updateMovement = functions.region("us-central1").https.onCall(async (dat
       updatedAt: now,
       updatedBy: uid,
       updatedByName: displayName,
+      split,
+      originalCurrency: original ? original.originalCurrency : null,
+      originalAmount: original ? original.originalAmount : null,
+      exchangeRate: original ? original.exchangeRate : null,
       ...(existing.isStartingBalance ? {} : {
-        receiptUrl: receiptReference(data.receiptUrl, groupId),
+        receiptUrl: receiptReference(data.receiptUrl, groupRef.id),
       }),
     };
     transaction.set(movementRef, updated);
@@ -771,12 +1035,12 @@ exports.updateMovement = functions.region("us-central1").https.onCall(async (dat
 
 exports.softDeleteMovement = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const {groupId, movementId} = data;
-  const groupRef = db.collection("groups").doc(groupId);
+  const groupRef = groupRefFrom(data.groupId);
+  const movementId = safeId(data.movementId, "Movement ID");
   const movementRef = groupRef.collection("movements").doc(movementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   await db.runTransaction(async (transaction) => {
-    const {groupData, memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {groupData, memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     const snap = await transaction.get(movementRef);
     if (!snap.exists) throw new functions.https.HttpsError("not-found", "Movement not found.");
     const existing = snap.data();
@@ -789,7 +1053,7 @@ exports.softDeleteMovement = functions.region("us-central1").https.onCall(async 
     if (nextBalance < 0) {
       throw new functions.https.HttpsError("failed-precondition", "Insufficient balance.");
     }
-    const name = inputString(data.displayName, "Display name", 80) || memberData.displayName || "Member";
+    const name = inputString(data.displayName, "Display name", 80, false) || memberData.displayName || "Member";
     const deleted = {...existing, deleted: true, deletedAt: now, updatedAt: now, updatedBy: uid, updatedByName: name};
     transaction.set(movementRef, deleted);
     transaction.set(groupRef, {balanceMinorUnits: nextBalance}, {merge: true});
@@ -800,12 +1064,12 @@ exports.softDeleteMovement = functions.region("us-central1").https.onCall(async 
 
 exports.undoSoftDelete = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const {groupId, movementId} = data;
-  const groupRef = db.collection("groups").doc(groupId);
+  const groupRef = groupRefFrom(data.groupId);
+  const movementId = safeId(data.movementId, "Movement ID");
   const movementRef = groupRef.collection("movements").doc(movementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   await db.runTransaction(async (transaction) => {
-    const {groupData, memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {groupData, memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     const snap = await transaction.get(movementRef);
     if (!snap.exists) throw new functions.https.HttpsError("not-found", "Movement not found.");
     const existing = snap.data();
@@ -821,7 +1085,7 @@ exports.undoSoftDelete = functions.region("us-central1").https.onCall(async (dat
     if (nextBalance < 0) {
       throw new functions.https.HttpsError("failed-precondition", "Insufficient balance.");
     }
-    const name = inputString(data.displayName, "Display name", 80) || memberData.displayName || "Member";
+    const name = inputString(data.displayName, "Display name", 80, false) || memberData.displayName || "Member";
     const restored = {...existing, deleted: false, deletedAt: null, updatedAt: now, updatedBy: uid, updatedByName: name};
     transaction.set(movementRef, restored);
     transaction.set(groupRef, {balanceMinorUnits: nextBalance}, {merge: true});
@@ -830,83 +1094,152 @@ exports.undoSoftDelete = functions.region("us-central1").https.onCall(async (dat
   return resultTime(now);
 });
 
+// Deterministic per-direction key for the settlement replay guard. Both uids
+// are validated against [A-Za-z0-9_-]+ before this is ever called, so the
+// result is always a legal document id.
+function settlementPairKey(fromUid, toUid) {
+  return `${fromUid}__${toUid}`;
+}
+
 exports.recordSettlement = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const groupId = data.groupId;
-  const settlementId = inputString(data.settlementId, "Settlement ID", 128);
+const groupRef = groupRefFrom(data.groupId);
+  const settlementId = safeId(data.settlementId, "Settlement ID");
   const fromUid = inputString(data.fromUid, "Payer", 128);
   const toUid = inputString(data.toUid, "Recipient", 128);
-  if (!/^[A-Za-z0-9_-]+$/.test(settlementId) || fromUid !== uid || toUid === uid) {
+  // Both uids reach settlementPairKey() and so become part of a document id:
+  // an unchecked "/" throws an SDK path error that reaches the client as an
+  // opaque internal, and an unchecked "__" would alias one pair's replay guard
+  // onto a different pair's.
+  // The recipient may record money already in hand. That payment needs no
+  // second confirmation, because the person who would confirm it is the caller.
+  const asRecipient = data.asRecipient === true;
+  const otherUid = asRecipient ? fromUid : toUid;
+  if (!SAFE_ID_RE.test(fromUid) || !SAFE_ID_RE.test(toUid) ||
+      fromUid.includes("__") || toUid.includes("__") || fromUid === toUid ||
+      (asRecipient ? toUid !== uid : fromUid !== uid)) {
     throw new functions.https.HttpsError("invalid-argument", "Settlement details are invalid.");
   }
-  const groupRef = db.collection("groups").doc(groupId);
   const settlementRef = groupRef.collection("settlements").doc(settlementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   let created = false;
   await db.runTransaction(async (transaction) => {
     created = false;
-    const {groupData, memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {groupData, memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     if (groupData.isPersonal === true) {
       throw new functions.https.HttpsError("failed-precondition", "Personal caisses do not use group settlements.");
     }
-    const toMemberRef = groupRef.collection("members").doc(toUid);
+    const otherMemberRef = groupRef.collection("members").doc(otherUid);
     const pendingQuery = groupRef.collection("settlements")
-      .where("fromUid", "==", uid)
+      .where("fromUid", "==", fromUid)
       .where("toUid", "==", toUid)
       .where("status", "==", "pending");
-    const [toMember, existing, pending] = await Promise.all([
-      transaction.get(toMemberRef),
+    const pairGuardRef = groupRef
+      .collection("settlementGuards")
+      .doc(settlementPairKey(fromUid, toUid));
+    // A settlement is only worth recording when something changed since the
+    // last one. Keying on the balance alone is not enough: expenses and deposits
+    // can return the balance to the same number while genuinely new activity
+    // happened, so the newest movement is tracked as a monotonic second signal.
+    const latestMovementQuery = groupRef.collection("movements")
+      .orderBy("createdAt", "desc")
+      .limit(1);
+    const [otherMember, existing, pending, pairGuard, latestMovement] = await Promise.all([
+      transaction.get(otherMemberRef),
       transaction.get(settlementRef),
       transaction.get(pendingQuery),
+      transaction.get(pairGuardRef),
+      transaction.get(latestMovementQuery),
     ]);
-    if (!toMember.exists) {
-      throw new functions.https.HttpsError("failed-precondition", "The recipient is no longer in this group.");
+    if (!otherMember.exists) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        asRecipient ? "The payer is no longer in this group." : "The recipient is no longer in this group.",
+      );
     }
     if (existing.exists) {
-      if (existing.data().fromUid === uid && existing.data().toUid === toUid) return;
+      if (existing.data().fromUid === fromUid && existing.data().toUid === toUid) return;
       throw new functions.https.HttpsError("already-exists", "Settlement ID is already used.");
     }
     if (!pending.empty) {
       throw new functions.https.HttpsError("failed-precondition", "A payment is already waiting for confirmation.");
     }
+    // Replay guard. The pending check above only covers payments that have not
+    // been confirmed yet, so once a payment was confirmed the same pair could
+    // record and confirm an identical payment again under a fresh client-chosen
+    // id, forever. A new payment for this pair is only meaningful after the
+    // group's balance has actually moved, which is what the guard records.
+    const currentBalanceMinor = groupData.balanceMinorUnits || 0;
+    const latestMovementAt = latestMovement.docs.length
+      ? latestMovement.docs[0].get("createdAt") || null
+      : null;
+    if (pairGuard.exists) {
+      const guard = pairGuard.data();
+      const balanceUnchanged =
+        (guard.balanceMinorUnits || 0) === currentBalanceMinor;
+      const guardAt = guard.latestMovementAt || null;
+      const noNewMovement = guardAt == null || latestMovementAt == null
+        ? guardAt == null && latestMovementAt == null
+        : guardAt.toMillis() === latestMovementAt.toMillis();
+      if (balanceUnchanged && noNewMovement) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Nothing new to settle since the last recorded payment.",
+        );
+      }
+    }
     const currency = groupData.currency || "MAD";
     const minor = amountInMinorUnits(data.amount, currency);
     const digits = zeroDecimalCurrencies.has(currency) ? 0 : 2;
     const amount = minor / (10 ** digits);
-    const fromName = memberData.displayName || "Member";
-    const toName = toMember.data().displayName || "Member";
+    const callerName = memberData.displayName || "Member";
+    const otherName = otherMember.data().displayName || "Member";
+    const fromName = asRecipient ? otherName : callerName;
+    const toName = asRecipient ? callerName : otherName;
     transaction.create(settlementRef, {
-      fromUid: uid,
+      fromUid,
       fromName,
       toUid,
       toName,
       amount,
       currency,
-      status: "pending",
+      status: asRecipient ? "confirmed" : "pending",
       createdAt: now,
-      confirmedAt: null,
+      confirmedAt: asRecipient ? now : null,
+      ...(asRecipient ? {confirmedBy: uid} : {}),
     });
+    transaction.set(pairGuardRef, {
+      fromUid,
+      toUid,
+      balanceMinorUnits: currentBalanceMinor,
+      latestMovementAt,
+      settlementId,
+      updatedAt: now,
+    }, {merge: true});
     transaction.set(groupRef, {
-      settlementRevision: admin.firestore.FieldValue.increment(1),
+      settlementRevision: FieldValue.increment(1),
     }, {merge: true});
     transaction.create(groupRef.collection("audit").doc(), {
       settlementId,
-      action: "settlement_pending",
+      action: asRecipient ? "settlement_confirmed" : "settlement_pending",
       performedBy: uid,
-      performedByName: fromName,
+      performedByName: callerName,
       timestamp: now,
       amount,
-      fromUid: uid,
+      fromUid,
       toUid,
     });
-    transaction.create(db.collection("users").doc(toUid)
-      .collection("notifications").doc(`settlement_pending_${settlementId}`), {
-        groupId,
-        title: "Payment to confirm",
-        body: `${fromName} recorded a payment of ${amount} ${currency} to you.`,
-        type: "settlement_pending",
+    const notificationType = asRecipient ? "settlement_confirmed" : "settlement_pending";
+    transaction.create(db.collection("users").doc(otherUid)
+      .collection("notifications").doc(`${notificationType}_${settlementId}`), {
+        groupId: groupRef.id,
+        title: asRecipient ? "Payment confirmed" : "Payment to confirm",
+        body: asRecipient
+          ? `${callerName} confirmed receiving ${amount} ${currency} from you.`
+          : `${callerName} recorded a payment of ${amount} ${currency} to you.`,
+        type: notificationType,
         actorUid: uid,
-        actorName: fromName,
+        actorName: callerName,
         createdAt: now,
         read: false,
       });
@@ -917,15 +1250,14 @@ exports.recordSettlement = functions.region("us-central1").https.onCall(async (d
 
 exports.confirmSettlement = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const groupId = data.groupId;
-  const settlementId = inputString(data.settlementId, "Settlement ID", 128);
-  const groupRef = db.collection("groups").doc(groupId);
+  const groupRef = groupRefFrom(data.groupId);
+  const settlementId = safeId(data.settlementId, "Settlement ID");
   const settlementRef = groupRef.collection("settlements").doc(settlementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   let confirmed = false;
   await db.runTransaction(async (transaction) => {
     confirmed = false;
-    const {memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     const snap = await transaction.get(settlementRef);
     if (!snap.exists) {
       throw new functions.https.HttpsError("not-found", "Payment not found.");
@@ -941,7 +1273,7 @@ exports.confirmSettlement = functions.region("us-central1").https.onCall(async (
       confirmedBy: uid,
     });
     transaction.set(groupRef, {
-      settlementRevision: admin.firestore.FieldValue.increment(1),
+      settlementRevision: FieldValue.increment(1),
     }, {merge: true});
     transaction.create(groupRef.collection("audit").doc(), {
       settlementId,
@@ -955,7 +1287,7 @@ exports.confirmSettlement = functions.region("us-central1").https.onCall(async (
     });
     transaction.create(db.collection("users").doc(payment.fromUid)
       .collection("notifications").doc(`settlement_confirmed_${settlementId}`), {
-        groupId,
+        groupId: groupRef.id,
         title: "Payment confirmed",
         body: `${payment.toName || "The recipient"} confirmed your payment of ${payment.amount} ${payment.currency || ""}.`,
         type: "settlement_confirmed",
@@ -971,15 +1303,14 @@ exports.confirmSettlement = functions.region("us-central1").https.onCall(async (
 
 exports.cancelSettlement = functions.region("us-central1").https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const groupId = data.groupId;
-  const settlementId = inputString(data.settlementId, "Settlement ID", 128);
-  const groupRef = db.collection("groups").doc(groupId);
+  const groupRef = groupRefFrom(data.groupId);
+  const settlementId = safeId(data.settlementId, "Settlement ID");
   const settlementRef = groupRef.collection("settlements").doc(settlementId);
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   let cancelled = false;
   await db.runTransaction(async (transaction) => {
     cancelled = false;
-    const {memberData} = await getGroupAndMember(transaction, groupId, uid);
+    const {memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
     const snap = await transaction.get(settlementRef);
     if (!snap.exists) {
       throw new functions.https.HttpsError("not-found", "Payment not found.");
@@ -991,13 +1322,19 @@ exports.cancelSettlement = functions.region("us-central1").https.onCall(async (d
     if (payment.status !== "pending") {
       throw new functions.https.HttpsError("failed-precondition", "Only a pending payment can be cancelled.");
     }
-    transaction.update(settlementRef, {
+transaction.update(settlementRef, {
       status: "cancelled",
       cancelledAt: now,
       cancelledBy: uid,
     });
+    // A cancelled payment must not leave the replay guard behind, otherwise
+    // the pair could never record a legitimate payment again.
+    transaction.delete(
+      groupRef.collection("settlementGuards")
+        .doc(settlementPairKey(payment.fromUid, payment.toUid)),
+    );
     transaction.set(groupRef, {
-      settlementRevision: admin.firestore.FieldValue.increment(1),
+      settlementRevision: FieldValue.increment(1),
     }, {merge: true});
     transaction.create(groupRef.collection("audit").doc(), {
       settlementId,
@@ -1012,7 +1349,7 @@ exports.cancelSettlement = functions.region("us-central1").https.onCall(async (d
     const otherUid = uid === payment.fromUid ? payment.toUid : payment.fromUid;
     transaction.create(db.collection("users").doc(otherUid)
       .collection("notifications").doc(`settlement_cancelled_${settlementId}`), {
-        groupId,
+        groupId: groupRef.id,
         title: "Payment cancelled",
         body: `${memberData.displayName || "A member"} cancelled a pending payment.`,
         type: "settlement_cancelled",
@@ -1025,6 +1362,235 @@ exports.cancelSettlement = functions.region("us-central1").https.onCall(async (d
   });
   return {...resultTime(now), settlementId, cancelled};
 });
+
+const RECURRING_FREQUENCIES = new Set(["weekly", "monthly"]);
+const MAX_ACTIVE_RECURRING_PER_GROUP = 50;
+const MAX_FIRST_RUN_AHEAD_MS = 400 * 24 * 60 * 60 * 1000;
+
+/**
+ * Next run after [from]. Monthly rules keep their original day of the month
+ * (clamped to shorter months), so a rule set on the 31st does not drift to
+ * the 28th forever after February.
+ */
+function nextOccurrence(from, frequency, anchorDay) {
+  if (frequency === "weekly") {
+    return new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+  const year = from.getUTCFullYear();
+  const month = from.getUTCMonth() + 1;
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(
+    year,
+    month,
+    Math.min(anchorDay, lastDay),
+    from.getUTCHours(),
+    from.getUTCMinutes(),
+  ));
+}
+
+exports.createRecurring = functions.region("us-central1").https.onCall(async (data, context) => {
+  const uid = requireAuth(context);
+  const groupRef = groupRefFrom(data.groupId);
+  const recurringId = safeId(data.recurringId, "Recurring ID");
+  const frequency = data.frequency;
+  if (!RECURRING_FREQUENCIES.has(frequency)) {
+    throw new functions.https.HttpsError("invalid-argument", "Frequency is invalid.");
+  }
+  const firstRunMillis = Number(data.firstRunAtMillis);
+  const nowMillis = Date.now();
+  if (!Number.isFinite(firstRunMillis) || firstRunMillis < nowMillis - 60 * 1000 ||
+      firstRunMillis > nowMillis + MAX_FIRST_RUN_AHEAD_MS) {
+    throw new functions.https.HttpsError("invalid-argument", "First run date is invalid.");
+  }
+  const ruleRef = groupRef.collection("recurring").doc(recurringId);
+  const now = Timestamp.now();
+  await db.runTransaction(async (transaction) => {
+    const {groupData, memberData} = await getGroupAndMember(transaction, groupRef.id, uid);
+    const [existing, active] = await Promise.all([
+      transaction.get(ruleRef),
+      transaction.get(groupRef.collection("recurring")
+        .where("active", "==", true)
+        .limit(MAX_ACTIVE_RECURRING_PER_GROUP)),
+    ]);
+    if (existing.exists) {
+      if (existing.data().createdBy === uid) return;
+      throw new functions.https.HttpsError("already-exists", "Recurring ID is already used.");
+    }
+    if (active.size >= MAX_ACTIVE_RECURRING_PER_GROUP) {
+      throw new functions.https.HttpsError("resource-exhausted", "Too many recurring movements in this caisse.");
+    }
+    const currency = groupData.currency || "MAD";
+    signedMinor(data, currency);
+    const amountMinor = amountInMinorUnits(data.amount, currency);
+    const split = groupData.isPersonal === true
+      ? null
+      : await parseSplit(transaction, groupRef, data.split, amountMinor, currency);
+    const displayName = inputString(data.displayName, "Display name", 80, false) ||
+      memberData.displayName || "Member";
+    transaction.create(ruleRef, {
+      type: data.type,
+      amount: amountMinor / minorFactor(currency),
+      title: inputString(data.title, "Title", 120),
+      category: inputString(data.category, "Category", 60),
+      split,
+      frequency,
+      anchorDay: new Date(firstRunMillis).getUTCDate(),
+      nextRunAt: Timestamp.fromMillis(firstRunMillis),
+      active: true,
+      createdBy: uid,
+      createdByName: displayName,
+      createdAt: now,
+      lastRunAt: null,
+      lastError: null,
+    });
+  });
+  return {...resultTime(now), recurringId};
+});
+
+exports.deleteRecurring = functions.region("us-central1").https.onCall(async (data, context) => {
+  const uid = requireAuth(context);
+  const groupRef = groupRefFrom(data.groupId);
+  const recurringId = safeId(data.recurringId, "Recurring ID");
+  const ruleRef = groupRef.collection("recurring").doc(recurringId);
+  const now = Timestamp.now();
+  await db.runTransaction(async (transaction) => {
+    const {groupData} = await getGroupAndMember(transaction, groupRef.id, uid);
+    const snap = await transaction.get(ruleRef);
+    if (!snap.exists) return;
+    if (snap.data().createdBy !== uid && groupData.createdBy !== uid) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Only the person who set it up or the caisse creator can stop it.",
+      );
+    }
+    transaction.delete(ruleRef);
+  });
+  return resultTime(now);
+});
+
+const RECURRING_FAILURE_COPY = {
+  insufficient_balance: "the caisse did not hold enough money",
+  split_invalid: "someone in its split has left the caisse",
+};
+
+async function runRecurringRule(ruleRef) {
+  const groupRef = ruleRef.parent.parent;
+  if (!groupRef) return false;
+  const now = Timestamp.now();
+  let outcome = null;
+  await db.runTransaction(async (transaction) => {
+    outcome = null;
+    const ruleSnap = await transaction.get(ruleRef);
+    if (!ruleSnap.exists) return;
+    const rule = ruleSnap.data();
+    if (rule.active !== true || !rule.nextRunAt ||
+        rule.nextRunAt.toMillis() > now.toMillis()) {
+      return;
+    }
+    const [groupSnap, creatorSnap] = await Promise.all([
+      transaction.get(groupRef),
+      transaction.get(groupRef.collection("members").doc(rule.createdBy)),
+    ]);
+    if (!groupSnap.exists || !creatorSnap.exists) {
+      transaction.update(ruleRef, {active: false, lastError: "creator_left", lastRunAt: now});
+      return;
+    }
+    const runAt = rule.nextRunAt.toDate();
+    const nextRunAt = Timestamp.fromDate(nextOccurrence(
+      runAt,
+      rule.frequency,
+      Number.isInteger(rule.anchorDay) ? rule.anchorDay : runAt.getUTCDate(),
+    ));
+    const groupData = groupSnap.data();
+    const currency = groupData.currency || "MAD";
+    let amountMinor;
+    let split;
+    try {
+      amountMinor = amountInMinorUnits(rule.amount, currency);
+      split = groupData.isPersonal === true || rule.split == null
+        ? null
+        : await parseSplit(transaction, groupRef, rule.split, amountMinor, currency);
+    } catch (error) {
+      transaction.update(ruleRef, {nextRunAt, lastRunAt: now, lastError: "split_invalid"});
+      outcome = {failed: "split_invalid", rule};
+      return;
+    }
+    const delta = rule.type === "expense" ? -amountMinor : amountMinor;
+    const balance = await balanceMinorInTransaction(transaction, groupRef, groupData);
+    if (balance + delta < 0) {
+      transaction.update(ruleRef, {nextRunAt, lastRunAt: now, lastError: "insufficient_balance"});
+      outcome = {failed: "insufficient_balance", rule};
+      return;
+    }
+    const name = creatorSnap.data().displayName || rule.createdByName || "Member";
+    const movementRef = groupRef.collection("movements").doc();
+    const movement = {
+      type: rule.type === "expense" ? "expense" : "deposit",
+      amount: amountMinor / minorFactor(currency),
+      title: rule.title,
+      category: rule.category,
+      createdBy: rule.createdBy,
+      createdByName: name,
+      createdAt: now,
+      updatedAt: now,
+      updatedBy: rule.createdBy,
+      updatedByName: name,
+      receiptUrl: null,
+      deleted: false,
+      deletedAt: null,
+      isStartingBalance: false,
+      split,
+      originalCurrency: null,
+      originalAmount: null,
+      exchangeRate: null,
+      recurringId: ruleRef.id,
+    };
+    transaction.create(movementRef, movement);
+    transaction.set(groupRef, {balanceMinorUnits: balance + delta}, {merge: true});
+    auditWrite(transaction, groupRef, movementRef.id, "create", rule.createdBy, name, null, movement, now);
+    transaction.update(ruleRef, {nextRunAt, lastRunAt: now, lastError: null});
+    outcome = {created: true};
+  });
+  if (outcome && outcome.failed) {
+    const {rule, failed} = outcome;
+    await db.collection("users").doc(rule.createdBy).collection("notifications")
+      .doc(`recurring_failed_${ruleRef.id}_${now.toMillis()}`)
+      .set({
+        groupId: groupRef.id,
+        title: "Recurring movement skipped",
+        body: `"${rule.title}" was not added because ${RECURRING_FAILURE_COPY[failed]}.`,
+        type: "recurring_failed",
+        actorUid: rule.createdBy,
+        actorName: rule.createdByName || "Member",
+        createdAt: now,
+        read: false,
+      })
+      .catch((error) => console.error("recurring failure notice failed", ruleRef.path, error));
+  }
+  return outcome != null && outcome.created === true;
+}
+
+exports.runRecurringMovements = functions.region("us-central1")
+  .runWith({timeoutSeconds: 300, memory: "256MB"})
+  .pubsub.schedule("every 60 minutes")
+  .timeZone("Etc/UTC")
+  .onRun(async () => {
+    const due = await db.collectionGroup("recurring")
+      .where("active", "==", true)
+      .where("nextRunAt", "<=", Timestamp.now())
+      .limit(200)
+      .get();
+    let created = 0;
+    for (const doc of due.docs) {
+      try {
+        if (await runRecurringRule(doc.ref)) created++;
+      } catch (error) {
+        console.error("recurring run failed", doc.ref.path, error);
+      }
+    }
+    console.log(`Recurring movements: ${created} created from ${due.size} due rules`);
+    return created;
+  });
 
 exports.notifyMovementChange = functions.region("us-central1")
   .firestore.document("groups/{groupId}/movements/{movementId}")
@@ -1058,7 +1624,7 @@ exports.notifyMovementChange = functions.region("us-central1")
           type,
           actorUid,
           actorName: after.updatedByName || after.createdByName || null,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
           read: false,
         });
       count++;
@@ -1096,7 +1662,7 @@ exports.notifyMemberJoin = functions.region("us-central1")
           type: "member_join",
           actorUid,
           actorName,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
           read: false,
         });
       count++;
@@ -1248,8 +1814,8 @@ exports.deleteAccount = functions.region("us-central1")
       if (++count === 400) { await batch.commit(); batch = db.batch(); count = 0; }
     }
     if (count > 0) await batch.commit();
-    await admin.storage().bucket().deleteFiles({prefix: `users/${uid}/`});
+    await getStorage().bucket().deleteFiles({prefix: `users/${uid}/`});
     await db.collection("users").doc(uid).delete();
-    await admin.auth().deleteUser(uid);
+    await getAuth().deleteUser(uid);
     return {deleted: true};
   });

@@ -3,11 +3,12 @@ package com.encaisse.encaisse
 import android.content.Context
 import android.os.Build
 import android.telephony.TelephonyManager
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+// FragmentActivity is required by local_auth's BiometricPrompt (app lock).
+class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(

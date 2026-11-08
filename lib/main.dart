@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'providers/settings_provider.dart';
 import 'router/app_router.dart';
 import 'services/device_region.dart';
 import 'services/notification_service.dart';
+import 'widgets/app_lock_gate.dart';
 import 'widgets/force_update_gate.dart';
 import 'widgets/offline_banner.dart';
 
@@ -34,7 +36,8 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   if (!prefs.containsKey(kOnboardingCompletedKey)) {
-    final upgrading = prefs.containsKey('auth_remembered_email') ||
+    final upgrading =
+        prefs.containsKey('auth_remembered_email') ||
         prefs.containsKey('settings_theme_mode') ||
         prefs.containsKey('movement_success_count') ||
         prefs.containsKey('review_asked');
@@ -50,6 +53,15 @@ Future<void> main() async {
     );
     firebaseReady = true;
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    if (!kIsWeb) {
+      final crashlytics = FirebaseCrashlytics.instance;
+      await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
+      FlutterError.onError = crashlytics.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        crashlytics.recordError(error, stack, fatal: true);
+        return true;
+      };
+    }
   } catch (e, st) {
     debugPrint(
       '${FirebaseSetupNotes.placeholderNotice}\nFirebase init error: $e\n$st',
@@ -106,8 +118,12 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp>
   }
 
   Future<void> _syncNotifications(String? uid) async {
+    if (!kIsWeb && ref.read(firebaseReadyProvider)) {
+      FirebaseCrashlytics.instance.setUserIdentifier(uid ?? '').ignore();
+    }
     final service = ref.read(notificationServiceProvider);
     if (uid == null) {
+      ref.read(homeWidgetServiceProvider).clear().ignore();
       await service.stopListening();
       _notifUid = null;
       return;
@@ -120,7 +136,13 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp>
       if (!mounted) return;
       ref.read(routerProvider).go('/groups/$groupId');
     };
-    await service.initialize(uid: uid);
+    try {
+      await service.initialize(uid: uid);
+    } catch (e) {
+      debugPrint(
+        'Notification service init failed (FCM may be unavailable): $e',
+      );
+    }
     final pending = service.takePendingGroupId();
     if (pending != null && pending.isNotEmpty && mounted) {
       ref.read(routerProvider).go('/groups/$pending');
@@ -143,12 +165,11 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp>
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
       locale: settings.locale,
-      localeListResolutionCallback: (deviceLocales, supported) {
-        if (settings.locale != null) {
-          return settings.locale;
-        }
-        return resolveDeviceLocale(deviceLocales);
-      },
+      // Flutter passes `[locale]` here when a language is forced, and the
+      // phone languages otherwise; the latter result is cached, so returning
+      // the forced language would stick after switching back to the phone's.
+      localeListResolutionCallback: (locales, supported) =>
+          resolveDeviceLocale(locales),
       supportedLocales: supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -158,9 +179,9 @@ class _EncaisseAppState extends ConsumerState<EncaisseApp>
       ],
       routerConfig: router,
       builder: (context, child) {
-        return ForceUpdateGate(
-          child: OfflineBanner(
-            child: child ?? const SizedBox.shrink(),
+        return AppLockGate(
+          child: ForceUpdateGate(
+            child: OfflineBanner(child: child ?? const SizedBox.shrink()),
           ),
         );
       },

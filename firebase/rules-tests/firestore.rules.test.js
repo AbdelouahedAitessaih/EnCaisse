@@ -94,6 +94,24 @@ test("members can update their own safe profile fields but not group identity", 
   await assertSucceeds(updateDoc(doc(ownerDb, "groups/g1"), {name: "Renamed"}));
 });
 
+test("recurring rules are readable by members and written only by the server", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "groups/g1/recurring/r1"), {
+      type: "expense",
+      amount: 20,
+      createdBy: "owner",
+      active: true,
+    });
+  });
+  const memberDb = env.authenticatedContext("member").firestore();
+  const ownerDb = env.authenticatedContext("owner").firestore();
+  const outsiderDb = env.authenticatedContext("outsider").firestore();
+  await assertSucceeds(getDoc(doc(memberDb, "groups/g1/recurring/r1")));
+  await assertFails(getDoc(doc(outsiderDb, "groups/g1/recurring/r1")));
+  await assertFails(updateDoc(doc(ownerDb, "groups/g1/recurring/r1"), {amount: 1}));
+  await assertFails(setDoc(doc(memberDb, "groups/g1/recurring/r2"), {amount: 5}));
+});
+
 test("users can mark their own notifications read, but cannot change other fields", async () => {
   await env.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "users/member/notifications/n1"), {

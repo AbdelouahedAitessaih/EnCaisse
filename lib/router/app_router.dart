@@ -13,6 +13,7 @@ import '../screens/group/create_group_screen.dart';
 import '../screens/group/group_insights_screen.dart';
 import '../screens/group/group_screen.dart';
 import '../screens/group/join_group_screen.dart';
+import '../screens/group/recurring_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/movement/movement_detail_screen.dart';
 import '../screens/movement/movement_form_screen.dart';
@@ -23,6 +24,13 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/settings/settings_screen.dart';
 
 const kOnboardingCompletedKey = 'onboarding_completed';
+const kPendingInviteCodeKey = 'pending_invite_code';
+
+final _inviteCodePattern = RegExp(r'^/join/([A-HJ-NP-Za-hj-np-z2-9]{6})/?$');
+
+/// Invite code carried by a `/join/CODE` location, upper-cased, or null.
+String? _inviteCodeFrom(String location) =>
+    _inviteCodePattern.firstMatch(location)?.group(1)?.toUpperCase();
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -52,10 +60,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final user = ref.read(authServiceProvider).currentUser ?? streamUser;
       final isLoading = authState.isLoading;
       final onboardingDone = prefs.getBool(kOnboardingCompletedKey) ?? false;
+      final inviteCode = _inviteCodeFrom(loc);
 
       if (isLoading) return null;
 
       if (user == null) {
+        // An invite link opened while signed out must survive sign-up, or the
+        // person lands on Home with no idea which group they were invited to.
+        if (inviteCode != null) {
+          prefs.setString(kPendingInviteCodeKey, inviteCode);
+        }
         if (!onboardingDone && loc != '/onboarding') {
           return '/onboarding';
         }
@@ -70,6 +84,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final auth = ref.read(authServiceProvider);
       if (auth.needsEmailVerification(user) && !verifying) {
+        if (inviteCode != null) {
+          prefs.setString(kPendingInviteCodeKey, inviteCode);
+        }
         return '/verify-email';
       }
       if (!auth.needsEmailVerification(user) && verifying) {
@@ -81,6 +98,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       if (loc == '/onboarding') {
         return '/home';
+      }
+      if (loc == '/home') {
+        final pending = prefs.getString(kPendingInviteCodeKey);
+        if (pending != null) {
+          prefs.remove(kPendingInviteCodeKey);
+          if (_inviteCodeFrom('/join/$pending') != null) {
+            return '/join/$pending';
+          }
+        }
       }
 
       return null;
@@ -125,6 +151,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const JoinGroupScreen(),
       ),
       GoRoute(
+        path: '/join/:code',
+        builder: (context, state) => JoinGroupScreen(
+          initialCode: _inviteCodeFrom(state.matchedLocation),
+        ),
+      ),
+      GoRoute(
         path: '/groups/:groupId',
         builder: (context, state) {
           final groupId = state.pathParameters['groupId']!;
@@ -136,6 +168,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final groupId = state.pathParameters['groupId']!;
               return GroupInsightsScreen(groupId: groupId);
+            },
+          ),
+          GoRoute(
+            path: 'recurring',
+            builder: (context, state) {
+              final groupId = state.pathParameters['groupId']!;
+              return RecurringScreen(groupId: groupId);
             },
           ),
           GoRoute(

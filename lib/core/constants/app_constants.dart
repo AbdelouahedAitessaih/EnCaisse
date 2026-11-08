@@ -5,11 +5,16 @@ abstract final class AppConstants {
   static const String appName = 'EnCaisse';
   static const String tagline = 'EnCaisse, ensemble.';
   static const int inviteCodeLength = 6;
+
+  /// Landing page served by Firebase Hosting (docs/play-store/join.html).
+  static String inviteLink(String code) =>
+      'https://encaisse-3c7fb.web.app/join/$code';
   static const Duration softDeleteWindow = Duration(hours: 24);
   static const int groupsBeforeInterstitial = 3;
   static const int movementsBeforeReview = 5;
 
-  static const List<String> categories = [
+  /// Category keys used for storage. Display labels are localized via AppLocalizations.
+  static const List<String> categoryKeys = [
     'Food',
     'Transport',
     'Rent',
@@ -22,19 +27,21 @@ abstract final class AppConstants {
     'Gift',
     'Other',
   ];
+
+  /// Backward compatibility — returns English keys.
+  @Deprecated('Use AppLocalizations extension instead')
+  static const List<String> categories = categoryKeys;
 }
 
 /// Production AdMob IDs (Android app Ready in AdMob).
 /// Banner: Home. Interstitial: after creating the 3rd group.
 abstract final class AdMobConfig {
   /// Android app ID — also set in AndroidManifest.xml
-  static const String androidAppId =
-      'ca-app-pub-7691333173853968~2642191347';
+  static const String androidAppId = 'ca-app-pub-7691333173853968~2642191347';
 
   /// iOS AdMob app ID — create a dedicated iOS app in AdMob and replace.
   /// Until then, uses the same publisher app entry as Android (ads may be limited on iOS).
-  static const String iosAppId =
-      'ca-app-pub-7691333173853968~2642191347';
+  static const String iosAppId = 'ca-app-pub-7691333173853968~2642191347';
 
   /// Banner on Home screen only
   static const String bannerAdUnitIdAndroid =

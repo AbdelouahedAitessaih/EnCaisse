@@ -31,6 +31,10 @@
     ],
     "rewrites": [
       {
+        "source": "/join/**",
+        "destination": "/join.html"
+      },
+      {
         "source": "/",
         "destination": "/privacy.html"
       }

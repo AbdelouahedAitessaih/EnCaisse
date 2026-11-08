@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/currencies.dart';
-import '../../core/theme/app_colors.dart';
+
 import '../../core/utils/user_error.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
@@ -70,10 +72,13 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     });
 
     try {
-      final group = await ref.read(groupServiceProvider).createGroup(
+      final group = await ref
+          .read(groupServiceProvider)
+          .createGroup(
             name: _name.text,
             createdBy: user.uid,
-            displayName: profile?.displayName ??
+            displayName:
+                profile?.displayName ??
                 user.displayName ??
                 AppLocalizations.of(context).member,
             photoUrl: profile?.photoUrl ?? user.photoURL,
@@ -82,23 +87,23 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
           );
 
       final newCount = (profile?.groupsCreatedCount ?? 0) + 1;
-      await ref.read(authServiceProvider).updateUserFields(user.uid, {
-        'groupsCreatedCount': newCount,
-      });
-
-      // Interstitial only after creating the 3rd group
-      if (newCount == AppConstants.groupsBeforeInterstitial) {
-        await ref.read(adServiceProvider).showInterstitialIfReady();
-      }
+      unawaited(
+        ref.read(authServiceProvider).updateUserFields(user.uid, {
+          'groupsCreatedCount': newCount,
+        }),
+      );
 
       HapticFeedback.mediumImpact();
       if (mounted) {
-        // Keep Home under the group so the back button works.
         context.go('/home');
         context.push('/groups/${group.id}');
       }
+
+      if (newCount == AppConstants.groupsBeforeInterstitial) {
+        ref.read(adServiceProvider).showInterstitialIfReady();
+      }
     } catch (e) {
-      setState(() => _error = userFacingError(e));
+      if (mounted) setState(() => _error = userFacingError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -114,7 +119,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.createAGroup)),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
@@ -182,9 +187,14 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 16),
-                  Text(_error!, style: const TextStyle(color: AppColors.error)),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 ],
-                const Spacer(),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _loading ? null : _create,
                   child: _loading

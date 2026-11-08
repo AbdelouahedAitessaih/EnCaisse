@@ -32,8 +32,11 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if ownsUser(uid);
       allow create: if ownsUser(uid) && validProfileKeys();
+      // On update only the changed keys matter. Re-checking the whole document
+      // against validProfileKeys() broke every client write the moment the
+      // server added a field outside that list, so keep the affectedKeys check
+      // alone here.
       allow update: if ownsUser(uid)
-        && validProfileKeys()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'displayName', 'email', 'photoUrl', 'createdAt', 'fcmToken',
           'fcmTokens', 'fcmTokenUpdatedAt', 'movementSuccessCount',
@@ -117,6 +120,17 @@ service cloud.firestore {
       match /settlements/{settlementId} {
         allow read: if isGroupMember(groupId);
         allow write: if false;
+      }
+
+      match /recurring/{ruleId} {
+        allow read: if isGroupMember(groupId);
+        allow write: if false;
+      }
+
+      // Server-side replay bookkeeping only. Denied to clients explicitly so a
+      // future rule change cannot accidentally expose it.
+      match /settlementGuards/{pairId} {
+        allow read, write: if false;
       }
     }
   }

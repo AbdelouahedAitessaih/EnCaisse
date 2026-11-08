@@ -414,7 +414,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get delete => '删除';
 
   @override
-  String get movementDeletedUndo => '流水已删除 — 撤销';
+  String get movementDeletedUndo => '流水已删除';
 
   @override
   String get undo => '撤销';
@@ -732,7 +732,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chartsTitle => '图表';
 
   @override
-  String get categoryBreakdown => '按类别';
+  String get categoryBreakdown => '按类别的支出';
 
   @override
   String get exportCsv => '导出 CSV';
@@ -883,4 +883,282 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get creatingPersonal => '正在打开您的个人账本…';
+
+  @override
+  String get categoryFood => '餐饮';
+
+  @override
+  String get categoryTransport => '交通';
+
+  @override
+  String get categoryRent => '房租';
+
+  @override
+  String get categoryUtilities => '水电';
+
+  @override
+  String get categoryEntertainment => '娱乐';
+
+  @override
+  String get categoryShopping => '购物';
+
+  @override
+  String get categoryHealth => '医疗';
+
+  @override
+  String get categoryTravel => '旅行';
+
+  @override
+  String get categorySalary => '工资';
+
+  @override
+  String get categoryGift => '礼物';
+
+  @override
+  String get categoryOther => '其他';
+
+  @override
+  String get retry => '重试';
+
+  @override
+  String get caisseDeleting => '正在删除账本…';
+
+  @override
+  String get groupDeleting => '正在删除群组…';
+
+  @override
+  String get balancePerCaisse => '不同币种的余额永远不会相加。';
+
+  @override
+  String balanceAcrossCaisses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '总计 $count 个账本',
+      one: '总计 $count 个账本',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountTitle => '删除账号';
+
+  @override
+  String get deleteAccountSubtitle => '删除您的 EnCaisse 账号及所有个人数据';
+
+  @override
+  String get deleteAccountConfirm => '删除您的账号？';
+
+  @override
+  String get deleteAccountWarning => '此操作无法撤销。出于安全考虑，请在删除前重新登录。';
+
+  @override
+  String get security => '安全';
+
+  @override
+  String get appLock => '应用锁';
+
+  @override
+  String get appLockHint => '打开 EnCaisse 时要求指纹、面容或设备密码';
+
+  @override
+  String get appLockUnavailable => '此设备未设置指纹、面容或屏幕锁';
+
+  @override
+  String get appLockReason => '解锁 EnCaisse';
+
+  @override
+  String get appLockTitle => 'EnCaisse 已锁定';
+
+  @override
+  String get appLockUnlock => '解锁';
+
+  @override
+  String convertedAmount(String amount) {
+    return '= 账本货币 $amount';
+  }
+
+  @override
+  String get enterValidRate => '请输入有效的汇率';
+
+  @override
+  String exchangeRateLabel(String from, String to) {
+    return '汇率（1 $from = ? $to）';
+  }
+
+  @override
+  String get exchangeRateUnavailable => '无法获取汇率，请手动输入。';
+
+  @override
+  String get formerMember => '前成员';
+
+  @override
+  String homeWidgetMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '另有 $count 个账本',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWidgetUpdated(String time) {
+    return '更新于 $time';
+  }
+
+  @override
+  String get markReceived => '标记为已收到';
+
+  @override
+  String markReceivedConfirm(String name, String amount) {
+    return '确认已收到 $name 的 $amount？';
+  }
+
+  @override
+  String paidInCurrency(String amount, String rate) {
+    return '原始金额 $amount · 汇率 $rate';
+  }
+
+  @override
+  String paymentRequestText(String name, String amount, String group) {
+    return '你好 $name，你在 EnCaisse 账本“$group”中欠我 $amount。谢谢！';
+  }
+
+  @override
+  String get recurringBadge => '定期';
+
+  @override
+  String get recurringCreatorLeft => '已停止：创建者已离开账本';
+
+  @override
+  String get recurringEmpty => '添加收支时选择“重复”，即可自动记录房租、订阅或零花钱。';
+
+  @override
+  String recurringNext(String date) {
+    return '下次：$date';
+  }
+
+  @override
+  String recurringSetupFailed(String details) {
+    return '收支已保存，但无法设置重复：$details';
+  }
+
+  @override
+  String get recurringSkippedBalance => '上次执行已跳过：余额不足';
+
+  @override
+  String get recurringSkippedSplit => '上次执行已跳过：部分参与者已离开账本';
+
+  @override
+  String get recurringStop => '停止';
+
+  @override
+  String get recurringStopConfirm => '停止此定期收支？已创建的收支将保留。';
+
+  @override
+  String get recurringTitle => '定期收支';
+
+  @override
+  String get repeatLabel => '重复';
+
+  @override
+  String get repeatNever => '从不';
+
+  @override
+  String get repeatWeekly => '每周';
+
+  @override
+  String get repeatMonthly => '每月';
+
+  @override
+  String get requestPayment => '请求付款';
+
+  @override
+  String get searchMovements => '搜索收支';
+
+  @override
+  String shareInviteLinkText(String name, String link, String code) {
+    return '加入我在 EnCaisse 的账本“$name”：$link\n或在应用中输入邀请码 $code。';
+  }
+
+  @override
+  String get splitBalanced => '份额与金额一致';
+
+  @override
+  String splitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 人分摊',
+      one: '1 人',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitCustom => '自定义';
+
+  @override
+  String get splitEqually => '平均';
+
+  @override
+  String get splitEveryone => '所有人';
+
+  @override
+  String get splitJustMe => '仅我';
+
+  @override
+  String get splitMustMatch => '份额之和必须等于金额';
+
+  @override
+  String get splitPickSomeone => '请至少选择一人';
+
+  @override
+  String splitRemaining(String amount) {
+    return '待分配：$amount';
+  }
+
+  @override
+  String get splitTitleDeposit => '出资人';
+
+  @override
+  String get splitTitleExpense => '分摊成员';
+
+  @override
+  String get you => '你';
+
+  @override
+  String get forgotPassword => '忘记密码？';
+
+  @override
+  String get resetPasswordTitle => '重置密码';
+
+  @override
+  String get resetPasswordBody => '输入账户邮箱，我们会发送一个设置新密码的链接。';
+
+  @override
+  String get resetPasswordSend => '发送链接';
+
+  @override
+  String resetPasswordSent(String email) {
+    return '如果 $email 存在账户，重置链接即将送达。请查看收件箱和垃圾邮件。';
+  }
+
+  @override
+  String get resetPasswordTooMany => '尝试次数过多，请稍等几分钟后再试。';
+
+  @override
+  String get resetPasswordFailed => '无法发送重置邮件，请检查网络后重试。';
+
+  @override
+  String get memberSettled => '已结清';
+
+  @override
+  String get addPhoto => '添加照片';
+
+  @override
+  String availableInCaisse(String amount) {
+    return '可用：$amount';
+  }
 }

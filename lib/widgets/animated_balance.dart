@@ -20,11 +20,12 @@ class AnimatedBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final baseStyle = style ??
+    final tones = context.semantic;
+    final baseStyle =
+        style ??
         Theme.of(context).textTheme.displayLarge?.copyWith(
-              color: value >= 0 ? AppColors.primary : AppColors.accent,
-            );
+          color: value >= 0 ? tones.positive : tones.negative,
+        );
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: value),
@@ -32,8 +33,9 @@ class AnimatedBalance extends StatelessWidget {
       curve: Curves.easeOutCubic,
       builder: (context, animated, _) {
         return Text(
-          formatMoney(animated, currency: currency, locale: locale),
+          formatMoney(animated, currency: currency),
           style: baseStyle,
+          textDirection: TextDirection.ltr,
         );
       },
     );

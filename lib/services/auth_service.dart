@@ -12,9 +12,9 @@ class AuthService {
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _db = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _db = firestore ?? FirebaseFirestore.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
@@ -68,6 +68,9 @@ class AuthService {
     if (user == null || user.emailVerified) return;
     await user.sendEmailVerification();
   }
+
+  Future<void> sendPasswordReset(String email) =>
+      _auth.sendPasswordResetEmail(email: email.trim());
 
   Future<bool> reloadAndCheckEmailVerified() async {
     var user = _auth.currentUser;
@@ -135,7 +138,8 @@ class AuthService {
   /// True only when the user clearly dismissed the picker (not a SHA/[16] fake cancel).
   bool _isGenuineUserCancel(Object e) {
     final s = e.toString();
-    final looksCanceled = s.contains('GoogleSignInExceptionCode.canceled') ||
+    final looksCanceled =
+        s.contains('GoogleSignInExceptionCode.canceled') ||
         s.contains('sign_in_canceled') ||
         s.contains('web-context-canceled') ||
         s.contains('ERROR_WEB_CONTEXT_CANCELED') ||
@@ -226,8 +230,8 @@ class AuthService {
     final fallbackName = displayNameOverride?.trim().isNotEmpty == true
         ? displayNameOverride!.trim()
         : (user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!.trim()
-            : (user.email?.split('@').first ?? 'Member'));
+              ? user.displayName!.trim()
+              : (user.email?.split('@').first ?? 'Member'));
     final email = user.email ?? '';
 
     if (snap.exists) {
@@ -307,6 +311,7 @@ class AuthService {
         'createdAt': Timestamp.fromDate(DateTime.now()),
       if (clearPhotoUrl)
         'photoUrl': null
+      // ignore: use_null_aware_elements
       else if (photoUrl != null)
         'photoUrl': photoUrl,
     };

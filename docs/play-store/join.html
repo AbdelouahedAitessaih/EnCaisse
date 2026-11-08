@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Join a caisse on EnCaisse</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.55;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+      color: #1a1a1a;
+      background: #fafaf8;
+      text-align: center;
+    }
+    h1 { color: #0F6E56; font-size: 1.6rem; margin-bottom: 0.5rem; }
+    p { color: #444; }
+    .code {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 0.35rem;
+      color: #0A5240;
+      background: #e6f4f0;
+      border: 1px solid #cfe8df;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+    }
+    .button {
+      display: block;
+      padding: 0.95rem 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      margin: 0.75rem 0;
+    }
+    .primary { background: #0F6E56; color: #fff; }
+    .secondary { border: 1px solid #0F6E56; color: #0F6E56; }
+    .hint { font-size: 0.9rem; color: #6b6b6b; margin-top: 1.5rem; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1 id="title">You're invited to a caisse</h1>
+  <p id="intro">Open EnCaisse to join. If the app is not installed yet, install it and enter this code:</p>
+  <div class="code" id="code">——————</div>
+  <a class="button primary" id="open" href="#">Open in EnCaisse</a>
+  <a class="button secondary" id="store"
+     href="https://play.google.com/store/apps/details?id=com.encaisse.encaisse">Get EnCaisse on Google Play</a>
+  <p class="hint" id="hint">On iPhone, open EnCaisse, choose “Join with code” and enter the code above.</p>
+  <p class="hint hidden" id="invalid">This invite link is not valid. Ask for a new one.</p>
+
+  <script>
+    (function () {
+      var copy = {
+        fr: {
+          title: "Vous êtes invité à rejoindre une caisse",
+          intro: "Ouvrez EnCaisse pour rejoindre. Si l’application n’est pas encore installée, installez-la puis saisissez ce code :",
+          open: "Ouvrir dans EnCaisse",
+          store: "Télécharger EnCaisse sur Google Play",
+          hint: "Sur iPhone, ouvrez EnCaisse, choisissez « Rejoindre avec un code » et saisissez le code ci-dessus.",
+          invalid: "Ce lien d’invitation n’est pas valide. Demandez-en un nouveau."
+        }
+      };
+      var lang = (navigator.language || "en").slice(0, 2).toLowerCase();
+      var strings = copy[lang];
+      if (strings) {
+        document.documentElement.lang = lang;
+        Object.keys(strings).forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = strings[id];
+        });
+      }
+
+      var match = /^\/join\/([A-HJ-NP-Za-hj-np-z2-9]{6})\/?$/.exec(location.pathname);
+      if (!match) {
+        document.getElementById("code").classList.add("hidden");
+        document.getElementById("open").classList.add("hidden");
+        document.getElementById("intro").classList.add("hidden");
+        document.getElementById("invalid").classList.remove("hidden");
+        return;
+      }
+      var code = match[1].toUpperCase();
+      document.getElementById("code").textContent = code;
+
+      var store = document.getElementById("store").href;
+      var open = document.getElementById("open");
+      if (/android/i.test(navigator.userAgent)) {
+        open.href = "intent://app/join/" + code +
+          "#Intent;scheme=encaisse;package=com.encaisse.encaisse;" +
+          "S.browser_fallback_url=" + encodeURIComponent(store) + ";end";
+      } else {
+        open.href = "encaisse://app/join/" + code;
+      }
+    })();
+  </script>
+</body>
+</html>

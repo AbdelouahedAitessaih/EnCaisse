@@ -423,7 +423,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get delete => 'हटाएँ';
 
   @override
-  String get movementDeletedUndo => 'लेन-देन हटाया गया — पूर्ववत';
+  String get movementDeletedUndo => 'लेन-देन हटाया गया';
 
   @override
   String get undo => 'पूर्ववत';
@@ -753,7 +753,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chartsTitle => 'चार्ट';
 
   @override
-  String get categoryBreakdown => 'श्रेणी के अनुसार';
+  String get categoryBreakdown => 'श्रेणी के अनुसार खर्च';
 
   @override
   String get exportCsv => 'CSV निर्यात';
@@ -914,4 +914,294 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get creatingPersonal => 'आपकी व्यक्तिगत कैश खुल रही है…';
+
+  @override
+  String get categoryFood => 'खाना';
+
+  @override
+  String get categoryTransport => 'परिवहन';
+
+  @override
+  String get categoryRent => 'किराया';
+
+  @override
+  String get categoryUtilities => 'सार्वजनिक सेवाएं';
+
+  @override
+  String get categoryEntertainment => 'मनोरंजन';
+
+  @override
+  String get categoryShopping => 'खरीदारी';
+
+  @override
+  String get categoryHealth => 'स्वास्थ्य';
+
+  @override
+  String get categoryTravel => 'यात्रा';
+
+  @override
+  String get categorySalary => 'वेतन';
+
+  @override
+  String get categoryGift => 'उपहार';
+
+  @override
+  String get categoryOther => 'अन्य';
+
+  @override
+  String get retry => 'फिर कोशिश करें';
+
+  @override
+  String get caisseDeleting => 'कैश हटाया जा रहा है…';
+
+  @override
+  String get groupDeleting => 'समूह हटाया जा रहा है…';
+
+  @override
+  String get balancePerCaisse =>
+      'अलग-अलग मुद्राओं के बैलेंस कभी नहीं जोड़े जाते।';
+
+  @override
+  String balanceAcrossCaisses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'कुल $count कैश में',
+      one: 'कुल $count कैश में',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteAccountTitle => 'खाता हटाएं';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'अपना EnCaisse खाता और सभी निजी डेटा हटाएं';
+
+  @override
+  String get deleteAccountConfirm => 'क्या आप अपना खाता हटाएं?';
+
+  @override
+  String get deleteAccountWarning =>
+      'यह कार्रवाई पूर्ववत नहीं की जा सकती। सुरक्षा के लिए, हटाने से पहले फिर से साइन इन करें।';
+
+  @override
+  String get security => 'सुरक्षा';
+
+  @override
+  String get appLock => 'ऐप लॉक';
+
+  @override
+  String get appLockHint =>
+      'EnCaisse खोलते समय फ़िंगरप्रिंट, चेहरा या डिवाइस PIN माँगें';
+
+  @override
+  String get appLockUnavailable =>
+      'इस डिवाइस पर कोई फ़िंगरप्रिंट, चेहरा या स्क्रीन लॉक सेट नहीं है';
+
+  @override
+  String get appLockReason => 'EnCaisse अनलॉक करें';
+
+  @override
+  String get appLockTitle => 'EnCaisse लॉक है';
+
+  @override
+  String get appLockUnlock => 'अनलॉक करें';
+
+  @override
+  String convertedAmount(String amount) {
+    return '= कैश की मुद्रा में $amount';
+  }
+
+  @override
+  String get enterValidRate => 'मान्य विनिमय दर दर्ज करें';
+
+  @override
+  String exchangeRateLabel(String from, String to) {
+    return 'विनिमय दर (1 $from = ? $to)';
+  }
+
+  @override
+  String get exchangeRateUnavailable => 'दर नहीं मिल सकी। इसे स्वयं दर्ज करें।';
+
+  @override
+  String get formerMember => 'पूर्व सदस्य';
+
+  @override
+  String homeWidgetMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count और कैश',
+      one: '+1 और कैश',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeWidgetUpdated(String time) {
+    return '$time पर अपडेट किया गया';
+  }
+
+  @override
+  String get markReceived => 'प्राप्त के रूप में चिह्नित करें';
+
+  @override
+  String markReceivedConfirm(String name, String amount) {
+    return 'पुष्टि करें कि आपको $name से $amount मिले?';
+  }
+
+  @override
+  String paidInCurrency(String amount, String rate) {
+    return 'मूल राशि $amount · दर $rate';
+  }
+
+  @override
+  String paymentRequestText(String name, String amount, String group) {
+    return 'नमस्ते $name, EnCaisse पर कैश \"$group\" में आप पर मेरे $amount बाकी हैं। धन्यवाद!';
+  }
+
+  @override
+  String get recurringBadge => 'आवर्ती';
+
+  @override
+  String get recurringCreatorLeft => 'रोका गया: इसके निर्माता ने कैश छोड़ दिया';
+
+  @override
+  String get recurringEmpty =>
+      'किराया, सदस्यता या जेब खर्च स्वचालित करने के लिए लेन-देन जोड़ते समय \"दोहराएँ\" चुनें।';
+
+  @override
+  String recurringNext(String date) {
+    return 'अगला: $date';
+  }
+
+  @override
+  String recurringSetupFailed(String details) {
+    return 'लेन-देन सहेजा गया, लेकिन दोहराव सेट नहीं हो सका: $details';
+  }
+
+  @override
+  String get recurringSkippedBalance => 'पिछला रन छोड़ा गया: पर्याप्त शेष नहीं';
+
+  @override
+  String get recurringSkippedSplit =>
+      'पिछला रन छोड़ा गया: कुछ प्रतिभागियों ने कैश छोड़ दिया';
+
+  @override
+  String get recurringStop => 'रोकें';
+
+  @override
+  String get recurringStopConfirm =>
+      'यह आवर्ती लेन-देन रोकें? पहले से बने लेन-देन बने रहेंगे।';
+
+  @override
+  String get recurringTitle => 'आवर्ती लेन-देन';
+
+  @override
+  String get repeatLabel => 'दोहराएँ';
+
+  @override
+  String get repeatNever => 'कभी नहीं';
+
+  @override
+  String get repeatWeekly => 'हर सप्ताह';
+
+  @override
+  String get repeatMonthly => 'हर महीने';
+
+  @override
+  String get requestPayment => 'भुगतान का अनुरोध करें';
+
+  @override
+  String get searchMovements => 'लेन-देन खोजें';
+
+  @override
+  String shareInviteLinkText(String name, String link, String code) {
+    return 'EnCaisse पर मेरे कैश \"$name\" से जुड़ें: $link\nया ऐप में कोड $code दर्ज करें।';
+  }
+
+  @override
+  String get splitBalanced => 'हिस्से राशि से मेल खाते हैं';
+
+  @override
+  String splitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count में बँटा',
+      one: '1 व्यक्ति के लिए',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get splitCustom => 'कस्टम';
+
+  @override
+  String get splitEqually => 'बराबर';
+
+  @override
+  String get splitEveryone => 'सभी';
+
+  @override
+  String get splitJustMe => 'केवल मैं';
+
+  @override
+  String get splitMustMatch => 'हिस्सों का योग राशि के बराबर होना चाहिए';
+
+  @override
+  String get splitPickSomeone => 'कम से कम एक व्यक्ति चुनें';
+
+  @override
+  String splitRemaining(String amount) {
+    return 'बाँटना शेष: $amount';
+  }
+
+  @override
+  String get splitTitleDeposit => 'योगदानकर्ता';
+
+  @override
+  String get splitTitleExpense => 'इनके बीच बँटा';
+
+  @override
+  String get you => 'आप';
+
+  @override
+  String get forgotPassword => 'पासवर्ड भूल गए?';
+
+  @override
+  String get resetPasswordTitle => 'पासवर्ड रीसेट करें';
+
+  @override
+  String get resetPasswordBody =>
+      'अपने खाते का ईमेल दर्ज करें, हम नया पासवर्ड चुनने का लिंक भेजेंगे।';
+
+  @override
+  String get resetPasswordSend => 'लिंक भेजें';
+
+  @override
+  String resetPasswordSent(String email) {
+    return 'यदि $email के लिए खाता है, तो रीसेट लिंक आ रहा है। इनबॉक्स और स्पैम देखें।';
+  }
+
+  @override
+  String get resetPasswordTooMany =>
+      'बहुत अधिक प्रयास। कुछ मिनट रुककर फिर कोशिश करें।';
+
+  @override
+  String get resetPasswordFailed =>
+      'ईमेल नहीं भेजा जा सका। कनेक्शन जाँचें और फिर कोशिश करें।';
+
+  @override
+  String get memberSettled => 'बराबर';
+
+  @override
+  String get addPhoto => 'फ़ोटो जोड़ें';
+
+  @override
+  String availableInCaisse(String amount) {
+    return 'उपलब्ध: $amount';
+  }
 }

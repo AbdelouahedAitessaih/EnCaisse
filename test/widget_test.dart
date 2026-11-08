@@ -75,16 +75,8 @@ void main() {
 
   test('settle computes who owes whom for equal share', () {
     final members = [
-      GroupMember(
-        uid: 'a',
-        displayName: 'Alice',
-        joinedAt: DateTime(2026),
-      ),
-      GroupMember(
-        uid: 'b',
-        displayName: 'Bob',
-        joinedAt: DateTime(2026),
-      ),
+      GroupMember(uid: 'a', displayName: 'Alice', joinedAt: DateTime(2026)),
+      GroupMember(uid: 'b', displayName: 'Bob', joinedAt: DateTime(2026)),
     ];
     final movements = [
       _mov(

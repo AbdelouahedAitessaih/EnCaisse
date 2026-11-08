@@ -57,7 +57,8 @@ class _AuthorizedImageState extends State<AuthorizedImage> {
         width: widget.width,
         height: widget.height,
         errorBuilder: (context, error, _) =>
-            widget.errorBuilder?.call(context, error) ?? const SizedBox.shrink(),
+            widget.errorBuilder?.call(context, error) ??
+            const SizedBox.shrink(),
       );
     }
     return FutureBuilder<Uint8List?>(
@@ -72,11 +73,14 @@ class _AuthorizedImageState extends State<AuthorizedImage> {
           return SizedBox(
             width: widget.width,
             height: widget.height,
-            child: const Center(
+            child: Center(
               child: SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           );
@@ -87,7 +91,8 @@ class _AuthorizedImageState extends State<AuthorizedImage> {
           width: widget.width,
           height: widget.height,
           errorBuilder: (context, error, _) =>
-              widget.errorBuilder?.call(context, error) ?? const SizedBox.shrink(),
+              widget.errorBuilder?.call(context, error) ??
+              const SizedBox.shrink(),
         );
       },
     );

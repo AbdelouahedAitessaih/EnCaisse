@@ -35,8 +35,9 @@ class _ForceUpdateGateState extends ConsumerState<ForceUpdateGate> {
       return;
     }
     try {
-      final decision =
-          await ref.read(appUpdateServiceProvider).checkForUpdate();
+      final decision = await ref
+          .read(appUpdateServiceProvider)
+          .checkForUpdate();
       if (!mounted) return;
       setState(() {
         _decision = decision;
@@ -83,10 +84,9 @@ class _ForceUpdateGateState extends ConsumerState<ForceUpdateGate> {
   Future<void> _runUpdate({required bool immediate}) async {
     setState(() => _updating = true);
     try {
-      await ref.read(appUpdateServiceProvider).startUpdate(
-            immediate: immediate,
-            config: _decision?.config,
-          );
+      await ref
+          .read(appUpdateServiceProvider)
+          .startUpdate(immediate: immediate, config: _decision?.config);
     } finally {
       if (mounted) setState(() => _updating = false);
     }
@@ -114,34 +114,34 @@ class _ForceUpdateGateState extends ConsumerState<ForceUpdateGate> {
       children: [
         widget.child,
         Material(
-          color: AppColors.background,
+          color: Theme.of(context).colorScheme.surface,
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.system_update_alt,
                     size: 72,
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     l10n.forceUpdateTitle,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     message,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   SizedBox(
@@ -154,7 +154,10 @@ class _ForceUpdateGateState extends ConsumerState<ForceUpdateGate> {
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : Text(l10n.updateNow),
                     ),

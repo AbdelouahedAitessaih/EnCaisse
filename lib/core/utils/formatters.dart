@@ -10,11 +10,7 @@ String generateInviteCode({int length = 6}) {
   return List.generate(length, (_) => chars[rng.nextInt(chars.length)]).join();
 }
 
-String formatMoney(
-  num amount, {
-  String currency = 'MAD',
-  String? locale,
-}) {
+String formatMoney(num amount, {String currency = 'MAD', String? locale}) {
   final code = currency.toUpperCase();
   final digits = AppCurrencies.decimalDigits(code);
   try {

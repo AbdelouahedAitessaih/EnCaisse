@@ -901,7 +901,7 @@ abstract class AppLocalizations {
   /// No description provided for @movementDeletedUndo.
   ///
   /// In en, this message translates to:
-  /// **'Movement deleted — Undo'**
+  /// **'Movement deleted'**
   String get movementDeletedUndo;
 
   /// No description provided for @undo.
@@ -1483,7 +1483,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoryBreakdown.
   ///
   /// In en, this message translates to:
-  /// **'By category'**
+  /// **'Spending by category'**
   String get categoryBreakdown;
 
   /// No description provided for @exportCsv.
@@ -1785,6 +1785,468 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opening your personal caisse…'**
   String get creatingPersonal;
+
+  /// No description provided for @categoryFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get categoryFood;
+
+  /// No description provided for @categoryTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get categoryTransport;
+
+  /// No description provided for @categoryRent.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent'**
+  String get categoryRent;
+
+  /// No description provided for @categoryUtilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get categoryUtilities;
+
+  /// No description provided for @categoryEntertainment.
+  ///
+  /// In en, this message translates to:
+  /// **'Entertainment'**
+  String get categoryEntertainment;
+
+  /// No description provided for @categoryShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get categoryShopping;
+
+  /// No description provided for @categoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get categoryHealth;
+
+  /// No description provided for @categoryTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel'**
+  String get categoryTravel;
+
+  /// No description provided for @categorySalary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get categorySalary;
+
+  /// No description provided for @categoryGift.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift'**
+  String get categoryGift;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @caisseDeleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting caisse…'**
+  String get caisseDeleting;
+
+  /// No description provided for @groupDeleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting group…'**
+  String get groupDeleting;
+
+  /// No description provided for @balancePerCaisse.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances in different currencies are never added together.'**
+  String get balancePerCaisse;
+
+  /// No description provided for @balanceAcrossCaisses.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {Total across {count} caisse} other {Total across {count} caisses}}'**
+  String balanceAcrossCaisses(int count);
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your EnCaisse account and all personal data'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. For security, sign in again before deleting.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @security.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get security;
+
+  /// No description provided for @appLock.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock'**
+  String get appLock;
+
+  /// No description provided for @appLockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for your fingerprint, face or device PIN when opening EnCaisse'**
+  String get appLockHint;
+
+  /// No description provided for @appLockUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No fingerprint, face or screen lock is set up on this device'**
+  String get appLockUnavailable;
+
+  /// No description provided for @appLockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock EnCaisse'**
+  String get appLockReason;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EnCaisse is locked'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
+  /// No description provided for @convertedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'= {amount} in the caisse currency'**
+  String convertedAmount(String amount);
+
+  /// No description provided for @enterValidRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid exchange rate'**
+  String get enterValidRate;
+
+  /// No description provided for @exchangeRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate (1 {from} = ? {to})'**
+  String exchangeRateLabel(String from, String to);
+
+  /// No description provided for @exchangeRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not fetch the rate. Enter it manually.'**
+  String get exchangeRateUnavailable;
+
+  /// No description provided for @formerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Former member'**
+  String get formerMember;
+
+  /// No description provided for @homeWidgetMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{+1 more caisse} other{+{count} more caisses}}'**
+  String homeWidgetMore(int count);
+
+  /// No description provided for @homeWidgetUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String homeWidgetUpdated(String time);
+
+  /// No description provided for @markReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as received'**
+  String get markReceived;
+
+  /// No description provided for @markReceivedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm that you received {amount} from {name}?'**
+  String markReceivedConfirm(String name, String amount);
+
+  /// No description provided for @paidInCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Originally {amount} · rate {rate}'**
+  String paidInCurrency(String amount, String rate);
+
+  /// No description provided for @paymentRequestText.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name}, you owe me {amount} in the caisse \"{group}\" on EnCaisse. Thanks!'**
+  String paymentRequestText(String name, String amount, String group);
+
+  /// No description provided for @recurringBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring'**
+  String get recurringBadge;
+
+  /// No description provided for @recurringCreatorLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped: its creator left the caisse'**
+  String get recurringCreatorLeft;
+
+  /// No description provided for @recurringEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose \"Repeat\" when adding a movement to automate rent, subscriptions or allowances.'**
+  String get recurringEmpty;
+
+  /// No description provided for @recurringNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {date}'**
+  String recurringNext(String date);
+
+  /// No description provided for @recurringSetupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement saved, but the repeat could not be set up: {details}'**
+  String recurringSetupFailed(String details);
+
+  /// No description provided for @recurringSkippedBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run skipped: not enough balance'**
+  String get recurringSkippedBalance;
+
+  /// No description provided for @recurringSkippedSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run skipped: some participants left the caisse'**
+  String get recurringSkippedSplit;
+
+  /// No description provided for @recurringStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get recurringStop;
+
+  /// No description provided for @recurringStopConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this recurring movement? Movements already created are kept.'**
+  String get recurringStopConfirm;
+
+  /// No description provided for @recurringTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring movements'**
+  String get recurringTitle;
+
+  /// No description provided for @repeatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get repeatLabel;
+
+  /// No description provided for @repeatNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get repeatNever;
+
+  /// No description provided for @repeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every week'**
+  String get repeatWeekly;
+
+  /// No description provided for @repeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Every month'**
+  String get repeatMonthly;
+
+  /// No description provided for @requestPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Request payment'**
+  String get requestPayment;
+
+  /// No description provided for @searchMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Search movements'**
+  String get searchMovements;
+
+  /// No description provided for @shareInviteLinkText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join my caisse \"{name}\" on EnCaisse: {link}\nOr enter the code {code} in the app.'**
+  String shareInviteLinkText(String name, String link, String code);
+
+  /// No description provided for @splitBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares match the amount'**
+  String get splitBalanced;
+
+  /// No description provided for @splitCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{For 1 person} other{Shared by {count}}}'**
+  String splitCount(int count);
+
+  /// No description provided for @splitCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get splitCustom;
+
+  /// No description provided for @splitEqually.
+  ///
+  /// In en, this message translates to:
+  /// **'Equally'**
+  String get splitEqually;
+
+  /// No description provided for @splitEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get splitEveryone;
+
+  /// No description provided for @splitJustMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Just me'**
+  String get splitJustMe;
+
+  /// No description provided for @splitMustMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares must add up to the amount'**
+  String get splitMustMatch;
+
+  /// No description provided for @splitPickSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one person'**
+  String get splitPickSomeone;
+
+  /// No description provided for @splitRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to assign: {amount}'**
+  String splitRemaining(String amount);
+
+  /// No description provided for @splitTitleDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributed by'**
+  String get splitTitleDeposit;
+
+  /// No description provided for @splitTitleExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Split between'**
+  String get splitTitleExpense;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get you;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your account email and we\'ll send you a link to choose a new password.'**
+  String get resetPasswordBody;
+
+  /// No description provided for @resetPasswordSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send link'**
+  String get resetPasswordSend;
+
+  /// No description provided for @resetPasswordSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for {email}, a reset link is on its way. Check your inbox and spam folder.'**
+  String resetPasswordSent(String email);
+
+  /// No description provided for @resetPasswordTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a few minutes and try again.'**
+  String get resetPasswordTooMany;
+
+  /// No description provided for @resetPasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the reset email. Check your connection and try again.'**
+  String get resetPasswordFailed;
+
+  /// No description provided for @memberSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Even'**
+  String get memberSettled;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get addPhoto;
+
+  /// No description provided for @availableInCaisse.
+  ///
+  /// In en, this message translates to:
+  /// **'Available: {amount}'**
+  String availableInCaisse(String amount);
 }
 
 class _AppLocalizationsDelegate

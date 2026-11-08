@@ -84,9 +84,24 @@ function cleanup() {
 
 process.on("exit", cleanup);
 
-/** firebase-admin resolved from the functions workspace. */
+/**
+ * firebase-admin resolved from the functions workspace, exposed through the
+ * namespaced surface the scripts use (`admin.auth()`, `admin.firestore()`…).
+ * The functions workspace ships the modular SDK, whose root export no longer
+ * carries those accessors.
+ */
 function requireAdmin() {
-  return require(path.join(__dirname, "..", "functions", "node_modules", "firebase-admin"));
+  const root = path.join(__dirname, "..", "functions", "node_modules", "firebase-admin");
+  const app = require(path.join(root, "lib", "app"));
+  return {
+    get apps() {
+      return app.getApps();
+    },
+    initializeApp: (options) => app.initializeApp(options),
+    auth: () => require(path.join(root, "lib", "auth")).getAuth(),
+    firestore: () => require(path.join(root, "lib", "firestore")).getFirestore(),
+    storage: () => require(path.join(root, "lib", "storage")).getStorage(),
+  };
 }
 
 module.exports = { useFirebaseCliCredentials, requireAdmin, cleanup };

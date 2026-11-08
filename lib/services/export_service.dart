@@ -124,13 +124,15 @@ class ExportService {
           if (settlements.isEmpty)
             pw.Text('No repayments recorded')
           else
-            ...settlements.take(20).map(
-              (payment) => pw.Text(
-                '${payment.fromName} → ${payment.toName}: '
-                '${formatMoney(payment.amount, currency: group.currency)} '
-                '(${payment.status.name})',
-              ),
-            ),
+            ...settlements
+                .take(20)
+                .map(
+                  (payment) => pw.Text(
+                    '${payment.fromName} → ${payment.toName}: '
+                    '${formatMoney(payment.amount, currency: group.currency)} '
+                    '(${payment.status.name})',
+                  ),
+                ),
           pw.SizedBox(height: 16),
           pw.Text(
             'Movements',

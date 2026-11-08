@@ -1,14 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
+import '../../l10n/engagement_copy.dart';
+import '../../widgets/app_components.dart';
 import '../../core/utils/user_error.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/image_picker_utils.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/category_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../widgets/authorized_image.dart';
@@ -34,8 +40,17 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   String? _categoryFilter;
   String? _userFilter;
   DateTimeRange? _dateFilter;
-  bool _closingGroup = false;
+  final _searchController = TextEditingController();
+  String _search = '';
   bool _tourScheduled = false;
+  bool _deleting = false;
+  bool _confirmingDelete = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -66,7 +81,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final l10n = AppLocalizations.of(context);
     SharePlus.instance.share(
       ShareParams(
-        text: l10n.shareInviteText(group.name, group.inviteCode),
+        text: l10n.shareInviteLinkText(
+          group.name,
+          AppConstants.inviteLink(group.inviteCode),
+          group.inviteCode,
+        ),
         subject: l10n.joinOnEncaisse(group.name),
       ),
     );
@@ -96,7 +115,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 Text(
                   group.inviteCode,
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    color: AppColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     letterSpacing: 6,
                     fontSize: 36,
                   ),
@@ -142,6 +161,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     List<GroupMember> members,
   ) async {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final tones = context.semantic;
     final action = await showModalBottomSheet<_GroupMenuAction>(
       context: context,
       builder: (ctx) {
@@ -182,15 +203,28 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 onTap: () => Navigator.pop(ctx, _GroupMenuAction.exportPdf),
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.delete_outline,
-                  color: AppColors.accent,
+                  color: _deleting ? scheme.outline : tones.negative,
                 ),
                 title: Text(
-                  group.isPersonal ? l10n.deleteCaisse : l10n.deleteGroup,
-                  style: const TextStyle(color: AppColors.accent),
+                  _deleting
+                      ? (group.isPersonal
+                            ? l10n.caisseDeleting
+                            : l10n.groupDeleting)
+                      : (group.isPersonal
+                            ? l10n.deleteCaisse
+                            : l10n.deleteGroup),
+                  style: TextStyle(
+                    color: _deleting
+                        ? scheme.onSurfaceVariant
+                        : tones.negativeInk,
+                  ),
                 ),
-                onTap: () => Navigator.pop(ctx, _GroupMenuAction.delete),
+                enabled: !_deleting,
+                onTap: _deleting
+                    ? null
+                    : () => Navigator.pop(ctx, _GroupMenuAction.delete),
               ),
             ],
           ),
@@ -223,10 +257,15 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     required bool pdf,
   }) async {
     final l10n = AppLocalizations.of(context);
-    final movements = ref.read(movementsProvider(group.id)).value ?? [];
-    final settlements = ref.read(settlementsProvider(group.id)).value ?? [];
+    final messenger = ScaffoldMessenger.of(context);
     final balance = ref.read(balanceProvider(group.id));
     try {
+      // A still-loading stream reports an empty list, which produces a
+      // header-only file that would then be announced as a successful share.
+      // Await the first snapshot, and let a failed read surface as an error,
+      // instead of exporting a file the streams could not back.
+      final movements = await ref.read(movementsProvider(group.id).future);
+      final settlements = await ref.read(settlementsProvider(group.id).future);
       final export = ref.read(exportServiceProvider);
       if (pdf) {
         await export.sharePdf(
@@ -245,15 +284,13 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         );
       }
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportShared)));
+        messenger.showSnackBar(SnackBar(content: Text(l10n.exportShared)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.exportFailed)));
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
+        );
       }
     }
   }
@@ -334,7 +371,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                       final isCreator = member.uid == group.createdBy;
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppColors.primaryLight,
+                          backgroundColor: context.semantic.positiveSurface,
                           backgroundImage:
                               member.photoUrl != null &&
                                   !member.photoUrl!.startsWith('storage://') &&
@@ -348,8 +385,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                   member.displayName.isNotEmpty
                                       ? member.displayName[0].toUpperCase()
                                       : '?',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
+                                  style: TextStyle(
+                                    color: context.semantic.positiveInk,
                                   ),
                                 )
                               : member.photoUrl!.startsWith('storage://') ||
@@ -391,8 +428,9 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                               Navigator.pop(dCtx, true),
                                           child: Text(
                                             l10n.removeMember,
-                                            style: const TextStyle(
-                                              color: AppColors.accent,
+                                            style: TextStyle(
+                                              color:
+                                                  context.semantic.negativeInk,
                                             ),
                                           ),
                                         ),
@@ -438,8 +476,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                 },
                                 child: Text(
                                   l10n.removeMember,
-                                  style: const TextStyle(
-                                    color: AppColors.accent,
+                                  style: TextStyle(
+                                    color: context.semantic.negativeInk,
                                   ),
                                 ),
                               ),
@@ -557,7 +595,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               l10n.leaveGroup,
-              style: const TextStyle(color: AppColors.accent),
+              style: TextStyle(color: context.semantic.negativeInk),
             ),
           ),
         ],
@@ -589,56 +627,83 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     WidgetRef ref,
     Group group,
   ) async {
+    // A rapid second tap must not stack a second confirmation dialog or fire a
+    // second delete request while the first is still in flight.
+    if (_deleting || _confirmingDelete) return;
     final l10n = AppLocalizations.of(context);
-    final user = ref.read(authStateProvider).value;
-    if (user == null) return;
+    // The delete itself is authorised server-side from the caller's ID token,
+    // so this only bails out when there is no signed-in user to send it with.
+    if (ref.read(authStateProvider).value == null) return;
 
-    final ok = await showCompactDialog<bool>(
-      context: context,
-      builder: (ctx) => CompactAlertDialog(
-        title: Text(
-          group.isPersonal ? l10n.deleteCaisseConfirm : l10n.deleteGroupConfirm,
-        ),
-        content: Text(
-          group.isPersonal ? l10n.deleteCaisseHint : l10n.deleteGroupHint,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              group.isPersonal ? l10n.deleteCaisse : l10n.deleteGroup,
-              style: const TextStyle(color: AppColors.accent),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !context.mounted) return;
-
-    setState(() => _closingGroup = true);
-    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _confirmingDelete = true);
+    final bool? ok;
     try {
-      await ref
-          .read(groupServiceProvider)
-          .deleteGroup(groupId: group.id, creatorUid: user.uid);
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            group.isPersonal ? l10n.caisseDeleted : l10n.groupDeleted,
+      ok = await showCompactDialog<bool>(
+        context: context,
+        builder: (ctx) => CompactAlertDialog(
+          title: Text(
+            group.isPersonal
+                ? l10n.deleteCaisseConfirm
+                : l10n.deleteGroupConfirm,
           ),
+          content: Text(
+            group.isPersonal ? l10n.deleteCaisseHint : l10n.deleteGroupHint,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(
+                group.isPersonal ? l10n.deleteCaisse : l10n.deleteGroup,
+                style: TextStyle(color: context.semantic.negativeInk),
+              ),
+            ),
+          ],
         ),
       );
-      context.go('/home');
+    } finally {
+      if (mounted) setState(() => _confirmingDelete = false);
+    }
+    if (ok != true || !mounted || !context.mounted) return;
+
+    // Leave for home straight away; the group is hidden there while the
+    // server deletes it. This screen is gone by the time the call returns, so
+    // everything the outcome needs is captured from the app-wide scope now.
+    _deleting = true;
+    final container = ProviderScope.containerOf(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final pending = container.read(pendingGroupDeletionsProvider.notifier);
+    final deletedMessage = group.isPersonal
+        ? l10n.caisseDeleted
+        : l10n.groupDeleted;
+    pending.add(group.id);
+    context.go('/home');
+    messenger.showSnackBar(SnackBar(content: Text(deletedMessage)));
+
+    try {
+      await container.read(groupServiceProvider).deleteGroup(groupId: group.id);
+      container.invalidate(userGroupsProvider);
     } catch (e) {
-      if (mounted) {
-        setState(() => _closingGroup = false);
+      // The backend can commit the Firestore delete and still fail to return a
+      // response (timeout, dropped connection). Only bring the group back when
+      // it still exists.
+      final stillExists = await container
+          .read(groupServiceProvider)
+          .groupExists(group.id)
+          .catchError((_) => true);
+      if (!stillExists) {
+        container.invalidate(userGroupsProvider);
+      } else {
+        pending.remove(group.id);
+        messenger.hideCurrentSnackBar();
         messenger.showSnackBar(
-          SnackBar(content: Text(l10n.errorWithDetails(userFacingError(e)))),
+          SnackBar(
+            content: Text(l10n.errorWithDetails(userFacingError(e))),
+            duration: const Duration(seconds: 6),
+          ),
         );
       }
     }
@@ -650,7 +715,23 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
       list = list.where((m) => m.category == _categoryFilter);
     }
     if (_userFilter != null) {
-      list = list.where((m) => m.createdBy == _userFilter);
+      list = list.where(
+        (m) =>
+            m.createdBy == _userFilter ||
+            (m.split?.containsKey(_userFilter) ?? false),
+      );
+    }
+    final query = _search.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      final l10n = AppLocalizations.of(context);
+      list = list.where(
+        (m) =>
+            m.title.toLowerCase().contains(query) ||
+            m.category.toLowerCase().contains(query) ||
+            l10n.categoryLabel(m.category).toLowerCase().contains(query) ||
+            m.createdByName.toLowerCase().contains(query) ||
+            m.amount.toStringAsFixed(2).contains(query),
+      );
     }
     if (_dateFilter != null) {
       final start = DateTime(
@@ -714,25 +795,51 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final myMember = members.where((m) => m.uid == user?.uid).firstOrNull;
 
     return groupAsync.when(
-      loading: () => const Scaffold(
+      loading: () => Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      ),
-      error: (e, _) => Scaffold(
-        appBar: AppBar(),
-        body: Center(
-          child: Text(
-            AppLocalizations.of(context).errorWithDetails(userFacingError(e)),
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
       ),
+      error: (e, _) {
+        final isPermissionDenied =
+            e is FirebaseException && e.code == 'permission-denied';
+        if (isPermissionDenied) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.go('/home');
+            }
+          });
+        }
+        return Scaffold(
+          appBar: AppBar(),
+          body: Center(
+            child: Text(
+              AppLocalizations.of(context).errorWithDetails(userFacingError(e)),
+            ),
+          ),
+        );
+      },
       data: (group) {
         if (group == null) {
-          if (_closingGroup) {
-            return const Scaffold(
+          // The backend commits the Firestore delete before the callable
+          // returns, so this stream emits null while our own request is still
+          // in flight. Rendering "group not found" here is what flashed a dead
+          // group at the user for a frame before navigating home; show the
+          // pending deletion instead.
+          if (_deleting) {
+            return Scaffold(
+              appBar: AppBar(),
               body: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(AppLocalizations.of(context).groupDeleting),
+                  ],
+                ),
               ),
             );
           }
@@ -754,7 +861,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         final visible = _applyFilters(listSource);
         final categories = {
           ...allActive.map((m) => m.category),
-          if (_categoryFilter != null) _categoryFilter!,
+          if (_categoryFilter != null) ...[_categoryFilter!],
         }.toList()..sort();
         final userOptions = <({String uid, String name})>[];
         final seenUids = <String>{};
@@ -780,8 +887,27 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             : (hasMovementFilters
                   ? (availableActionWidth - 12) / 2
                   : availableActionWidth);
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         final isCreator = user != null && group.createdBy == user.uid;
+        final tones = context.semantic;
+        final copy = EngagementCopy.of(context);
+        // The caller's own position, kept visually separate from the group
+        // balance so "what the caisse holds" is never confused with "what I am
+        // owed or owe".
+        final settle = ref.watch(settleProvider(groupId));
+        // settleProvider folds a failed settlements read into an empty list, so
+        // a backend failure would otherwise render a confident "You are settled
+        // up". Watch the stream itself and never claim a clear position without
+        // the data behind it.
+        final settlementsAsync = ref.watch(settlementsProvider(groupId));
+        final settleError = settlementsAsync.hasError
+            ? userFacingError(settlementsAsync.error!)
+            : null;
+        final myNet = user == null || group.isPersonal
+            ? null
+            : settle.memberNets
+                  .where((m) => m.uid == user.uid)
+                  .map((m) => m.delta)
+                  .firstOrNull;
 
         if (!_tourScheduled) {
           _tourScheduled = true;
@@ -798,7 +924,13 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: Icon(
+                // Mirror in RTL so "back" still points the way the reader reads.
+                Directionality.of(context) == TextDirection.rtl
+                    ? Icons.arrow_forward
+                    : Icons.arrow_back,
+              ),
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: () {
                 if (context.canPop()) {
                   context.pop();
@@ -811,60 +943,102 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             actions: [
               if (!group.isPersonal)
                 IconButton(
-                  tooltip: myMember?.notificationsMuted == true
-                      ? l10n.unmuteNotifications
-                      : l10n.muteNotifications,
-                  onPressed: user == null
-                      ? null
-                      : () async {
-                          final muted =
-                              !(myMember?.notificationsMuted ?? false);
-                          await ref
-                              .read(groupServiceProvider)
-                              .setNotificationsMuted(
-                                groupId: groupId,
-                                uid: user.uid,
-                                muted: muted,
-                              );
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  muted
-                                      ? l10n.notificationsMuted
-                                      : l10n.notificationsEnabled,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                  icon: Icon(
-                    myMember?.notificationsMuted == true
-                        ? Icons.notifications_off_outlined
-                        : Icons.notifications_outlined,
-                  ),
-                ),
-              if (!group.isPersonal)
-                IconButton(
                   tooltip: l10n.inviteFriends,
                   onPressed: () => _showInviteSheet(context, group),
                   icon: const Icon(Icons.person_add_alt_1_outlined),
                 ),
-              if (isCreator)
-                IconButton(
-                  tooltip: group.isPersonal
-                      ? l10n.manageCaisse
-                      : l10n.manageGroup,
-                  onPressed: () =>
-                      _showManageMenu(context, ref, group, members),
-                  icon: const Icon(Icons.more_vert),
-                )
-              else if (user != null)
-                IconButton(
-                  tooltip: l10n.leaveGroup,
-                  onPressed: () => _confirmLeaveGroup(context, ref, group),
-                  icon: const Icon(Icons.logout),
-                ),
+              PopupMenuButton<_GroupAction>(
+                tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                icon: const Icon(Icons.more_vert),
+                onSelected: (action) async {
+                  switch (action) {
+                    case _GroupAction.recurring:
+                      context.push('/groups/$groupId/recurring');
+                    case _GroupAction.mute:
+                      if (user == null) return;
+                      final muted = !(myMember?.notificationsMuted ?? false);
+                      await ref
+                          .read(groupServiceProvider)
+                          .setNotificationsMuted(
+                            groupId: groupId,
+                            uid: user.uid,
+                            muted: muted,
+                          );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              muted
+                                  ? l10n.notificationsMuted
+                                  : l10n.notificationsEnabled,
+                            ),
+                          ),
+                        );
+                      }
+                    case _GroupAction.manage:
+                      _showManageMenu(context, ref, group, members);
+                    case _GroupAction.leave:
+                      _confirmLeaveGroup(context, ref, group);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: _GroupAction.recurring,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.event_repeat_outlined),
+                      title: Text(l10n.recurringTitle),
+                    ),
+                  ),
+                  if (!group.isPersonal && user != null)
+                    PopupMenuItem(
+                      value: _GroupAction.mute,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          myMember?.notificationsMuted == true
+                              ? Icons.notifications_outlined
+                              : Icons.notifications_off_outlined,
+                        ),
+                        title: Text(
+                          myMember?.notificationsMuted == true
+                              ? l10n.unmuteNotifications
+                              : l10n.muteNotifications,
+                        ),
+                      ),
+                    ),
+                  if (isCreator)
+                    PopupMenuItem(
+                      value: _GroupAction.manage,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.tune),
+                        title: Text(
+                          group.isPersonal
+                              ? l10n.manageCaisse
+                              : l10n.manageGroup,
+                        ),
+                      ),
+                    )
+                  else if (user != null)
+                    PopupMenuItem(
+                      value: _GroupAction.leave,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          Icons.logout,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        title: Text(
+                          l10n.leaveGroup,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
           body: EncaisseRefreshIndicator(
@@ -892,6 +1066,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                           ),
                           changeHint: l10n.tapPhotoToChange,
                           viewHint: l10n.tapPhotoToView,
+                          addHint: l10n.addPhoto,
                         ),
                         if (group.isPersonal) ...[
                           Align(
@@ -904,62 +1079,142 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                           ),
                           const SizedBox(height: 8),
                         ],
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF1E3A31)
-                                : AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.2),
-                            ),
-                          ),
+                        AppSurface(
+                          padding: const EdgeInsets.all(AppSpacing.md),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 l10n.balance,
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                style: Theme.of(context).textTheme.labelMedium,
                               ),
-                              const SizedBox(height: 4),
-                              AnimatedBalance(
-                                value: balance.total,
-                                currency: group.currency,
-                              ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppSpacing.xs),
+                              // balanceProvider collapses a loading and a failed
+                              // read into 0.00, which is indistinguishable from a
+                              // genuinely empty caisse. Never render a number the
+                              // app does not actually have.
+                              if (movementsAsync.isLoading)
+                                const SizedBox(
+                                  height: 40,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              else if (movementsAsync.hasError)
+                                Text(
+                                  userFacingError(movementsAsync.error!),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(color: scheme.error),
+                                )
+                              else
+                                AnimatedBalance(
+                                  value: balance.total,
+                                  currency: group.currency,
+                                ),
+                              if (settleError != null) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.smd,
+                                    vertical: AppSpacing.sm,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: scheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadii.field,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.cloud_off_outlined,
+                                        size: 18,
+                                        color: scheme.onErrorContainer,
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Expanded(
+                                        child: Text(
+                                          settleError,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: scheme.onErrorContainer,
+                                              ),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => ref.invalidate(
+                                          settlementsProvider(groupId),
+                                        ),
+                                        child: Text(l10n.retry),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ] else if (myNet != null &&
+                                  myNet.abs() >= 0.01) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                _PositionRow(
+                                  label: myNet > 0
+                                      ? copy.youAreOwed
+                                      : copy.youOwe,
+                                  amount: myNet.abs(),
+                                  currency: group.currency,
+                                  positive: myNet > 0,
+                                  negative: myNet < 0,
+                                ),
+                              ] else if (myNet != null) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                _PositionRow(
+                                  label: copy.youAreSettled,
+                                  amount: 0,
+                                  currency: group.currency,
+                                  positive: false,
+                                  negative: false,
+                                ),
+                              ],
+                              const SizedBox(height: AppSpacing.md),
                               Row(
                                 children: [
                                   Expanded(
-                                    child: _MiniStat(
+                                    child: AppStat(
                                       label: l10n.inLabel,
                                       value: formatMoney(
                                         balance.deposits,
                                         currency: group.currency,
                                       ),
-                                      color: AppColors.deposit,
+                                      valueColor: tones.positiveInk,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: AppSizes.hairline,
+                                    height: 28,
+                                    color: scheme.outline,
+                                  ),
                                   Expanded(
-                                    child: _MiniStat(
+                                    child: AppStat(
                                       label: l10n.outLabel,
                                       value: formatMoney(
                                         balance.expenses,
                                         currency: group.currency,
                                       ),
-                                      color: AppColors.expense,
+                                      valueColor: tones.negativeInk,
                                     ),
                                   ),
                                   if (!group.isPersonal) ...[
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: _MiniStat(
-                                        label: l10n.members,
-                                        value: '${members.length}',
-                                        color: scheme.onSurface,
-                                      ),
+                                    const SizedBox(width: AppSpacing.smd),
+                                    Container(
+                                      width: AppSizes.hairline,
+                                      height: 28,
+                                      color: scheme.outline,
+                                    ),
+                                    const SizedBox(width: AppSpacing.smd),
+                                    AppStat(
+                                      label: l10n.members,
+                                      value: '${members.length}',
                                     ),
                                   ],
                                 ],
@@ -1008,7 +1263,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                             ],
                           ),
                         ),
-                        if (!group.isPersonal) ...[
+                        if (!group.isPersonal && members.length < 2) ...[
                           const SizedBox(height: 12),
                           Container(
                             width: double.infinity,
@@ -1040,7 +1295,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                             .textTheme
                                             .headlineMedium
                                             ?.copyWith(
-                                              color: AppColors.primary,
+                                              color: context.semantic.positive,
                                               letterSpacing: 4,
                                             ),
                                       ),
@@ -1051,19 +1306,47 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                                         context,
                                         group.inviteCode,
                                       ),
-                                      icon: const Icon(Icons.copy),
-                                      color: AppColors.primary,
+                                      icon: Icon(Icons.copy),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                     IconButton(
                                       tooltip: l10n.share,
                                       onPressed: () =>
                                           _shareInvite(context, group),
-                                      icon: const Icon(Icons.ios_share),
-                                      color: AppColors.primary,
+                                      icon: Icon(Icons.ios_share),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                   ],
                                 ),
                               ],
+                            ),
+                          ),
+                        ],
+                        // Search stays directly above the list it filters.
+                        if (hasMovementFilters) ...[
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _searchController,
+                            textInputAction: TextInputAction.search,
+                            onChanged: (value) =>
+                                setState(() => _search = value),
+                            decoration: InputDecoration(
+                              hintText: l10n.searchMovements,
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _search.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: l10n.clearFilters,
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () => setState(() {
+                                        _search = '';
+                                        _searchController.clear();
+                                      }),
+                                    ),
                             ),
                           ),
                         ],
@@ -1078,10 +1361,42 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                   ),
                 ),
                 if (movementsAsync.isLoading)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  )
+                else if (movementsAsync.hasError)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.cloud_off_outlined,
+                            size: 40,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            l10n.errorWithDetails(
+                              userFacingError(movementsAsync.error!),
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                ref.invalidate(movementsProvider(groupId)),
+                            icon: const Icon(Icons.refresh),
+                            label: Text(l10n.retry),
+                          ),
+                        ],
                       ),
                     ),
                   )
@@ -1112,6 +1427,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                               _categoryFilter = null;
                               _userFilter = null;
                               _dateFilter = null;
+                              _search = '';
+                              _searchController.clear();
                             }),
                             child: Text(l10n.clearFilters),
                           ),
@@ -1136,7 +1453,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                       );
                     }, childCount: visible.length),
                   ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                // Room for the add button so it never hides the last amount.
+                const SliverToBoxAdapter(child: SizedBox(height: 96)),
               ],
             ),
           ),
@@ -1178,9 +1496,12 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 ),
                 ListTile(
                   minTileHeight: 64,
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.primaryLight,
-                    child: Icon(Icons.arrow_downward, color: AppColors.deposit),
+                  leading: CircleAvatar(
+                    backgroundColor: context.semantic.positiveSurface,
+                    child: Icon(
+                      Icons.arrow_downward,
+                      color: context.semantic.positive,
+                    ),
                   ),
                   title: Text(l10n.deposit),
                   onTap: () {
@@ -1194,8 +1515,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 ListTile(
                   minTileHeight: 64,
                   leading: CircleAvatar(
-                    backgroundColor: AppColors.accentLight,
-                    child: Icon(Icons.arrow_upward, color: AppColors.expense),
+                    backgroundColor: context.semantic.negativeSurface,
+                    child: Icon(
+                      Icons.arrow_upward,
+                      color: context.semantic.negative,
+                    ),
                   ),
                   title: Text(l10n.expense),
                   onTap: () {
@@ -1291,42 +1615,78 @@ class _RenameGroupPageState extends State<_RenameGroupPage> {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({
+/// The caller's position in the caisse: owed, owing, or settled. Rendered as a
+/// distinct strip rather than another figure in the stat row, because it
+/// answers a different question than the group balance does.
+class _PositionRow extends StatelessWidget {
+  const _PositionRow({
     required this.label,
-    required this.value,
-    required this.color,
+    required this.amount,
+    required this.currency,
+    required this.positive,
+    required this.negative,
   });
 
   final String label;
-  final String value;
-  final Color color;
+  final double amount;
+  final String currency;
+  final bool positive;
+  final bool negative;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 2),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: AlignmentDirectional.centerStart,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
+    final tones = context.semantic;
+    final settled = !positive && !negative;
+    final ink = positive
+        ? tones.positiveInk
+        : (negative
+              ? tones.negativeInk
+              : Theme.of(context).colorScheme.onSurfaceVariant);
+    final surface = positive
+        ? tones.positiveSurface
+        : (negative ? tones.negativeSurface : tones.neutralSurface);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.smd,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppRadii.field),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            positive
+                ? Icons.call_received
+                : (negative ? Icons.call_made : Icons.check_circle_outline),
+            size: 18,
+            color: settled ? tones.positiveInk : ink,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: ink),
             ),
           ),
-        ),
-      ],
+          if (amount > 0)
+            AppAmount(
+              amount: amount,
+              currency: currency,
+              color: ink,
+              showSign: false,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: ink,
+                fontFeatures: kTabularFigures,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1721,6 +2081,7 @@ class _GroupPhotoBanner extends StatelessWidget {
     required this.onTap,
     required this.changeHint,
     required this.viewHint,
+    required this.addHint,
   });
 
   final String? photoUrl;
@@ -1728,12 +2089,26 @@ class _GroupPhotoBanner extends StatelessWidget {
   final VoidCallback onTap;
   final String changeHint;
   final String viewHint;
+  final String addHint;
 
   @override
   Widget build(BuildContext context) {
     final hasPhoto = photoUrl != null && photoUrl!.trim().isNotEmpty;
     if (!hasPhoto && !canEdit) {
       return const SizedBox.shrink();
+    }
+    if (!hasPhoto) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+            label: Text(addHint),
+          ),
+        ),
+      );
     }
 
     return Padding(
@@ -1750,57 +2125,34 @@ class _GroupPhotoBanner extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  if (hasPhoto)
-                    AuthorizedImage(
-                      url: photoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _) => Container(
-                        color: AppColors.primaryLight,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.broken_image_outlined),
-                      ),
-                    )
-                  else
-                    Container(
-                      color: AppColors.primary.withValues(alpha: 0.12),
+                  AuthorizedImage(
+                    url: photoUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _) => Container(
+                      color: AppColors.primaryLight,
                       alignment: Alignment.center,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.add_a_photo_outlined,
-                            color: AppColors.primary,
-                            size: 32,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            changeHint,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: AppColors.primary),
-                          ),
-                        ],
-                      ),
+                      child: const Icon(Icons.broken_image_outlined),
                     ),
-                  if (hasPhoto)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        color: Colors.black54,
-                        child: Text(
-                          canEdit ? changeHint : viewHint,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      color: Colors.black54,
+                      child: Text(
+                        canEdit ? changeHint : viewHint,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
                         ),
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -1810,3 +2162,5 @@ class _GroupPhotoBanner extends StatelessWidget {
     );
   }
 }
+
+enum _GroupAction { recurring, mute, manage, leave }

@@ -138,10 +138,16 @@ abstract final class AppCurrencies {
         locale: locale,
         decimalDigits: decimalDigits(upper),
       );
-      final symbol = format.currencySymbol.trim();
+      // NumberFormat.currency uses the ISO code as its symbol; the simple
+      // format carries the glyph people actually recognise (€, \$, £, ¥…).
+      final symbol = NumberFormat.simpleCurrency(
+        name: upper,
+        locale: locale,
+      ).currencySymbol.trim();
       final name = format.currencyName?.trim();
-      final symbolPart =
-          symbol.isNotEmpty && symbol != upper ? ' ($symbol)' : '';
+      final symbolPart = symbol.isNotEmpty && symbol != upper
+          ? ' ($symbol)'
+          : '';
       if (name != null && name.isNotEmpty && name.toUpperCase() != upper) {
         return '$upper$symbolPart — $name';
       }

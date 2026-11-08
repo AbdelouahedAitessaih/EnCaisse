@@ -16,10 +16,12 @@ class DeviceRegion {
 
   static Future<String?> countryCode() {
     if (_cached != null) return Future.value(_cached);
+    if (kIsWeb) return Future.value(null);
     return _pending ??= _resolve().whenComplete(() => _pending = null);
   }
 
   static Future<String?> timeZoneId() async {
+    if (kIsWeb) return null;
     try {
       return await _channel.invokeMethod<String>('getTimeZoneId');
     } catch (e) {

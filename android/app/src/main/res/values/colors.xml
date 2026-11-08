@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Splash / NormalTheme window background — must match Flutter scaffold color
+         so there is no visible flash when the engine takes over. -->
+    <color name="launch_background">#FAFAF8</color>
 </resources>
