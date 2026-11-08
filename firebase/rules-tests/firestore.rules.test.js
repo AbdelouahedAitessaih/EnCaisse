@@ -123,3 +123,10 @@ test("users can mark their own notifications read, but cannot change other field
   await assertSucceeds(updateDoc(doc(db, "users/member/notifications/n1"), {read: true}));
   await assertFails(updateDoc(doc(db, "users/member/notifications/n1"), {title: "Forged"}));
 });
+
+test("config is readable only by signed-in users", async () => {
+  const memberDb = env.authenticatedContext("member").firestore();
+  const unauthDb = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(memberDb, "config/appUpdate")));
+  await assertFails(getDoc(doc(unauthDb, "config/appUpdate")));
+});

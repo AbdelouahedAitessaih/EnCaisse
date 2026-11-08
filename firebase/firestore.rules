@@ -73,7 +73,7 @@ service cloud.firestore {
     }
 
     match /config/{docId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if false;
     }
 
